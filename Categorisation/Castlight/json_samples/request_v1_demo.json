@@ -1,0 +1,65 @@
+{
+    "transactions": [
+
+        {
+            "type": "credit",
+            "description": "DOCKLANDS Light RAILWA",
+            "amount":20.30
+        },
+
+        {
+            "type": "debit",
+            "description": "Boots 1629",
+            "amount":6.70
+        },
+
+        {
+            "type": "debit",
+            "description": "The Wellington",
+            "amount":6.70
+        },
+
+        {
+            "type": "debit",
+            "description": "Princess of Wales",
+            "amount":12.88
+        },
+
+        {
+            "type": "debit",
+            "description": "PRET A MANGER",
+            "amount":13.85
+        },
+
+        {
+            "type": "debit",
+            "description": "LTR UK London City",
+            "amount":67.20
+        },
+
+        {
+            "type": "debit",
+            "description": "Starbucks",
+            "amount":164.40
+        },
+
+        {
+            "type": "debit",
+            "description": "Lemon Tree",
+            "amount":50.05
+        },
+
+        {
+            "type": "debit",
+            "description": "Citadines TRAFALGA",
+            "amount":15.80
+        },
+
+
+        {
+            "type": "credit",
+            "description": "Salary",
+            "amount":10530.43
+        }
+    ]
+}

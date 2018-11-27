@@ -1,0 +1,94 @@
+{
+    "transactions": [
+
+        {
+            "transaction_id": "10111",
+            "customer_id": "4711",
+            "transction_date": "2018-02-11 11:01:11",
+            "type": "credit",
+            "description": "DOCKLANDS Light RAILWA",
+            "amount":20.30
+        },
+
+        {
+            "transaction_id": "10112",
+            "customer_id": "4711",
+            "transction_date": "2018-02-11 11:01:22",
+            "type": "debit",
+            "description": "Boots 1629",
+            "amount":6.70
+        },
+
+        {
+            "transaction_id": "10113",
+            "customer_id": "4711",
+            "transction_date": "2018-02-11 11:01:13",
+            "type": "debit",
+            "description": "The Wellington",
+            "amount":6.70
+        },
+
+        {
+            "transaction_id": "10114",
+            "customer_id": "4713",
+            "transction_date": "2018-02-11 11:01:14",
+            "type": "debit",
+            "description": "Princess of Wales",
+            "amount":12.88
+        },
+
+        {
+            "transaction_id": "10115",
+            "customer_id": "4711",
+            "transction_date": "2018-02-11 11:01:15",
+            "type": "debit",
+            "description": "PRET A MANGER",
+            "amount":13.85
+        },
+
+        {
+            "transaction_id": "10116",
+            "customer_id": "4712",
+            "transction_date": "2018-02-11 11:01:16",
+            "type": "debit",
+            "description": "LTR UK London City",
+            "amount":67.20
+        },
+
+        {
+            "transaction_id": "10117",
+            "customer_id": "4711",
+            "transction_date": "2018-02-11 11:01:17",
+            "type": "debit",
+            "description": "Starbucks",
+            "amount":164.40
+        },
+
+        {
+            "transaction_id": "10118",
+            "customer_id": "4712",
+            "transction_date": "2018-02-11 11:01:18",
+            "type": "debit",
+            "description": "Lemon Tree",
+            "amount":50.05
+        },
+
+        {
+            "transaction_id": "10119",
+            "customer_id": "4711",
+            "transction_date": "2018-02-11 11:01:19",
+            "type": "debit",            "description": "Citadines TRAFALGA",
+            "amount":15.80
+        },
+
+
+        {
+            "transaction_id": "10120",
+            "customer_id": "4713",
+            "transction_date": "2018-02-11 11:01:20",
+            "type": "credit",
+            "description": "Salary",
+            "amount":10530.43
+        }
+    ]
+}
