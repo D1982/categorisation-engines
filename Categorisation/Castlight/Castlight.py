@@ -1,192 +1,303 @@
-"""
-Links:
-https://develop.castlightfinancial.com
-https://openliberty.io/guides/rest-hateoas.html
-https://realpython.com/python-json/
+"""Castlight Financial API usage PoC
+Basic PoC for the interaction with the transaction categorisation engine of the UK vendor Castlight Financial (https://castlightfinancial.com)
+Currently supporting their API in version 1 and version 2.
+
+LINKS:
+Logging HOWTO: https://docs.python.org/2/howto/logging.html
+Castlight Developer Portal: https://develop.castlightfinancial.com
+Creating a hypermedia-driven RESTful web service: https://openliberty.io/guides/rest-hateoas.html
 """
 from enum import Enum
-import csv
-import http.client
-import json
+import Categorisation.Common.util as util
+import Categorisation.Common.config as cfg
+
 import os.path
+import json
+import http.client
 import urllib.error
 import urllib.parse
 import urllib.request
+import logging
+import sys
+import time
 
-# Required for json output
-# import pandas as pd
-# import ast
-
-CSV_DELIMITER = ',' # Standard Delimiter
 URL = "gateway.castlightfinancial.com"
-API_VERSION_1 = 'APIv1'
-API_VERSION_2 = 'APIv2'
+WAIT = 3
+
+class SupportedAPIs(Enum):
+    CastlightAPIv1 = 'CastlightAPIv1'
+    CastlightAPIv2 = 'CastlightAPIv2'
+
 
 class ResponseMissingEntries(Exception):
     def __init__(self, message):
-
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
 
-class Castlight:
+class APIFactory:
+    @staticmethod
+    def create_api(api_version=SupportedAPIs.CastlightAPIv1):
+        #logging.info("Initiated:", "APIFactory.create_api()")
+        if api_version == SupportedAPIs.CastlightAPIv1:
+            logging.info(SupportedAPIs.CastlightAPIv1.value)
+            return CastlightAPIv1()
+        elif api_version == SupportedAPIs.CastlightAPIv2:
+            logging.info(SupportedAPIs.CastlightAPIv1.value)
+            return CastlightAPIv2()
 
-    def __init__(self, api_version=API_VERSION_1, api_call=False):
-        # Parameters
-        self.api_version = api_version
-        self.api_call = api_call
-        # HTTP Headers
-        self.headers = {'Content-Type': 'application/json', 'Ocp-Apim-Subscription-Key': '8d2b8e00bc794f7c81fcdcc7359bb995'}
-        # HTTP URL Parameters
+
+class CastlightAPI:
+    def __init__(self):
+        self.config = cfg.CastlightConfig()
+        # self.headers = {'Content-Type': 'application/json', 'Ocp-Apim-Subscription-Key': '8d2b8e00bc794f7c81fcdcc7359bb995'}
+        self.headers = {'Content-Type': 'application/json'}
+        self.headers['Ocp-Apim-Subscription-Key'] = self.config.api_headers['Ocp-Apim-Subscription-Key']
+        logging.debug("Ocp-Apim-Subscription-Key: " + self.headers['Ocp-Apim-Subscription-Key'])
         self.params = urllib.parse.urlencode({})
-        # HTTP Request
-        if api_version == API_VERSION_1:
-            self.request = "/caas/classify?{p}".format(p=self.params)
-        elif api_version == API_VERSION_2:
-            self.request = "/categorisation/transactions?{p}".format(p=self.params)
-        # Fieldnames depending on API Version (Required for CSV DictReader + DictWriter)
-        if self.api_version == API_VERSION_1:
-            self.fieldnames_request = ("type", "description", "amount")
-            self.fieldnames_response = ("categorisation_method", "category", "low_confidence", "probability", "subcategory")
-        elif self.api_version == API_VERSION_2:
-            self.fieldnames_request = ("transaction_id", "customer_id", "transaction_date", "type", "description", "amount")
-            # self.fieldnames_response = ("categorisation_method", "category", "low_confidence", "probability", "subcategory")
 
 
-    def read_json_file(self, filename):
-        extension = os.path.splitext(filename)[1]
-        if extension == '.json':
-            with open(filename) as json_data:
-                json_dict = json.load(json_data)
-        return json_dict
-
-
-    def write_json_file(self, json_data, filename):
-        jsonfile = open(filename, 'w')
-        json.dump(json_data, jsonfile)
-        jsonfile.write('\n')
-
-
-    def read_csv_file(self, filename, skip_header=True):
-        extension = os.path.splitext(filename)[1]
-        if extension == '.csv' or extension == '.txt':
-            csvfile = open(filename,'r')
-            csvreader = csv.DictReader(csvfile, self.fieldnames_request)
-            csv_data = []
-            if skip_header == True:
-                next(csvreader) # This skips the first row of the CSV file
-            for row in csvreader:
-                csv_data.append(row)
-        return csv_data
-
-
-    def write_csv_file(self, data, fieldnames, filename):
-        csvfile = open(filename, 'w')
-        csvwriter = csv.DictWriter(csvfile, fieldnames)
-        csvwriter.writeheader()
-        for rec in data:
-            csvwriter.writerow(rec)
-
-
-    def print_request_data(self, headers, request, json_data, transactions):
-        print("REQUEST-HEADERS: ", headers)
-        print("REQUEST-URL: ", request)
-        print("\nREQUEST-BODY: ", json.dumps(json_data, sort_keys=False, indent=4))
-        print("\nINPUT-TRANSACTIONS: ")
+    def log_input_data(self, json_data, transactions=None):
+        logging.debug("JSON: " + json.dumps(json_data, sort_keys=False, indent=4))
+        logging.debug("TRANSACTIONS: ")
         for trx in transactions:
             rec = ''
             for i, fname in enumerate(self.fieldnames_request):
                 rec = rec + str(trx[fname])
                 if i < len(self.fieldnames_request)-1: # Skip delimiter for last element
-                    rec = rec + CSV_DELIMITER
-            print(rec)
+                    rec = rec + util.CSV_DELIMITER
+            logging.info(rec)
 
 
-    def call_api(self, request, json_string, headers):
+    def get_result_data(self, transactions, response_dict):
+        pass
+
+
+class CastlightAPIv1(CastlightAPI):
+    def __init__(self):
+        CastlightAPI.__init__(self)
+        self.fieldnames_request = ("type", "description", "amount")
+        self.fieldnames_response = ("categorisation_method", "category", "low_confidence", "probability", "subcategory")
+
+
+    def log_input_data(self, json_data, transactions=None):
+        CastlightAPI.log_input_data(self, json_data, transactions)
+
+
+    def categorise_transactions(self, json_string):
         response_dict = {}
+        request = "/caas/classify?{p}".format(p=self.params)
+        logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
             conn = http.client.HTTPSConnection(URL)
-            conn.request("POST", request, json_string, headers)
+            conn.request("POST", request , json_string, self.headers)
             response = conn.getresponse()
             # Convert bytes to string type
             response_str = response.read().decode('utf-8')
-            response_error = response.reason, response.status
-            # Use this for API calls e.g. to get status of TRX processing and to get the categories back
-            operation_id = response.getheader("Location")
-            print("RESPONSE-OPERATION_ID; ", operation_id)
+            response_status = response.status
+            response_reason = response.reason
             conn.close()
             if response_str:
                 return response_str
             else:
-                return "Not received any response => {e}".format(e=response_error)
-
-
+                return "Not received any response => {s}, {r}".format(s=response_status, r=response_reason)
         except Exception as e:
             errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
             print(errmsg)
             return errmsg
 
 
-    def merge_result_data(self, transactions, response_dict):
+    def get_result_data(self, transactions, response_dict):
         len1=len(transactions)
         len2=len(response_dict["classifications"])
 
-        if self.api_version == API_VERSION_1 and len1 != len2:
+        if len1 != len2:
             raise ResponseMissingEntries(
                 "Number of elements in request {p1} and response {p1} do not equal".format(p1=len1, p2=len2))
 
         result_list = transactions
         result_row = None
-        for i, input_row in enumerate(result_list):
 
-            if self.api_version == API_VERSION_1:
-                result_list[i]["categorisation_method"] = response_dict["classifications"][i]["categorisation_method"]
-                result_list[i]["category"] = response_dict["classifications"][i]["category"]
-                result_list[i]["low_confidence"] = response_dict["classifications"][i]["low_confidence"]
-                result_list[i]["probability"] = response_dict["classifications"][i]["probability"]
-                result_list[i]["subcategory"] = response_dict["classifications"][i]["subcategory"]
-            elif self.api_version == API_VERSION_2:
-                pass
+        # Append all the information from the response to the result_dict already containing the input
+        if "classifications" in response_dict:
+            for i, input_row in enumerate(result_list):
+                for field in self.fieldnames_response:
+                    if field in response_dict["classifications"][i]:
+                        result_list[i][field] =  response_dict["classifications"][i][field]
+        return result_list
+
+class CastlightAPIv2(CastlightAPI):
+    def __init__(self):
+        CastlightAPI.__init__(self)
+        self.fieldnames_request = ("transaction_id", "customer_id", "transaction_date", "type", "description", "amount")
+        self.fieldnames_response = ("transaction_id", "customer_id", "transaction_date", "type", "description", "Amount", "label", "Confidence_random_forest", "category_random_forest", "subcategory_random_forest", "CR_version", "model_version")
+
+
+    def log_input_data(self, json_data, transactions=None):
+        CastlightAPI.log_input_data(self, json_data, transactions)
+
+
+    def categorise_transactions(self, json_string):
+        response_dict = {}
+        operation_id = ''
+        request = "/categorisation/transactions?{p}".format(p=self.params)
+        logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
+
+        try:
+            conn = http.client.HTTPSConnection(URL)
+            conn.request("POST", request, json_string, self.headers)
+            response = conn.getresponse()
+            status = response.status
+            reason = response.reason
+            # Use this for API calls e.g. to get status of TRX processing and to get the categories back
+            location = response.getheader("Location")
+            operation_id = location.rsplit('/',1)[1]
+            logging.info("OPERATION_ID; " + operation_id)
+            conn.close()
+            return (status, reason, operation_id)
+        except Exception as e:
+            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
+            return (500, errmsg, operation_id)
+
+
+    def get_categorisation_status(self, operation_id):
+        """
+        So it turns out that the status update service is turned off in development at the moment.
+        The system still works but the service that updates the file isn’t on!
+        You will see ‘Not Started’ but its actually complete.
+        We’re making some updates to how it works so it will be this way until Tuesday
+        (but you can easily ignore it)
+        """
+        pass
+
+
+    def get_categorised_transactions(self, operation_id):
+        response_dict = {}
+        headers = self.headers
+        headers["Accept"] = 'application/json'
+        request = "/categorisation/categorised_transactions/{operation_id}".format(operation_id=operation_id)
+        logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
+
+        try:
+            conn = http.client.HTTPSConnection(URL)
+            conn.request("GET", request, None, headers)
+            response = conn.getresponse()
+            status = response.status
+            reason = response.reason
+            # Convert bytes to string type
+            response_str = response.read().decode('utf-8')
+            conn.close()
+            return (status, reason, response_str)
+        except Exception as e:
+            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
+            return (status, reason, errmsg)
+
+    def get_result_data(self, transactions, response_dict):
+        result_list = list()
+        if "classifications" in response_dict:
+            for i, input_row in enumerate(response_dict["classifications"]):
+                result_list.append(dict())
+                for field in self.fieldnames_response:
+                    if field in response_dict["classifications"][i]:
+                        result_list[i][field] =  response_dict["classifications"][i][field]
         return result_list
 
 
-    def trx_classification(self, request_filename, response_filename):
-        json_data = dict()
+class Castlight:
 
-        extension = os.path.splitext(request_filename)[1]
+    def __init__(self, api_version=SupportedAPIs.CastlightAPIv1, test_mode=True):
+        # Initiate Logger
+        logging.basicConfig(filename='Castlight.log', level=logging.DEBUG)
+        logging.info('Program started.')
+        self.api_version = api_version
+        self.test_mode = test_mode
+        self.api = APIFactory.create_api(api_version)
+        logging.debug(type(self.api))
+        self.file_handler = util.FileHandler()
+
+
+    def read_transactions(self, input_filename):
+        input_data = dict()
+        transactions = []
+
+        extension = os.path.splitext(input_filename)[1]
         if extension == '.csv' or extension == '.txt':
-            transactions = self.read_csv_file(request_filename)
-            json_data["transactions"] = transactions
+            input_data = self.file_handler.read_csv_file(input_filename, self.api.fieldnames_request)
         elif extension == '.json':
-            json_data = self.read_json_file(request_filename)
-        self.print_request_data(self.headers, self.request, json_data, transactions)
-        if self.api_call == False:
-            print("\nACTION: No request fired!")
-            pass
-        else:
-            response_str = self.call_api(self.request, json.dumps(json_data), self.headers)
-            response_dict = dict()
+            input_data = self.file_handler.read_json_file(input_filename)
 
-            if response_str:
-                print("\nRESPONSE: ", response_str)
-                response_dict = json.loads(response_str)
+        return input_data
 
-            if response_dict:
-                time_taken = response_dict["time_taken"]
-                print("TIME-TAKEN: ", time_taken)
-                print("\nRESPONSE-JSON: ", json.dumps(response_dict, sort_keys=False, indent=4))
+
+    def process_data(self, input_filename, output_filename):
+        data = dict()
+        transactions = list()
+        categories = dict()
+        result_data = dict()
+
+        # --- Read input transactions from file
+        transactions =  self.read_transactions(input_filename)
+        data["transactions"] = transactions
+
+        # Log what we are going to send
+        self.api.log_input_data(data, transactions)
+
+        # If the programm is running in test mode stop here
+        if self.test_mode == True:
+            logging.warning("Program runs in test mode. No API calls to be performed. Program stopped.")
+            quit()  # quit at this point
+
+        # --- Categorise Transactions using API version 1
+        if self.api_version == SupportedAPIs.CastlightAPIv1:
+            response_str = self.api.categorise_transactions(json.dumps(data))
+            logging.info("RESPONSE: " + response_str)
+            categories = json.loads(response_str)
+            logging.debug("RESPONSE-JSON: " + json.dumps(categories, sort_keys=False, indent=4))
+            if "time_taken" in categories:
+                time_taken = categories["time_taken"]
+                logging.info("TIME-TAKEN: " + str(time_taken))
 
                 try:
-                    result_data = {}
-                    result_data = self.merge_result_data(transactions, response_dict)
+                    result_data = self.api.get_result_data(transactions, categories)
                 except ResponseMissingEntries as e:
-                    print("\nEXCEPTION: ".format(e.super().message))
+                    logging.error("EXCEPTION: ".format(e.super().message))
 
-                # Write the output file
-                if result_data:
-                    self.write_csv_file(result_data, self.fieldnames_request + self.fieldnames_response, response_filename)
+        # --- Categorise Transactions using API version 2
+        if self.api_version == SupportedAPIs.CastlightAPIv2:
 
+            # 1. Categorise Transactions (Start Job on Server)
+            (status_post, msg_post, operation_id) = self.api.categorise_transactions(json.dumps(data))
+            logging.info("RESPONSE: " + str(status_post) + msg_post + '{' + operation_id + '}')
+            if status_post == 201: # Created
+                # 2. Get Categorised Transactions
+                while True:
+                    msg = "Waiting " + str(WAIT) + " seconds for Categorisation Job on server to be finished ..."
+                    logging.info(msg)
+                    print(msg)
+                    time.sleep(WAIT)
+                    (status_get, msg_get, response_str) = self.api.get_categorised_transactions(operation_id)
+                    logging.info(response_str)
+
+                    if status_get == 200: # OK
+                        logging.info("STATUS-GET: " + str(status_get))
+                        logging.debug("RESPONSE-JSON: " + json.dumps(response_str, sort_keys=False, indent=4))
+                        categorised_transactions = json.loads(response_str)
+                        try:
+                            result_data = self.api.get_result_data(transactions, categorised_transactions)
+                        except ResponseMissingEntries as e:
+                            logging.error("EXCEPTION: ".format(e.super().message))
+                        msg = "Categorisation Job on server finished successfully."
+                        logging.info(msg)
+                        print(msg)
+                        break
+                    else:
+                        logging.error("GET Categorised Transactions failed: " + status_get + " - " + msg_get)
+            else:
+                logging.error("Categorise Transactions (POST) failed: " + status_post + " - " + msg_post)
+        # --- Write the output file
+        if result_data:
+            self.file_handler.write_csv_file(result_data, self.api.fieldnames_request + self.api.fieldnames_response, output_filename)
 
 def user_input():
 
@@ -194,44 +305,41 @@ def user_input():
     print ("-----------------------------------")
     input_api_version = input("API Version [1|2]: ")
     if input_api_version == "1":
-        api_version = API_VERSION_1
+        api_version = SupportedAPIs.CastlightAPIv1
     elif input_api_version == "2":
-        api_version = API_VERSION_2
+        api_version = SupportedAPIs.CastlightAPIv2
     else:
         print("No valid input. Program stopped.")
         quit()  # quit at this point
     input_api_call = input("Do HTTP Request [y|n]")
     if input_api_call == "y":
-        api_call = True
+        test_mode = False
     elif input_api_call == "n":
-        api_call = False
+        test_mode = True
     else:
         print("No valid input. Program stopped.")
         quit()  # quit at this point
     print ("-----------------------------------")
-    return (api_version, api_call)
+    return (api_version, test_mode)
 
 
 def main():
     # Get user input
-    (api_version, api_call) = user_input()
+    (api_version, test_mode) = user_input()
 
-    myCastlight = Castlight(api_version, api_call=api_call)
-    # myCastlight = Castlight(API_VERSION_1, api_call=True)
+    myCastlight = Castlight(api_version, test_mode=test_mode)
 
-    if myCastlight.api_version == API_VERSION_1:
-        file_in = "request_v1.csv"
-        file_out = "response_v1.csv"
-    elif myCastlight.api_version == API_VERSION_2:
-        file_in = "request_v2.csv"
-        file_out = "response_v2.csv"
+    if myCastlight.api_version == SupportedAPIs.CastlightAPIv1:
+        file_in = "APIv1_Request.csv"
+        file_out = "APIv1_Response.csv"
+    elif myCastlight.api_version == SupportedAPIs.CastlightAPIv2:
+        file_in = "APIv2_Request.csv"
+        file_out = "APIv2_Response.csv"
 
-    print("API-VERSION:", myCastlight.api_version)
-    print("API-CALL:", str(myCastlight.api_call))
-    print("FILE-IN:", file_in)
-    print("FILE-OUT:", file_out)
+    logging.info("FILE-IN: " + file_in)
+    logging.info("FILE-OUT: " + file_out)
 
-    myCastlight.trx_classification(file_in, file_out)
+    myCastlight.process_data(file_in, file_out)
 
 
 if __name__ == '__main__':
