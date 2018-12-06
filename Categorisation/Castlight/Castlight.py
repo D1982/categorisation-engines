@@ -292,7 +292,7 @@ class Castlight:
                         print(msg)
                         break
                     else:
-                        logging.error("GET Categorised Transactions failed: " + status_get + " - " + msg_get)
+                        logging.error("GET Categorised Transactions failed: " + str(status_get) + " - " + str(msg_get))
             else:
                 logging.error("Categorise Transactions (POST) failed: " + status_post + " - " + msg_post)
         # --- Write the output file
@@ -333,8 +333,8 @@ def main():
         file_in = "APIv1_Request.csv"
         file_out = "APIv1_Response.csv"
     elif myCastlight.api_version == SupportedAPIs.CastlightAPIv2:
-        file_in = "APIv2_Request.csv"
-        file_out = "APIv2_Response.csv"
+        file_in = "APIv2_N26_Request.csv"
+        file_out = "APIv2_N26_Response.csv"
 
     logging.info("FILE-IN: " + file_in)
     logging.info("FILE-OUT: " + file_out)
