@@ -330,11 +330,11 @@ def main():
     myCastlight = Castlight(api_version, test_mode=test_mode)
 
     if myCastlight.api_version == SupportedAPIs.CastlightAPIv1:
-        file_in = "APIv1_Request.csv"
-        file_out = "APIv1_Response.csv"
+        file_in = "csv/APIv1_Request.csv"
+        file_out = "csv/APIv1_Response.csv"
     elif myCastlight.api_version == SupportedAPIs.CastlightAPIv2:
-        file_in = "APIv2_N26_Request.csv"
-        file_out = "APIv2_N26_Response.csv"
+        file_in = "csv/APIv2_Request.csv"
+        file_out = "csv/APIv2_Response.csv"
 
     logging.info("FILE-IN: " + file_in)
     logging.info("FILE-OUT: " + file_out)
