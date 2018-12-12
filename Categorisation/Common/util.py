@@ -9,7 +9,7 @@ import json
 import os.path
 
 
-CSV_DELIMITER = ',' # Standard Delimiter
+CSV_DELIMITER = ';' # Standard Delimiter
 
 class FileHandler:
 
@@ -29,7 +29,7 @@ class FileHandler:
         extension = os.path.splitext(filename)[1]
         if extension == '.csv' or extension == '.txt':
             csvfile = open(filename, 'r')
-            csvreader = csv.DictReader(csvfile, fieldnames)
+            csvreader = csv.DictReader(csvfile, delimiter=CSV_DELIMITER, fieldnames=fieldnames)
             csv_data = []
             if skip_header == True:
                 next(csvreader)  # This skips the first row of the CSV file
@@ -39,7 +39,7 @@ class FileHandler:
 
     def write_csv_file(self, data, fieldnames, filename):
         csvfile = open(filename, 'w')
-        csvwriter = csv.DictWriter(csvfile, fieldnames)
+        csvwriter = csv.DictWriter(csvfile, delimiter=CSV_DELIMITER, fieldnames=fieldnames)
         csvwriter.writeheader()
         for rec in data:
             csvwriter.writerow(rec)
