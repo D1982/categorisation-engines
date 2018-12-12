@@ -1,11 +1,11 @@
-transaction_id,customer_id,transaction_date,type,description,amount
-1111,4711,2018-02-11 11:01:32,credit,DOCKLANDS Light RAILWA,20.3
-2222,4711,2018-02-12 16:02:55,credit,Salery,10530.43
-3333,4712,2018-02-11 11:02:33,debit,Citadines TRAFALGA,15.8
-4444,4711,2018-02-11 11:05:57,debit,Lemon Tree,50.05
-5555,4711,2018-02-10 07:06:11,debit,Starbucks,13.12
-6666,4712,2018-02-12 11:02:51,debit,LTR UK London City,67.2
-7777,4713,2018-02-11 15:04:52,debit,PRET A MANGER,12.85
-8888,4711,2018-02-09 11:02:42,debit,Princess of Wales,12.88
-9999,4713,2018-02-11 22:02:44,debit,The Wellington,6.7
-1010,4711,2018-02-08 19:08:10,debit,Boots 1629,29.9
+transaction_id;customer_id;transaction_date;type;description;amount
+1111;4711;2018-02-11 11:01:32;credit;DOCKLANDS Light RAILWA;20.3
+2222;4711;2018-02-12 16:02:55;credit;Salery;10530.43
+3333;4712;2018-02-11 11:02:33;debit;Citadines TRAFALGA;15.8
+4444;4711;2018-02-11 11:05:57;debit;Lemon Tree;50.05
+5555;4711;2018-02-10 07:06:11;debit;Starbucks;13.12
+6666;4712;2018-02-12 11:02:51;debit;LTR UK London City;67.2
+7777;4713;2018-02-11 15:04:52;debit;PRET A MANGER;12.85
+8888;4711;2018-02-09 11:02:42;debit;Princess of Wales;12.88
+9999;4713;2018-02-11 22:02:44;debit;The Wellington;6.7
+1010;4711;2018-02-08 19:08:10;debit;Boots 1629;29.9
