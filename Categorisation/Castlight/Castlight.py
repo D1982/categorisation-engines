@@ -33,7 +33,14 @@ class ResponseMissingEntries(Exception):
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
+        self.text = message
 
+
+class TestModeWarning(Exception):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+        self.text = message
 
 class APIFactory:
     @staticmethod
@@ -245,8 +252,9 @@ class Castlight:
 
         # If the programm is running in test mode stop here
         if self.test_mode == True:
-            logging.warning("Program runs in test mode. No API calls to be performed. Program stopped.")
-            quit()  # quit at this point
+            msg = "Program runs in test mode. No API calls to be performed. Program stopped."
+            logging.warning(msg)
+            raise TestModeWarning(msg)
 
         # --- Categorise Transactions using API version 1
         if self.api_version == SupportedAPIs.CastlightAPIv1:
@@ -261,7 +269,7 @@ class Castlight:
                 try:
                     result_data = self.api.get_result_data(transactions, categories)
                 except ResponseMissingEntries as e:
-                    logging.error("EXCEPTION: ".format(e.super().message))
+                    logging.error("EXCEPTION: " + e.text)
 
         # --- Categorise Transactions using API version 2
         if self.api_version == SupportedAPIs.CastlightAPIv2:
@@ -286,7 +294,7 @@ class Castlight:
                         try:
                             result_data = self.api.get_result_data(transactions, categorised_transactions)
                         except ResponseMissingEntries as e:
-                            logging.error("EXCEPTION: ".format(e.super().message))
+                            logging.error("EXCEPTION: " + e.text)
                         msg = "Categorisation Job on server finished successfully."
                         logging.info(msg)
                         print(msg)
@@ -333,13 +341,24 @@ def main():
         file_in = "csv/APIv1_Request.csv"
         file_out = "csv/APIv1_Response.csv"
     elif myCastlight.api_version == SupportedAPIs.CastlightAPIv2:
-        file_in = "csv/APIv2_Request.csv"
-        file_out = "csv/APIv2_Response.csv"
+        file_in = "xcsv/APIv2_Request.csv"
+        file_out = "xcsv/APIv2_Response.csv"
 
-    logging.info("FILE-IN: " + file_in)
-    logging.info("FILE-OUT: " + file_out)
+        logging.info("FILE-IN: " + file_in)
+        logging.info("FILE-OUT: " + file_out)
 
-    myCastlight.process_data(file_in, file_out)
+    try:
+        myCastlight.process_data(file_in, file_out)
+        print("Data processed successfully")
+    except TestModeWarning as t:
+        msg = "Warning: " + t.text
+        logging.warning(msg)
+        print(msg)
+        quit(0) # quit at this point
+    except Exception as e:
+        errmsg = "[Errno {0}] {1}".format(e.errno, e.strerror)
+        logging.error(errmsg)
+        print("Error: " + errmsg)
 
 
 if __name__ == '__main__':
