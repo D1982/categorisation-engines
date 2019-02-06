@@ -1,0 +1,11 @@
+type;description;amount;categorisation_method;category;low_confidence;probability;subcategory
+credit;DOCKLANDS Light RAILWA;20.3;caas;refunds;True;0.0;returned purchase
+credit;Salary;10530.43;caas;income;False;1.0;salary
+debit;Citadines TRAFALGA;15.8;caas;transfer_out;False;1.0;transfer_out
+debit;Lemon Tree;50.05;caas;food_and_dining;False;1.0;restaurants
+debit;Starbucks;13.12;caas;food_and_dining;False;1.0;coffee shops
+debit;LTR UK London City;67.2;caas;shopping;True;0.0;department store
+debit;PRET A MANGER;12.85;caas;food_and_dining;False;1.0;coffee shops
+debit;Princess of Wales;12.88;caas;food_and_dining;True;0.0;pubs & clubs
+debit;The Wellington;6.7;caas;food_and_dining;False;1.0;pubs & clubs
+debit;Boots 1629;29.9;caas;health_and_fitness;False;1.0;pharmacy
