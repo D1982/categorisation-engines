@@ -6,6 +6,8 @@ LINKS:
 Logging HOWTO: https://docs.python.org/2/howto/logging.html
 Castlight Developer Portal: https://develop.castlightfinancial.com
 Creating a hypermedia-driven RESTful web service: https://openliberty.io/guides/rest-hateoas.html
+Python DOCS (HTTPSConnection.set_tunnel): https://docs.python.org/3.4/library/http.client.html
+
 """
 from enum import Enum
 import Categorisation.Common.util as util
@@ -22,7 +24,10 @@ import sys
 import time
 
 URL = "gateway.castlightfinancial.com"
-WAIT = 3
+USE_PROXY = True
+PROXY_URL = "11.112.142.4"
+PROXY_PORT = 8080
+WAIT = 5
 
 class SupportedAPIs(Enum):
     CastlightAPIv1 = 'CastlightAPIv1'
@@ -64,6 +69,29 @@ class CastlightAPI:
         self.params = urllib.parse.urlencode({})
 
 
+    def connect(self, use_proxy=False):
+        try:
+            # Establish HTTPSConnection
+            if not use_proxy:
+                conn = http.client.HTTPSConnection(URL)
+            else:
+                logging.info("Establishing a HTTPSConnection with proxy server "+PROXY_URL+":"+str(PROXY_PORT))
+                conn = http.client.HTTPSConnection(PROXY_URL, PROXY_PORT, timeout=WAIT)
+                logging.info("Tunneling to API endpoint " + URL)
+                conn.set_tunnel(URL)
+
+            if conn == None:
+                raise ConnectionError
+            else:
+                return conn
+
+        except Exception as e:
+            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
+            logging.info(errmsg)
+            print(errmsg)
+            quit()
+
+
     def log_input_data(self, json_data, transactions=None):
         logging.debug("JSON: " + json.dumps(json_data, sort_keys=False, indent=4))
         logging.debug("TRANSACTIONS: ")
@@ -97,8 +125,13 @@ class CastlightAPIv1(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = http.client.HTTPSConnection(URL)
-            conn.request("POST", request , json_string, self.headers)
+            conn = self.connect(use_proxy=USE_PROXY)
+
+            # Fire Request
+            logging.info("Firing the Request...")
+            conn.request("POST", request, json_string, self.headers)
+            # Get Response
+            logging.info("Getting the Response...")
             response = conn.getresponse()
             # Convert bytes to string type
             response_str = response.read().decode('utf-8')
@@ -110,9 +143,10 @@ class CastlightAPIv1(CastlightAPI):
             else:
                 return "Not received any response => {s}, {r}".format(s=response_status, r=response_reason)
         except Exception as e:
-            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
+            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
+            logging.info(errmsg)
             print(errmsg)
-            return errmsg
+            quit()
 
 
     def get_result_data(self, transactions, response_dict):
@@ -152,7 +186,7 @@ class CastlightAPIv2(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = http.client.HTTPSConnection(URL)
+            conn = self.connect(use_proxy=USE_PROXY)
             conn.request("POST", request, json_string, self.headers)
             response = conn.getresponse()
             status = response.status
@@ -160,11 +194,14 @@ class CastlightAPIv2(CastlightAPI):
             # Use this for API calls e.g. to get status of TRX processing and to get the categories back
             location = response.getheader("Location")
             operation_id = location.rsplit('/',1)[1]
-            logging.info("OPERATION_ID; " + operation_id)
+            logging.info("OPERATION_ID: " + operation_id)
+            print("OPERATION_ID: " + operation_id)
             conn.close()
             return (status, reason, operation_id)
         except Exception as e:
-            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
+            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
+            logging.info(errmsg)
+            print(errmsg)
             return (500, errmsg, operation_id)
 
 
@@ -187,7 +224,7 @@ class CastlightAPIv2(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = http.client.HTTPSConnection(URL)
+            conn = self.connect(use_proxy=USE_PROXY)
             conn.request("GET", request, None, headers)
             response = conn.getresponse()
             status = response.status
@@ -197,7 +234,11 @@ class CastlightAPIv2(CastlightAPI):
             conn.close()
             return (status, reason, response_str)
         except Exception as e:
-            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
+            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
+            logging.info(errmsg)
+            print(errmsg)
+
+
             return (status, reason, errmsg)
 
     def get_result_data(self, transactions, response_dict):
@@ -341,8 +382,8 @@ def main():
         file_in = "csv/APIv1_Request.csv"
         file_out = "csv/APIv1_Response.csv"
     elif myCastlight.api_version == SupportedAPIs.CastlightAPIv2:
-        file_in = "xcsv/APIv2_Request.csv"
-        file_out = "xcsv/APIv2_Response.csv"
+        file_in = "csv/CastlightClientDataPoC_Request.csv"
+        file_out = "csv/CastlightClientDataPoC_Response.csv"
 
         logging.info("FILE-IN: " + file_in)
         logging.info("FILE-OUT: " + file_out)
@@ -363,3 +404,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
