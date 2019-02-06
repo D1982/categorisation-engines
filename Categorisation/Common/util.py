@@ -1,6 +1,6 @@
 """Common utilities
 
-Basic utilities e.g. for dealing with files (CSV, JSON).
+Basic utilities e.g. for dealing with files (csv, JSON).
 Working With JSON Data in Python: https://realpython.com/python-json/
 
 """
@@ -9,7 +9,7 @@ import json
 import os.path
 
 
-CSV_DELIMITER = ',' # Standard Delimiter
+CSV_DELIMITER = ';' # Standard Delimiter
 
 class FileHandler:
 
@@ -29,17 +29,17 @@ class FileHandler:
         extension = os.path.splitext(filename)[1]
         if extension == '.csv' or extension == '.txt':
             csvfile = open(filename, 'r')
-            csvreader = csv.DictReader(csvfile, fieldnames)
+            csvreader = csv.DictReader(csvfile, delimiter=CSV_DELIMITER, fieldnames=fieldnames)
             csv_data = []
             if skip_header == True:
-                next(csvreader)  # This skips the first row of the CSV file
+                next(csvreader)  # This skips the first row of the csv file
             for row in csvreader:
                 csv_data.append(row)
         return csv_data
 
     def write_csv_file(self, data, fieldnames, filename):
         csvfile = open(filename, 'w')
-        csvwriter = csv.DictWriter(csvfile, fieldnames)
+        csvwriter = csv.DictWriter(csvfile, delimiter=CSV_DELIMITER, fieldnames=fieldnames)
         csvwriter.writeheader()
         for rec in data:
             csvwriter.writerow(rec)
