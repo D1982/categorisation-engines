@@ -6,8 +6,6 @@ LINKS:
 Logging HOWTO: https://docs.python.org/2/howto/logging.html
 Castlight Developer Portal: https://develop.castlightfinancial.com
 Creating a hypermedia-driven RESTful web service: https://openliberty.io/guides/rest-hateoas.html
-Python DOCS (HTTPSConnection.set_tunnel): https://docs.python.org/3.4/library/http.client.html
-
 """
 from enum import Enum
 import Categorisation.Common.util as util
@@ -24,10 +22,7 @@ import sys
 import time
 
 URL = "gateway.castlightfinancial.com"
-USE_PROXY = True
-PROXY_URL = "11.112.142.4"
-PROXY_PORT = 8080
-WAIT = 5
+WAIT = 3
 
 class SupportedAPIs(Enum):
     CastlightAPIv1 = 'CastlightAPIv1'
@@ -38,14 +33,7 @@ class ResponseMissingEntries(Exception):
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
-        self.text = message
 
-
-class TestModeWarning(Exception):
-    def __init__(self, message):
-        # Call the base class constructor with the parameters it needs
-        super().__init__(message)
-        self.text = message
 
 class APIFactory:
     @staticmethod
@@ -67,29 +55,6 @@ class CastlightAPI:
         self.headers['Ocp-Apim-Subscription-Key'] = self.config.api_headers['Ocp-Apim-Subscription-Key']
         logging.debug("Ocp-Apim-Subscription-Key: " + self.headers['Ocp-Apim-Subscription-Key'])
         self.params = urllib.parse.urlencode({})
-
-
-    def connect(self, use_proxy=False):
-        try:
-            # Establish HTTPSConnection
-            if not use_proxy:
-                conn = http.client.HTTPSConnection(URL)
-            else:
-                logging.info("Establishing a HTTPSConnection with proxy server "+PROXY_URL+":"+str(PROXY_PORT))
-                conn = http.client.HTTPSConnection(PROXY_URL, PROXY_PORT, timeout=WAIT)
-                logging.info("Tunneling to API endpoint " + URL)
-                conn.set_tunnel(URL)
-
-            if conn == None:
-                raise ConnectionError
-            else:
-                return conn
-
-        except Exception as e:
-            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
-            logging.info(errmsg)
-            print(errmsg)
-            quit()
 
 
     def log_input_data(self, json_data, transactions=None):
@@ -125,13 +90,8 @@ class CastlightAPIv1(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = self.connect(use_proxy=USE_PROXY)
-
-            # Fire Request
-            logging.info("Firing the Request...")
-            conn.request("POST", request, json_string, self.headers)
-            # Get Response
-            logging.info("Getting the Response...")
+            conn = http.client.HTTPSConnection(URL)
+            conn.request("POST", request , json_string, self.headers)
             response = conn.getresponse()
             # Convert bytes to string type
             response_str = response.read().decode('utf-8')
@@ -143,10 +103,9 @@ class CastlightAPIv1(CastlightAPI):
             else:
                 return "Not received any response => {s}, {r}".format(s=response_status, r=response_reason)
         except Exception as e:
-            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
-            logging.info(errmsg)
+            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
             print(errmsg)
-            quit()
+            return errmsg
 
 
     def get_result_data(self, transactions, response_dict):
@@ -186,7 +145,7 @@ class CastlightAPIv2(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = self.connect(use_proxy=USE_PROXY)
+            conn = http.client.HTTPSConnection(URL)
             conn.request("POST", request, json_string, self.headers)
             response = conn.getresponse()
             status = response.status
@@ -194,14 +153,11 @@ class CastlightAPIv2(CastlightAPI):
             # Use this for API calls e.g. to get status of TRX processing and to get the categories back
             location = response.getheader("Location")
             operation_id = location.rsplit('/',1)[1]
-            logging.info("OPERATION_ID: " + operation_id)
-            print("OPERATION_ID: " + operation_id)
+            logging.info("OPERATION_ID; " + operation_id)
             conn.close()
             return (status, reason, operation_id)
         except Exception as e:
-            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
-            logging.info(errmsg)
-            print(errmsg)
+            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
             return (500, errmsg, operation_id)
 
 
@@ -224,7 +180,7 @@ class CastlightAPIv2(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = self.connect(use_proxy=USE_PROXY)
+            conn = http.client.HTTPSConnection(URL)
             conn.request("GET", request, None, headers)
             response = conn.getresponse()
             status = response.status
@@ -234,11 +190,7 @@ class CastlightAPIv2(CastlightAPI):
             conn.close()
             return (status, reason, response_str)
         except Exception as e:
-            errmsg = "Error:{0} {1}".format(e.errno or "", e.strerror or e.args[0])
-            logging.info(errmsg)
-            print(errmsg)
-
-
+            errmsg = "\n[Errno {0}] {1}".format(e.errno, e.strerror)
             return (status, reason, errmsg)
 
     def get_result_data(self, transactions, response_dict):
@@ -293,9 +245,8 @@ class Castlight:
 
         # If the programm is running in test mode stop here
         if self.test_mode == True:
-            msg = "Program runs in test mode. No API calls to be performed. Program stopped."
-            logging.warning(msg)
-            raise TestModeWarning(msg)
+            logging.warning("Program runs in test mode. No API calls to be performed. Program stopped.")
+            quit()  # quit at this point
 
         # --- Categorise Transactions using API version 1
         if self.api_version == SupportedAPIs.CastlightAPIv1:
@@ -310,7 +261,7 @@ class Castlight:
                 try:
                     result_data = self.api.get_result_data(transactions, categories)
                 except ResponseMissingEntries as e:
-                    logging.error("EXCEPTION: " + e.text)
+                    logging.error("EXCEPTION: ".format(e.super().message))
 
         # --- Categorise Transactions using API version 2
         if self.api_version == SupportedAPIs.CastlightAPIv2:
@@ -335,13 +286,13 @@ class Castlight:
                         try:
                             result_data = self.api.get_result_data(transactions, categorised_transactions)
                         except ResponseMissingEntries as e:
-                            logging.error("EXCEPTION: " + e.text)
+                            logging.error("EXCEPTION: ".format(e.super().message))
                         msg = "Categorisation Job on server finished successfully."
                         logging.info(msg)
                         print(msg)
                         break
                     else:
-                        logging.error("GET Categorised Transactions failed: " + str(status_get) + " - " + str(msg_get))
+                        logging.error("GET Categorised Transactions failed: " + status_get + " - " + msg_get)
             else:
                 logging.error("Categorise Transactions (POST) failed: " + status_post + " - " + msg_post)
         # --- Write the output file
@@ -379,29 +330,17 @@ def main():
     myCastlight = Castlight(api_version, test_mode=test_mode)
 
     if myCastlight.api_version == SupportedAPIs.CastlightAPIv1:
-        file_in = "csv/APIv1_Request.csv"
-        file_out = "csv/APIv1_Response.csv"
+        file_in = "APIv1_Request.csv"
+        file_out = "APIv1_Response.csv"
     elif myCastlight.api_version == SupportedAPIs.CastlightAPIv2:
-        file_in = "csv/CastlightClientDataPoC_Request.csv"
-        file_out = "csv/CastlightClientDataPoC_Response.csv"
+        file_in = "APIv2_Request.csv"
+        file_out = "APIv2_Response.csv"
 
-        logging.info("FILE-IN: " + file_in)
-        logging.info("FILE-OUT: " + file_out)
+    logging.info("FILE-IN: " + file_in)
+    logging.info("FILE-OUT: " + file_out)
 
-    try:
-        myCastlight.process_data(file_in, file_out)
-        print("Data processed successfully")
-    except TestModeWarning as t:
-        msg = "Warning: " + t.text
-        logging.warning(msg)
-        print(msg)
-        quit(0) # quit at this point
-    except Exception as e:
-        errmsg = "[Errno {0}] {1}".format(e.errno, e.strerror)
-        logging.error(errmsg)
-        print("Error: " + errmsg)
+    myCastlight.process_data(file_in, file_out)
 
 
 if __name__ == '__main__':
     main()
-
