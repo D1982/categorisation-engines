@@ -1,16 +1,15 @@
-"""Common utilities
+""" Common utilities
 
 Basic utilities e.g. for dealing with files (csv, JSON).
 Working With JSON Data in Python: https://realpython.com/python-json/
 
 """
+import Categorisation.Common.config as cfg
+
 import csv
 import json
 import os.path
-import requests
 
-
-CSV_DELIMITER = ';' # Standard Delimiter
 
 class FileHandler:
 
@@ -30,7 +29,7 @@ class FileHandler:
         extension = os.path.splitext(filename)[1]
         if extension == '.csv' or extension == '.txt':
             csvfile = open(filename, 'r')
-            csvreader = csv.DictReader(csvfile, delimiter=CSV_DELIMITER, fieldnames=fieldnames)
+            csvreader = csv.DictReader(csvfile, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
             csv_data = []
             if skip_header == True:
                 next(csvreader)  # This skips the first row of the csv file
@@ -40,19 +39,7 @@ class FileHandler:
 
     def write_csv_file(self, data, fieldnames, filename):
         csvfile = open(filename, 'w')
-        csvwriter = csv.DictWriter(csvfile, delimiter=CSV_DELIMITER, fieldnames=fieldnames)
+        csvwriter = csv.DictWriter(csvfile, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
         csvwriter.writeheader()
         for rec in data:
             csvwriter.writerow(rec)
-
-
-class DataGenerator:
-    def __init__(self):
-        pass
-
-
-class ResponseMissingEntriesError(Exception):
-    def __init__(self, message):
-
-        # Call the base class constructor with the parameters it needs
-        super().__init__(message)
