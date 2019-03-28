@@ -7,7 +7,7 @@ Logging HOWTO: https://docs.python.org/2/howto/logging.html
 Castlight Developer Portal: https://develop.castlightfinancial.com
 Creating a hypermedia-driven RESTful web service: https://openliberty.io/guides/rest-hateoas.html
 """
-from enum import Enum
+
 import Categorisation.Common.util as util
 import Categorisation.Common.config as cfg
 
@@ -21,8 +21,8 @@ import logging
 import sys
 import time
 
-URL = "gateway.castlightfinancial.com"
-WAIT = 3
+from enum import Enum
+
 
 class SupportedAPIs(Enum):
     CastlightAPIv1 = 'CastlightAPIv1'
@@ -80,7 +80,7 @@ class CastlightAPI:
             for i, fname in enumerate(self.fieldnames_request):
                 rec = rec + str(trx[fname])
                 if i < len(self.fieldnames_request)-1: # Skip delimiter for last element
-                    rec = rec + util.CSV_DELIMITER
+                    rec = rec + cfg.CSV_DELIMITER
             logging.info(rec)
 
 
@@ -105,7 +105,7 @@ class CastlightAPIv1(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = http.client.HTTPSConnection(URL)
+            conn = http.client.HTTPSConnection(cfg.URL)
             conn.request("POST", request , json_string, self.headers)
             response = conn.getresponse()
             # Convert bytes to string type
@@ -160,14 +160,15 @@ class CastlightAPIv2(CastlightAPI):
         logging.info(str(__class__.__name__) + "." + sys._getframe().f_code.co_name + ".VAR:request = " + request)
 
         try:
-            conn = http.client.HTTPSConnection(URL)
+            conn = http.client.HTTPSConnection(cfg.URL)
             conn.request("POST", request, json_string, self.headers)
             response = conn.getresponse()
             status = response.status
             reason = response.reason
             # Use this for API calls e.g. to get status of TRX processing and to get the categories back
             location = response.getheader("Location")
-            operation_id = location.rsplit('/',1)[1]
+            if operation_id:
+                operation_id = location.rsplit('/',1)[1]
             logging.info("OPERATION_ID; " + operation_id)
             conn.close()
             return (status, reason, operation_id)
@@ -288,10 +289,10 @@ class Castlight:
             if status_post == 201: # Created
                 # 2. Get Categorised Transactions
                 while True:
-                    msg = "Waiting " + str(WAIT) + " seconds for Categorisation Job on server to be finished ..."
+                    msg = "Waiting " + str(cfg.WAIT) + " seconds for Categorisation Job on server to be finished ..."
                     logging.info(msg)
                     print(msg)
-                    time.sleep(WAIT)
+                    time.sleep(cfg.WAIT)
                     (status_get, msg_get, response_str) = self.api.get_categorised_transactions(operation_id)
                     logging.info(response_str)
 
@@ -310,7 +311,7 @@ class Castlight:
                     else:
                         logging.error("GET Categorised Transactions failed: " + str(status_get) + " - " + str(msg_get))
             else:
-                logging.error("Categorise Transactions (POST) failed: " + status_post + " - " + msg_post)
+                logging.error("Categorise Transactions (POST) failed: " + str(status_post) + " - " + msg_post)
         # --- Write the output file
         if result_data:
             self.file_handler.write_csv_file(result_data, self.api.fieldnames_request + self.api.fieldnames_response, output_filename)
