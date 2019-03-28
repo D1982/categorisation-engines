@@ -1,6 +1,6 @@
 """ Common utilities
 
-Basic utilities e.g. for dealing with files (csv, JSON).
+Basic utilities e.g. for dealing with files (data, JSON).
 Working With JSON Data in Python: https://realpython.com/python-json/
 
 """
@@ -27,12 +27,12 @@ class FileHandler:
 
     def read_csv_file(self, filename, fieldnames, skip_header=True):
         extension = os.path.splitext(filename)[1]
-        if extension == '.csv' or extension == '.txt':
+        if extension == '.data' or extension == '.txt':
             csvfile = open(filename, 'r')
             csvreader = csv.DictReader(csvfile, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
             csv_data = []
             if skip_header == True:
-                next(csvreader)  # This skips the first row of the csv file
+                next(csvreader)  # This skips the first row of the data file
             for row in csvreader:
                 csv_data.append(row)
         return csv_data
