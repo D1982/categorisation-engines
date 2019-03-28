@@ -6,7 +6,7 @@ from enum import Enum
 
 CSV_DELIMITER = ';' # Standard Delimiter
 
-USE_PROXY = True
+USE_PROXY = False
 
 PROXY_URL = "11.112.142.4"
 
