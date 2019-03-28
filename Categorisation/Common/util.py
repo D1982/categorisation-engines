@@ -1,12 +1,13 @@
 """Common utilities
 
-Basic utilities e.g. for dealing with files (CSV, JSON).
+Basic utilities e.g. for dealing with files (csv, JSON).
 Working With JSON Data in Python: https://realpython.com/python-json/
 
 """
 import csv
 import json
 import os.path
+import requests
 
 
 CSV_DELIMITER = ';' # Standard Delimiter
@@ -32,7 +33,7 @@ class FileHandler:
             csvreader = csv.DictReader(csvfile, delimiter=CSV_DELIMITER, fieldnames=fieldnames)
             csv_data = []
             if skip_header == True:
-                next(csvreader)  # This skips the first row of the CSV file
+                next(csvreader)  # This skips the first row of the csv file
             for row in csvreader:
                 csv_data.append(row)
         return csv_data
