@@ -215,7 +215,7 @@ class Castlight:
 
     def __init__(self, api_version=SupportedAPIs.CastlightAPIv1, test_mode=True):
         # Initiate Logger
-        logging.basicConfig(filename='Castlight.log', level=logging.DEBUG)
+        logging.basicConfig(filename='castlight.log', level=logging.DEBUG)
         logging.info('Program started.')
         self.api_version = api_version
         self.test_mode = test_mode
@@ -341,8 +341,8 @@ def main():
         file_in = "csv/APIv1_Request.csv"
         file_out = "csv/APIv1_Response.csv"
     elif myCastlight.api_version == SupportedAPIs.CastlightAPIv2:
-        file_in = "xcsv/APIv2_Request.csv"
-        file_out = "xcsv/APIv2_Response.csv"
+        file_in = "csv/APIv2_Request_N26.csv"
+        file_out = "csv/APIv2_Response_N26.csv"
 
         logging.info("FILE-IN: " + file_in)
         logging.info("FILE-OUT: " + file_out)
