@@ -4,11 +4,12 @@
 import Categorisation.Common.config as cfg
 import Categorisation.Common.secret as secret
 
+import logging
 import requests
 import json
 
 
-class TinkAPI():
+class TinkAPI:
     def __init__(self):
         self.url_root = cfg.API_URL_TINK
         self.service_group = None
@@ -46,6 +47,8 @@ class CategoryService(TinkAPI):
         super().__init__()
 
     def list_categories(self):
+        self.service_group = '/api/v1/monitoring/'
+        endpoint = self.url_root + '/api/v1/oauth/authorization-grant'
         response = requests.get(url=self.url + '/api/v1/categories')
         content = response.content
         return content
@@ -77,28 +80,34 @@ class OAuthService(TinkAPI):
     """
     def authorize_client_access(self, client_id, client_secret,
                                 grant_type='client_credentials',
-                                scope='accounts:read,transactions:read,user:read'):
+                                scope='authorization:grant,user:create'):
 
-        endpoint = self.url_root + '/api/v1/oauth/authorization-grant'
+        endpoint = self.url_root + '/api/v1/oauth/token'
 
-        payload = dict()
-        payload.update({'client_id': client_id, 'client_secret': client_secret})
-        payload.update({'grant_type': grant_type})
-        payload.update({'scope': scope})
+        data = dict()
+        data.update({'client_id': client_id})
+        data.update({'client_secret': client_secret})
+        data.update({'grant_type': grant_type})
+        data.update({'scope': scope})
 
-        response = requests.post(url=endpoint, data=json.dumps(payload))
-        content = response.content
-        if content:
-            result = json.loads(str(content) or '')
-            access_token = response_dict['access_token']
-            token_type = response_dict['token_type']
-            expires_in = response_dict['expires_in']
-            scope = response_dict['scope']
+        logging.debug('Calling API endpoint {t} using data {d}'.format(t=endpoint, d=data))
 
+        response = requests.post(url=endpoint, data=data)
+        if response.content and response.status_code == 200:
+            response_msg = json.dumps(str(response.content) or '')
+            logging.debug('Response from {t} returned {d}'.format(t=endpoint, d=str(response_msg)))
+
+            response_data = response.json()
+            access_token = response_data['access_token']
+            token_type = response_data['token_type']
+            expires_in = response_data['expires_in']
+            scope = response_data['scope']
         else:
-            result = response.reason + ' ({c})'.format(c=str(response.status_code))
+            response_msg = json.loads(response.text)["message"]
+            result = response.reason + ' ({r}) - {m}'.format(r=str(response.status_code), m=msg)
+            logging.debug('Response from {t} returned no data {r}'.format(t=endpoint, r=str(result)))
 
-        return result
+        return response_msg, access_token or '', token_type or '', expires_in or '', scope or ''
 
     """ 
     Grant access to a user 

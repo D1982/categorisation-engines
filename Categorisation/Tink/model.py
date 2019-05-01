@@ -34,9 +34,19 @@ class TinkModel:
 
     def authentication(self):
         service = api.OAuthService()
-        output1 = service.authorize_client_access(sec.TINK_CLIENT_ID, sec.TINK_CLIENT_SECRET)
+        (response_msg, access_token, token_type, expires_in, scope) =\
+            service.authorize_client_access(sec.TINK_CLIENT_ID, sec.TINK_CLIENT_SECRET)
 
-        return output1
+        result = dict()
+
+        result["message"] = response_msg
+        result["access_token"] = access_token
+        result["token_type"] = token_type
+        result["expires_in"] = expires_in
+        result["scope"] = scope
+
+        return result
+
 
     def get_categories(self):
         service = api.CategoryService()

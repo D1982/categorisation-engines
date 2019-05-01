@@ -1,0 +1,200 @@
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "GET /api/v1/monitoring/ping HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "GET /api/v1/monitoring/healthy HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/authorization-grant using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'accounts:read,transactions:read,user:read'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/authorization-grant HTTP/1.1" 401 0
+DEBUG:root:Response from API endpoint https://api.tink.se/api/v1/oauth/authorization-grant returned no data Unauthorized (401)
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'accounts:read,transactions:read,user:read'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 401 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 401 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 401 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 401 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 401 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 502 138
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 502 138
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "PUT /api/v1/oauth/token HTTP/1.1" 405 0
+DEBUG:chardet.universaldetector:no data received!
+DEBUG:chardet.universaldetector:no probers hit minimum threshold
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using payload {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned no data Bad Request (400) - {
+  "message" : "Can not deserialize instance of java.util.ArrayList out of VALUE_STRING token"
+}
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned no data Bad Request (400) - Can not deserialize instance of java.util.ArrayList out of VALUE_STRING token
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned no data Bad Request (400) - Can not deserialize instance of java.util.ArrayList out of VALUE_STRING token
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned no data Bad Request (400) - Can not deserialize instance of java.util.ArrayList out of VALUE_STRING token
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned no data Bad Request (400) - Can not deserialize instance of java.util.ArrayList out of VALUE_STRING token
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 400 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned no data Bad Request (400) - Can not deserialize instance of java.util.ArrayList out of VALUE_STRING token
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjcxZjdjZmFhLTRmN2EtNDMyNS05NjkyLTdkYWY3MWNmMmYzYSIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2Mzc1ODQsImlhdCI6MTU1NjYzNTc4NCwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.7ZC9H-26KeqLRG5Yjr1066v_rFK4K4HeveiSJol6P-xSqy9JGuA8YipkwN65EBrCE6Mcu-yDq-_icPfpi-63Hg\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjcxZjdjZmFhLTRmN2EtNDMyNS05NjkyLTdkYWY3MWNmMmYzYSIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2Mzc2MDYsImlhdCI6MTU1NjYzNTgwNiwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.i2I2tDvxiqpC7OA7l6BA1n1NwViBPTOiWa3UddmHEJAGp72W_QC9hwBrTrDGcKVqahpb7spKGjU9oLe8LO4DFQ\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBiYzljNGI2LTY5ZjAtNDEyNy1iYWM0LWVmNTE5OGNiMGNmYyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2Mzc3MjcsImlhdCI6MTU1NjYzNTkyNywiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.kFWYehhrQnLOFMFuEvJ1yqnNiKt9zOM1xh2nlT4qk5hspt6ImUwfbEFjAJFhfKHFnTSlCrG0azuLDIuZ-Lzqrw\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBhZmQ3OGVlLWFmZjgtNDg1ZC1iN2UyLTQ5Nzc0ODc2YzU0MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2Mzc3NjksImlhdCI6MTU1NjYzNTk2OSwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.nytB37-cpK0d4RZDVLVYSJeUjtkg9ZmOKoCDZtLZoCeYqRh0e1ekfgcnm0zb4Xva3OQn0rO_xy2K5VyQsyurgA\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBhZmQ3OGVlLWFmZjgtNDg1ZC1iN2UyLTQ5Nzc0ODc2YzU0MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2MzgxOTEsImlhdCI6MTU1NjYzNjM5MSwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.j6mqbs6iZxuai07ZIFlieRGm0sIknw8DDnE5Um47VWbILciOkZ6SN1VKEXI5c58RDbCkvk0tWeBUpJmxOIowjQ\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBiYzljNGI2LTY5ZjAtNDEyNy1iYWM0LWVmNTE5OGNiMGNmYyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2MzgyOTQsImlhdCI6MTU1NjYzNjQ5NCwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.oPLDa4gHtHmnsIyantWAvtObpJZ4M9pLyob1VAZyJBGVXc-tq7h9XjaQH5G1CRUlMKCXCVQl8RmJJhXcNhE-0w\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBiYzljNGI2LTY5ZjAtNDEyNy1iYWM0LWVmNTE5OGNiMGNmYyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2MzgzMDQsImlhdCI6MTU1NjYzNjUwNCwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.mhBExLKbUCFmWrysOwYQx26N_zeCoFEQOz8o0fLOzjaaax_Xj-SWql4BKLpuB1az0hR5Jpeai14fKQWKTI2Ycw\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBiYzljNGI2LTY5ZjAtNDEyNy1iYWM0LWVmNTE5OGNiMGNmYyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2MzgzMDUsImlhdCI6MTU1NjYzNjUwNSwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.arW_W8byjhMY185Dm_ls8xhn599y5Ux0y0RNTGQ7KjyKJBC8O_TNQeZqagaPvNYvmIqVNKoIhr_sZhbTy4w6GA\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBiYzljNGI2LTY5ZjAtNDEyNy1iYWM0LWVmNTE5OGNiMGNmYyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2MzgzMDYsImlhdCI6MTU1NjYzNjUwNiwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.DWftpKiNPSFYYsJ4Bagzm6WOEqBj8AFHAHm7CQHrQttWSxXU_D8mnKtgbcNneD8IFIXRYvoxOAkPz69oPpaQ9A\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjBhZmQ3OGVlLWFmZjgtNDg1ZC1iN2UyLTQ5Nzc0ODc2YzU0MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2MzgzMDcsImlhdCI6MTU1NjYzNjUwNywiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.sLFT4VtbbBMtiUq9eiltz8h3jRvadAGIQubtd4e4AWfVRTXlV9btZAr54X_41iKMphMqZ5OX-WkjzT7MhX-xfQ\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "GET /api/v1/monitoring/ping HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "GET /api/v1/monitoring/healthy HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjU0Y2MwM2U4LWQ3NWItNGM2Yi1iNWJjLTdlYzcwZmZlMTU5YiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2OTU0MzUsImlhdCI6MTU1NjY5MzYzNSwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.z4bOstXlJEKaLmdKwKbbDtbbX7DxZR7NTHhbHZNgKbauofea2oiYkloa8dcF5PmcA4ng23Z-ka16ujuazaSZcA\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6ImU2Mjg4Mjk0LWJlZDEtNDY2ZC1iZTg3LThkZWRiNzJkMjM3MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2OTU0NTYsImlhdCI6MTU1NjY5MzY1NiwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.BJE_X5qMYeTKKfBLB5nkwFAmMzL_mLRImnINs33G1xqvjhTBYlQ7fO5dCHSnRL0lxFx9PmasKC1viRfwhUqXwQ\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6ImU2Mjg4Mjk0LWJlZDEtNDY2ZC1iZTg3LThkZWRiNzJkMjM3MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2OTU2MzMsImlhdCI6MTU1NjY5MzgzMywiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.ylnuLzc_IQQpc7vYyvHvUqDPoef24-kE9uoZfgR3_2Ju2a1hdVwuhh93WGFq-Xyg1dbXjLsJ2fWW7h_yLQiGow\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6ImU2Mjg4Mjk0LWJlZDEtNDY2ZC1iZTg3LThkZWRiNzJkMjM3MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2OTU2MzUsImlhdCI6MTU1NjY5MzgzNSwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.Cevh5zPiRNKClxx9Np4cCj2Hs3ZwN8AtDmdjsyJi0YCd3zjRbOYw8kJiuaSCBH9Q7HcAgLwvymmFBUEUZPGbYA\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6ImU2Mjg4Mjk0LWJlZDEtNDY2ZC1iZTg3LThkZWRiNzJkMjM3MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2OTU2MzYsImlhdCI6MTU1NjY5MzgzNiwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.LWR5C8OqmJFYEj57MMTOo4Z9FQrIY9bI6VefgYhhvWnrbdAgXdcYcc5LqdfTNt7auyoKGj06Hmq7dITGYc8kLQ\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "GET /api/v1/monitoring/ping HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "GET /api/v1/monitoring/healthy HTTP/1.1" 200 None
+DEBUG:root:Calling API endpoint https://api.tink.se/api/v1/oauth/token using data {'client_id': '4fde9d54f2f04f2d958460a0366dc2cc', 'client_secret': '44305377243c485eb7c1c8ee8c99ce91', 'grant_type': 'client_credentials', 'scope': 'authorization:grant,user:create'}
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.tink.se:443
+DEBUG:urllib3.connectionpool:https://api.tink.se:443 "POST /api/v1/oauth/token HTTP/1.1" 200 None
+DEBUG:root:Response from https://api.tink.se/api/v1/oauth/token returned "b'{\\n  \"token_type\" : \"bearer\",\\n  \"expires_in\" : 1799,\\n  \"access_token\" : \"eyJhbGciOiJFUzI1NiIsImtpZCI6ImU2Mjg4Mjk0LWJlZDEtNDY2ZC1iZTg3LThkZWRiNzJkMjM3MyIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTY2OTU3NjIsImlhdCI6MTU1NjY5Mzk2MiwiaXNzIjoidGluazovL2F1dGgiLCJzdWIiOiJ0aW5rOi8vYXV0aC9jbGllbnQvNGZkZTlkNTRmMmYwNGYyZDk1ODQ2MGEwMzY2ZGMyY2MiLCJzY29wZXMiOlsidXNlcjpjcmVhdGUiLCJhdXRob3JpemF0aW9uOmdyYW50Il19.y2Zedul_fmrqIGX15IzJTGGnnYTLlyd_KDASxeGBzRV7HApPv4FEnB7tbJMRkK-bKMpSpK5xS4U3BlN-dswZRg\",\\n  \"scope\" : \"user:create,authorization:grant\"\\n}'"

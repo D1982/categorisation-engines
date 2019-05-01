@@ -186,7 +186,7 @@ class TinkUI:
 
     def button_authenticate(self):
         result = self.model.authentication()
-        self.print_result_log(result)
+        self.print_result_log(result['message'])
 
     def button_clear_log(self):
         self.put_result_log('')
