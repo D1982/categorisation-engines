@@ -37,6 +37,15 @@ class TinkModel:
         (request, response) = svc.authorize_client_access(sec.TINK_CLIENT_ID, sec.TINK_CLIENT_SECRET)
         return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
+    def activate_user(self, ext_user_id, label, locale, market):
+        svc = api.UserService()
+        (request, response) = svc.activate_user(ext_user_id, label, locale, market, client_access_token)
+        return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
+
+    def delete_user(ext_user_id):
+        svc = api.UserService()
+        (request, response) = svc.delete_user(ext_user_id)
+        return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
     def get_categories(self):
         service = api.CategoryService()

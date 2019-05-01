@@ -114,7 +114,41 @@ class UserService(TinkAPI):
     def __init__(self):
         super().__init__()
 
-    def activate_user(self):
+    def activate_user(self, ext_user_id, label, locale, market, client_access_token):
+        # Target API specifications
+        url = self.url_root
+        method = 'POST'
+        postfix = '/connector/users'
+
+        # Prepare the request
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        req.headers.update({'Authorization: Bearer': client_access_token})
+        req.headers.update({'Content-Type': 'application/json'})
+
+        req.data.update({'client_access_token': client_access_token})
+        req.data.update({'externalId': ext_user_id})
+        req.data.update({'label': label})
+        req.data.update({'locale': locale})
+        req.data.update({'market': market})
+
+        # Log Request
+        logging.debug('POST {dest} using data {data}'.format(
+                dest=req.endpoint, data=req.data))
+        # Fire the request against the API endpoint
+        response = requests.post(url=req.endpoint, data=req.data)
+        # Process the response
+        resp = UserActivationResponse(response)
+        # Log the result depending on the HTTP status code
+        if resp.content and resp.status_code == 204:
+            logging.debug('RESPONSE from {dest} Response => {data}'.format(
+                    dest=req.endpoint, data=str(resp.to_string())))
+        else:
+            logging.debug('RESPONSE from {dest} not as expected => {msg}'.format(
+                    dest=req.endpoint, msg=resp.to_string()))
+
+        return req, resp
+
+    def delete_user(self, ext_user_id):
         pass
 
 
@@ -242,3 +276,18 @@ class OAuth2AuthorizeResponse(TinkAPIResponse):
         # Save relevant data in dedicated member variables => Facilitates data flow
         if self.status_code == 200:
             self.scope = self.data['code']
+
+
+class UserActivationResponse(TinkAPIResponse):
+
+    def __init__(self, response):
+        super().__init__(response)
+
+        # Define fields of interest referring to the official API documentation
+        self.names = {'user_id', 'errorMessage', 'errorCode'}
+        # Get relevant data out of the JSON => Facilitates string formatting for UI outputs
+        self.data = {key: value for key, value in self.json.items() if key in self.names}
+
+        # Save relevant data in dedicated member variables => Facilitates data flow
+        if self.status_code == 204:
+            self.user_id = self.data['user_id']

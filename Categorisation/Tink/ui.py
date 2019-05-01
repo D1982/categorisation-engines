@@ -120,11 +120,15 @@ class TinkUI:
         self.test_button = tk.Button(self.command_frame, fg='blue', text='Test API connectivity')
         self.test_button = tk.Button(self.command_frame, fg='blue', text='Test API connectivity')
         self.auth_button = tk.Button(self.command_frame, fg='blue', text='Authorize client access')
+        self.activate_user_button = tk.Button(self.command_frame, fg='blue', text='Create users')
+        self.delete_user_button = tk.Button(self.command_frame, fg='blue', text='Delete users')
 
         # --- Layout
         self.label_commands.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
         self.test_button.grid(row=1, column=1, sticky=tk.W)
         self.auth_button.grid(row=2, column=1, sticky=tk.W)
+        self.activate_user_button.grid(row=3, column=1, sticky=tk.W)
+        self.delete_user_button.grid(row=3, column=2, sticky=tk.W)
 
 
     def setup_result_frame(self):
@@ -181,6 +185,8 @@ class TinkUI:
     def button_command_binding(self):
         self.test_button['command'] = self.button_check_connectivity
         self.auth_button['command'] = self.button_authenticate
+        self.activate_user_button['command'] = self.button_activate_user
+        self.delete_user_button['command'] = self.button_delete_user
 
         self.clear_button['command'] = self.button_clear_log
         self.save_button['command'] = self.save_output_to_file
@@ -196,6 +202,20 @@ class TinkUI:
     def button_authenticate(self):
         self.put_result_log('*** Authorize client access ***')
         result = self.model.authentication()
+        self.put_result_log(result)
+
+    # Action for button 'Activate user'
+    def button_activate_user(self):
+        # TODO: Implement: Remove hard coded values + handling of client_access_code
+        self.put_result_log('*** Activate user ***')
+        result = self.model.activate_user('42', 'Daniel Ott', 'SE', 'sv_SE', 'XYZ')
+        self.put_result_log(result)
+
+    # Action for button 'Delete user'
+    def button_delete_user(self):
+        # TODO: Remove hard coded values
+        self.put_result_log('*** Delete user ***')
+        result = self.model.delete_user(42)
         self.put_result_log(result)
 
     # Action for button 'Clear'
