@@ -142,27 +142,27 @@ class OAuthService(TinkAPI):
         postfix = '/api/v1/oauth/token'
 
         # Prepare the request
-        tinkRequest = TinkAPIRequest(method=method, endpoint=url+postfix)
-        tinkRequest.headers.update({'Authorization: Bearer': client_access_token})
-        tinkRequest.data.update({'client_access_token': client_access_token})
-        tinkRequest.data.update({'user_id': user_id})
-        tinkRequest.data.update({'scope': scope})
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        req.headers.update({'Authorization: Bearer': client_access_token})
+        req.data.update({'client_access_token': client_access_token})
+        req.data.update({'user_id': user_id})
+        req.data.update({'scope': scope})
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
-                dest=tinkRequest.endpoint, data=tinkRequest.data))
+                dest=req.endpoint, data=req.data))
         # Fire the request against the API endpoint
-        response = requests.post(url=tinkRequest.endpoint, data=tinkRequest.data)
+        response = requests.post(url=req.endpoint, data=req.data)
         # Process the response
-        tinkResponse = OAuth2AuthenticationTokenResponse(response)
+        resp = OAuth2AuthenticationTokenResponse(response)
         # Log the result depending on the HTTP status code
-        if tinkResponse.content and tinkResponse.status_code == 200:
+        if resp.content and resp.status_code == 200:
             logging.debug('RESPONSE from {dest} Response => {data}'.format(
-                    dest=tinkRequest.endpoint, data=str(tinkResponse.to_string())))
+                    dest=req.endpoint, data=str(resp.to_string())))
         else:
             logging.debug('RESPONSE from {dest} not as expected => {msg}'.format(
-                    dest=tinkRequest.endpoint, msg=tinkResponse.to_string()))
+                    dest=req.endpoint, msg=resp.to_string()))
 
-        return tinkRequest, tinkResponse
+        return req, resp
 
 
 
@@ -177,27 +177,27 @@ class OAuthService(TinkAPI):
         postfix = '/api/v1/oauth/authorization-grant'
 
         # Prepare the request
-        tinkRequest = TinkAPIRequest(method=method, endpoint=url+postfix)
-        tinkRequest.data.update({'client_id': client_id})
-        tinkRequest.data.update({'client_secret': client_secret})
-        tinkRequest.data.update({'grant_type': grant_type})
-        tinkRequest.data.update({'scope': scope})
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        req.data.update({'client_id': client_id})
+        req.data.update({'client_secret': client_secret})
+        req.data.update({'grant_type': grant_type})
+        req.data.update({'scope': scope})
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
-                dest=tinkRequest.endpoint, data=tinkRequest.data))
+                dest=req.endpoint, data=req.data))
         # Fire the request against the API endpoint
-        response = requests.post(url=tinkRequest.endpoint, data=tinkRequest.data)
+        response = requests.post(url=req.endpoint, data=req.data)
         # Process the response
-        tinkResponse = OAuth2AuthorizeResponse(response)
+        resp = OAuth2AuthorizeResponse(response)
         # Log the result depending on the HTTP status code
-        if tinkResponse.content and tinkResponse.status_code == 200:
+        if resp.content and resp.status_code == 200:
             logging.debug('RESPONSE from {dest} Response => {data}'.format(
-                    dest=tinkRequest.endpoint, data=str(tinkResponse.to_string())))
+                    dest=req.endpoint, data=str(resp.to_string())))
         else:
             logging.debug('RESPONSE from {dest} not as expected => {msg}'.format(
-                    dest=tinkRequest.endpoint, msg=tinkResponse.to_string()))
+                    dest=req.endpoint, msg=resp.to_string()))
 
-        return tinkRequest, tinkResponse
+        return req, resp
 
     """ 
     Get the OAuth access token 
