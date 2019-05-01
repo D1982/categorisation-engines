@@ -4,6 +4,8 @@
 import Categorisation.Common.config as cfg
 import Categorisation.Common.secret as secret
 
+import os
+import collections
 import logging
 import requests
 import json
@@ -20,11 +22,59 @@ class TinkAPI:
         self.partner_info['client_id'] = secret.TINK_CLIENT_ID
         self.partner_info['client_secret'] = secret.TINK_CLIENT_SECRET
 
+
     def service_url(self, service, remember=True):
         url = self.url_root + self.service_group + service
         if remember:
             self.last_call_url = url
         return url
+
+
+class TinkAPIRequest:
+    def __init__(self, method, endpoint):
+        self.method = method
+        self.endpoint = endpoint
+        self.headers = collections.OrderedDict()
+        self.data = collections.OrderedDict()
+        self.names = collections.OrderedDict()
+
+    def to_string(self):
+        return '{m} {t}'.format(m=self.method, t=self.endpoint)
+
+    def to_string_formatted(self):
+        text = self.to_string()
+        for k, v in self.data.items():
+            text += os.linesep + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
+
+        return text
+
+    # Abstract Methods
+    def to_string_custom(self):
+        pass
+
+
+class TinkAPIResponse:
+    def __init__(self):
+        self.status_code = ''
+        self.reason = ''
+        self.content = ''
+        self.json = dict()
+        self.names = collections.OrderedDict()
+        self.data = collections.OrderedDict()
+
+    def to_string(self):
+        return 'RESPONSE ' + self.reason + ' ({code})'.format(code=str(self.status_code))
+
+    def to_string_formatted(self):
+        text = self.to_string()
+        for k, v in self.data.items():
+            text += os.linesep + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
+
+        return text
+
+    # Abstract Methods
+    def to_string_custom(self):
+        pass
 
 
 class MonitoringService(TinkAPI):
@@ -81,33 +131,33 @@ class OAuthService(TinkAPI):
     def authorize_client_access(self, client_id, client_secret,
                                 grant_type='client_credentials',
                                 scope='authorization:grant,user:create'):
+        # Target API specifications
+        url = self.url_root
+        method = 'POST'
+        postfix = '/api/v1/oauth/token'
 
-        endpoint = self.url_root + '/api/v1/oauth/token'
-
-        data = dict()
-        data.update({'client_id': client_id})
-        data.update({'client_secret': client_secret})
-        data.update({'grant_type': grant_type})
-        data.update({'scope': scope})
-
-        logging.debug('Calling API endpoint {t} using data {d}'.format(t=endpoint, d=data))
-
-        response = requests.post(url=endpoint, data=data)
-        if response.content and response.status_code == 200:
-            response_msg = json.dumps(str(response.content) or '')
-            logging.debug('Response from {t} returned {d}'.format(t=endpoint, d=str(response_msg)))
-
-            response_data = response.json()
-            access_token = response_data['access_token']
-            token_type = response_data['token_type']
-            expires_in = response_data['expires_in']
-            scope = response_data['scope']
+        # Prepare the request
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        req.data.update({'client_id': client_id})
+        req.data.update({'client_secret': client_secret})
+        req.data.update({'grant_type': grant_type})
+        req.data.update({'scope': scope})
+        # Log Request
+        logging.debug('POST {dest} using data {data}'.format(
+                dest=req.endpoint, data=req.data))
+        # Fire the request against the API endpoint
+        response = requests.post(url=req.endpoint, data=req.data)
+        # Process the response
+        resp = OAuth2AuthenticationTokenResponse(response)
+        # Log the result depending on the HTTP status code
+        if resp.content and resp.status_code == 200:
+            logging.debug('RESPONSE from {dest} Response => {data}'.format(
+                    dest=req.endpoint, data=str(resp.to_string())))
         else:
-            response_msg = json.loads(response.text)["message"]
-            result = response.reason + ' ({r}) - {m}'.format(r=str(response.status_code), m=msg)
-            logging.debug('Response from {t} returned no data {r}'.format(t=endpoint, r=str(result)))
+            logging.debug('RESPONSE from {dest} not as expected => {msg}'.format(
+                    dest=req.endpoint, msg=resp.to_string()))
 
-        return response_msg, access_token or '', token_type or '', expires_in or '', scope or ''
+        return req,resp
 
     """ 
     Grant access to a user 
@@ -122,3 +172,30 @@ class OAuthService(TinkAPI):
     """
     def get_user_oauth_access_token(self, ):
         pass
+
+
+class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
+
+    def __init__(self, response):
+        super().__init__()
+
+        # Data from requests.Response object
+        self.content = response.content or '{}'
+        self.content_text = str(response.content)
+        self.json = response.json() or dict()
+        self.status_code = response.status_code or -1
+        self.reason = response.reason or ''
+        self.names = {'access_token', 'token_type', 'expires_in', 'scope', 'errorMessage', 'errorCode'}
+
+        # Get relevant data out of the JSON => Facilitates string formatting for UI outputs
+        self.data = {key: value for key, value in self.json.items() if key in self.names}
+
+        # Save relevant data in dedicated member variables => Facilitates data flow
+        if self.status_code == 200:
+            self.access_token = self.data['access_token']
+            self.token_type = self.data['token_type']
+            self.expires_in = self.data['expires_in']
+            self.scope = self.data['scope']
+
+
+

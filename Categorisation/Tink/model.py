@@ -30,22 +30,12 @@ class TinkModel:
         result1 = s.service_url('ping')+'=> {result}'.format(result=s.ping())
         result2 = s.service_url('healthy') + '=> {result}'.format(result=s.health_check())
 
-        return result1 + os.linesep + result2
+        return result1 + os.linesep*2 + result2
 
     def authentication(self):
-        service = api.OAuthService()
-        (response_msg, access_token, token_type, expires_in, scope) =\
-            service.authorize_client_access(sec.TINK_CLIENT_ID, sec.TINK_CLIENT_SECRET)
-
-        result = dict()
-
-        result["message"] = response_msg
-        result["access_token"] = access_token
-        result["token_type"] = token_type
-        result["expires_in"] = expires_in
-        result["scope"] = scope
-
-        return result
+        svc = api.OAuthService()
+        (request, response) = svc.authorize_client_access(sec.TINK_CLIENT_ID, sec.TINK_CLIENT_SECRET)
+        return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
 
     def get_categories(self):
