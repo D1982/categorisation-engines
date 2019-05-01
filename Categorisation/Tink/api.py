@@ -137,27 +137,29 @@ class OAuthService(TinkAPI):
         postfix = '/api/v1/oauth/token'
 
         # Prepare the request
-        req = TinkAPIRequest(method=method, endpoint=url+postfix)
-        req.data.update({'client_id': client_id})
-        req.data.update({'client_secret': client_secret})
-        req.data.update({'grant_type': grant_type})
-        req.data.update({'scope': scope})
+        tinkRequest = TinkAPIRequest(method=method, endpoint=url+postfix)
+        tinkRequest.data.update({'client_id': client_id})
+        tinkRequest.data.update({'client_secret': client_secret})
+        tinkRequest.data.update({'grant_type': grant_type})
+        tinkRequest.data.update({'scope': scope})
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
-                dest=req.endpoint, data=req.data))
+                dest=tinkRequest.endpoint, data=tinkRequest.data))
         # Fire the request against the API endpoint
-        response = requests.post(url=req.endpoint, data=req.data)
+        response = requests.post(url=tinkRequest.endpoint, data=tinkRequest.data)
         # Process the response
-        resp = OAuth2AuthenticationTokenResponse(response)
+        tinkResponse = OAuth2AuthenticationTokenResponse(response)
         # Log the result depending on the HTTP status code
-        if resp.content and resp.status_code == 200:
+        if tinkResponse.content and tinkResponse.status_code == 200:
             logging.debug('RESPONSE from {dest} Response => {data}'.format(
-                    dest=req.endpoint, data=str(resp.to_string())))
+                    dest=tinkRequest.endpoint, data=str(tinkResponse.to_string())))
         else:
             logging.debug('RESPONSE from {dest} not as expected => {msg}'.format(
-                    dest=req.endpoint, msg=resp.to_string()))
+                    dest=tinkRequest.endpoint, msg=tinkResponse.to_string()))
 
-        return req,resp
+        return tinkRequest, tinkResponse
+
+
 
     """ 
     Grant access to a user 
