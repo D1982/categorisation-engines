@@ -6,6 +6,7 @@ import Categorisation.Tink.api as api
 
 import Categorisation.Common.config as cfg
 
+import os
 import tkinter as tk
 import easygui as gui
 import logging
@@ -34,6 +35,8 @@ class TinkUI:
 
         # Default values
         self.ui_data()
+
+    """ Setup the UI components """
 
     def create_windows(self):
         # --- Widgets
@@ -128,7 +131,7 @@ class TinkUI:
 
         # --- Widgets
         self.label_results = tk.Label(self.result_frame, bg='lavender', text='Results:')
-        self.result_log = tk.Label(master=self.result_frame)
+        self.result_log = tk.Label(master=self.result_frame, anchor=tk.NW, justify=tk.LEFT)
         self.save_button = tk.Button(self.result_frame, text='Save to file')
         self.clear_button = tk.Button(self.result_frame, text='Clear')
 
@@ -136,17 +139,9 @@ class TinkUI:
         self.label_results.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
         self.clear_button.grid(row=1, column=1, sticky=tk.W)
         self.save_button.grid(row=1, column=2, sticky=tk.W)
-        self.result_log.grid(row=2, column=2, sticky=tk.W)
+        self.result_log.grid(row=2, column=2, sticky=tk.NW)
 
-
-
-    def put_result_log(self, text):
-        self.result_log['text'] = text
-
-    def print_result_log(self, text):
-        # Place the resulting logs into the label
-        self.put_result_log(text)
-
+    """ Initialization of the UI components """
 
     def ui_data(self):
         root_path = self.entry_file_in['text']
@@ -180,17 +175,34 @@ class TinkUI:
         text.insert(0, cfg.PROXY_URL + ':' + cfg.PROXY_PORT)
         text.config(state='readonly')
 
+    """ Event Handlers """
+
+    # Assign the commands to the buttons
+    def button_command_binding(self):
+        self.test_button['command'] = self.button_check_connectivity
+        self.auth_button['command'] = self.button_authenticate
+
+        self.clear_button['command'] = self.button_clear_log
+        self.save_button['command'] = self.save_output_to_file
+
+    """ Button Actions """
+
+    # Action for button 'Test API connectivity'
     def button_check_connectivity(self):
         result = self.model.test_connectivity()
-        self.print_result_log(result)
+        self.put_result_log(result)
 
+    # Action for button 'Authorize client access'
     def button_authenticate(self):
+        self.put_result_log('*** Authorize client access ***')
         result = self.model.authentication()
-        self.print_result_log(result['message'])
+        self.put_result_log(result)
 
+    # Action for button 'Clear'
     def button_clear_log(self):
-        self.put_result_log('')
+        self.result_log['text'] = ''
 
+    # Action for button 'Save to file'
     def save_output_to_file(self):
         '''Save the output box into a text file'''
         type_list = [('Text files', '*.txt')]
@@ -202,13 +214,13 @@ class TinkUI:
             with open(file_name, 'w') as output_file:
                 output_file.writelines(self.result_log['text'])
 
-    # Assign the commands to the buttons
-    def button_command_binding(self):
-        self.test_button['command'] = self.button_check_connectivity
-        self.auth_button['command'] = self.button_authenticate
+    """ Output """
+    def put_result_log(self, text):
+        self.result_log['text'] += os.linesep*2 + text
 
-        self.clear_button['command'] = self.button_clear_log
-        self.save_button['command'] = self.save_output_to_file
+    def print_result_log(self, text):
+        # Place the resulting logs into the label
+        self.put_result_log(text)
 
     def run(self):
         # Start the application
