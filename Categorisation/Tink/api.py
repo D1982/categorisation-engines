@@ -134,8 +134,9 @@ class OAuthService(TinkAPI):
              secret and not exposed to any public client.
 
     """
-    def authorize_client_access(self, client_access_token, user_id,
-                                scope='accounts:read,transactions:read,user:read'):
+    def authorize_client_access(self, client_id, client_secret,
+                                grant_type='client_credentials',
+                                scope='authorization:grant,user:create'):
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -143,10 +144,11 @@ class OAuthService(TinkAPI):
 
         # Prepare the request
         req = TinkAPIRequest(method=method, endpoint=url+postfix)
-        req.headers.update({'Authorization: Bearer': client_access_token})
-        req.data.update({'client_access_token': client_access_token})
-        req.data.update({'user_id': user_id})
+        req.data.update({'client_id': client_id})
+        req.data.update({'client_secret': client_secret})
+        req.data.update({'grant_type': grant_type})
         req.data.update({'scope': scope})
+
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
                 dest=req.endpoint, data=req.data))
@@ -178,10 +180,12 @@ class OAuthService(TinkAPI):
 
         # Prepare the request
         req = TinkAPIRequest(method=method, endpoint=url+postfix)
-        req.data.update({'client_id': client_id})
-        req.data.update({'client_secret': client_secret})
-        req.data.update({'grant_type': grant_type})
+        req.headers.update({'Authorization: Bearer': client_access_token})
+        req.data.update({'client_access_token': client_access_token})
+        req.data.update({'user_id': user_id})
+        req.data.update({'external_user_id': ext_user_id})
         req.data.update({'scope': scope})
+
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
                 dest=req.endpoint, data=req.data))
