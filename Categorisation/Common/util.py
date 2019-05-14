@@ -27,7 +27,7 @@ class FileHandler:
 
     def read_csv_file(self, filename, fieldnames, skip_header=True):
         extension = os.path.splitext(filename)[1]
-        if extension == '.data' or extension == '.txt':
+        if extension == '.data' or extension == '.txt' or extension == '.csv':
             csvfile = open(filename, 'r')
             csvreader = csv.DictReader(csvfile, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
             csv_data = []
