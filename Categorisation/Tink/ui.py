@@ -8,6 +8,7 @@ import Categorisation.Common.config as cfg
 
 import os
 import tkinter as tk
+import tkinter.scrolledtext as tkst
 import easygui as gui
 import logging
 
@@ -35,6 +36,9 @@ class TinkUI:
 
         # Default values
         self.ui_data()
+
+        # Bind data in the model
+        self.data_bindings()
 
     """ Setup the UI components """
 
@@ -75,7 +79,7 @@ class TinkUI:
         self.entry_file_out = tk.Entry(self.file_frame, width=30)
         self.entry_file_in = tk.Entry(self.file_frame, width=30)
         self.entry_user_file = tk.Entry(self.file_frame, width=40)
-        self.entry_account_file = tk.Entry(self.file_frame, width=40)
+        self.entry_acc_file = tk.Entry(self.file_frame, width=40)
         self.entry_trx_file = tk.Entry(self.file_frame, width=40)
 
         self.label_user_file = tk.Label(self.file_frame, text='User file:')
@@ -97,7 +101,7 @@ class TinkUI:
         self.label_trx_file.grid(row=6, column=1, sticky=tk.E)
 
         self.entry_user_file.grid(row=4, column=2, sticky=tk.W)
-        self.entry_account_file.grid(row=5, column=2, sticky=tk.W)
+        self.entry_acc_file.grid(row=5, column=2, sticky=tk.W)
         self.entry_trx_file.grid(row=6, column=2, sticky=tk.W)
 
     def setup_config_frame(self):
@@ -120,30 +124,37 @@ class TinkUI:
         self.test_button = tk.Button(self.command_frame, fg='blue', text='Test API connectivity')
         self.test_button = tk.Button(self.command_frame, fg='blue', text='Test API connectivity')
         self.auth_button = tk.Button(self.command_frame, fg='blue', text='Authorize client access')
-        self.activate_user_button = tk.Button(self.command_frame, fg='blue', text='Create users')
-        self.delete_user_button = tk.Button(self.command_frame, fg='blue', text='Delete users')
+        self.activate_users_button = tk.Button(self.command_frame, fg='blue', text='Create users')
+        self.delete_users_button = tk.Button(self.command_frame, fg='blue', text='Delete users')
 
         # --- Layout
         self.label_commands.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
         self.test_button.grid(row=1, column=1, sticky=tk.W)
         self.auth_button.grid(row=2, column=1, sticky=tk.W)
-        self.activate_user_button.grid(row=3, column=1, sticky=tk.W)
-        self.delete_user_button.grid(row=3, column=2, sticky=tk.W)
+        self.activate_users_button.grid(row=3, column=1, sticky=tk.W)
+        self.delete_users_button.grid(row=3, column=2, sticky=tk.W)
 
 
     def setup_result_frame(self):
 
         # --- Widgets
         self.label_results = tk.Label(self.result_frame, bg='lavender', text='Results:')
-        self.result_log = tk.Label(master=self.result_frame, anchor=tk.NW, justify=tk.LEFT)
-        self.save_button = tk.Button(self.result_frame, text='Save to file')
-        self.clear_button = tk.Button(self.result_frame, text='Clear')
+        # self.result_log = tk.Label(master=self.result_frame, anchor=tk.NW, justify=tk.LEFT)
+        self.result_log = tkst.ScrolledText(
+            master=self.result_frame,
+            wrap=tk.WORD,
+            width=cfg.UI_STRING_MAX_WITH,
+            height=10,
+            bg = 'beige'
+        )
+        self.save_button = tk.Button(self.result_frame, text='Save logs to file')
+        self.clear_button = tk.Button(self.result_frame, text='Clear logs')
 
         # --- Layout
-        self.label_results.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
-        self.clear_button.grid(row=1, column=1, sticky=tk.W)
-        self.save_button.grid(row=1, column=2, sticky=tk.W)
-        self.result_log.grid(row=2, column=2, sticky=tk.NW)
+        self.label_results.grid(row=0, columnspan=2, padx=0, pady=10, sticky=tk.W)
+        self.result_log.grid(row=1, columnspan=2, sticky=tk.NW)
+        self.clear_button.grid(row=2, columnspan=2, sticky=tk.W)
+        self.save_button.grid(row=3, columnspan=2, sticky=tk.W)
 
     """ Initialization of the UI components """
 
@@ -162,7 +173,7 @@ class TinkUI:
         text.config(state='readonly')
 
         # Set Accounts file string
-        text = self.entry_account_file
+        text = self.entry_acc_file
         text.config(state='normal')
         text.insert(0, root_path + in_pattern.replace('*', 'Accounts'))
         text.config(state='readonly')
@@ -185,8 +196,8 @@ class TinkUI:
     def button_command_binding(self):
         self.test_button['command'] = self.button_check_connectivity
         self.auth_button['command'] = self.button_authenticate
-        self.activate_user_button['command'] = self.button_activate_user
-        self.delete_user_button['command'] = self.button_delete_user
+        self.activate_users_button['command'] = self.button_activate_users
+        self.delete_users_button['command'] = self.button_delete_users
 
         self.clear_button['command'] = self.button_clear_log
         self.save_button['command'] = self.save_output_to_file
@@ -205,22 +216,20 @@ class TinkUI:
         self.put_result_log(result)
 
     # Action for button 'Activate user'
-    def button_activate_user(self):
-        # TODO: Implement: Remove hard coded values + handling of client_access_code
+    def button_activate_users(self):
         self.put_result_log('*** Activate user ***')
-        result = self.model.activate_user('42', 'Daniel Ott', 'SE', 'sv_SE', 'XYZ')
+        result = self.model.activate_users()
         self.put_result_log(result)
 
     # Action for button 'Delete user'
-    def button_delete_user(self):
-        # TODO: Remove hard coded values
+    def button_delete_users(self):
         self.put_result_log('*** Delete user ***')
-        result = self.model.delete_user(42)
+        result = self.model.delete_users()
         self.put_result_log(result)
 
     # Action for button 'Clear'
     def button_clear_log(self):
-        self.result_log['text'] = ''
+        self.result_log.delete(1.0, tk.END)
 
     # Action for button 'Save to file'
     def save_output_to_file(self):
@@ -232,11 +241,22 @@ class TinkUI:
         # Save file if user entered a file name
         if file_name != '':
             with open(file_name, 'w') as output_file:
-                output_file.writelines(self.result_log['text'])
+                output_file.writelines(self.result_log.get(1.0, tk.END))
+
+    """ Data bindings """
+    def data_bindings(self):
+        # Provide required input data to the data access object (source data locations, here files)
+        self.model.dao.bind_data_source(cfg.TinkEntityType.UserEntity, self.entry_user_file.get())
+        self.model.dao.bind_data_source(cfg.TinkEntityType.AccountEntity, self.entry_acc_file.get())
+        self.model.dao.bind_data_source(cfg.TinkEntityType.TransactionEntity, self.entry_trx_file.get())
 
     """ Output """
+
     def put_result_log(self, text):
-        self.result_log['text'] += os.linesep*2 + text
+        # self.result_log['text'] += os.linesep*2 + text
+        self.result_log.insert(tk.INSERT, os.linesep*2 + text)
+        self.result_log.see(tk.END)
+
 
     def print_result_log(self, text):
         # Place the resulting logs into the label
