@@ -2,6 +2,8 @@
 
 """
 
+from enum import Enum
+
 # File processing
 CSV_DELIMITER = ';' # Standard Delimiter
 
@@ -23,9 +25,19 @@ TINK_LOGFILE = 'tink.log'
 
 API_URL_TINK = 'https://api.tink.se'
 
-IN_FILE_PATTERN_TINK = 'data/TinkRequest_*.csv'
+IN_FILE_PATTERN_TINK = 'data/TinkReq*.csv'
 
-OUT_FILE_PATTERN_TINK = 'data/TinkResponse_*.csv'
+OUT_FILE_PATTERN_TINK = 'data/TinkResp*.csv'
 
 # UI
 UI_STRING_MAX_WITH = 100
+
+# Enumerations
+class TinkEntityType(Enum):
+    UserEntity = 'UserEntity'
+    AccountEntity = 'AccountEntity'
+    TransactionEntity = 'TransactionEntity'
+
+
+class DataSourceType(Enum):
+    CSVFileSource = 'CSVFileSource'
