@@ -8,7 +8,6 @@ import os
 import collections
 import logging
 import requests
-import json
 
 
 class TinkAPI:
@@ -21,13 +20,6 @@ class TinkAPI:
         self.partner_info = dict()
         self.partner_info['client_id'] = secret.TINK_CLIENT_ID
         self.partner_info['client_secret'] = secret.TINK_CLIENT_SECRET
-
-
-    def service_url(self, service, remember=True):
-        url = self.url_root + self.service_group + service
-        if remember:
-            self.last_call_url = url
-        return url
 
 
 class TinkAPIRequest:
@@ -58,15 +50,23 @@ class TinkAPIRequest:
 class TinkAPIResponse:
     def __init__(self, response):
         # Data from requests.Response object
+        self.text = response.text
         self.content = response.content or '{}'
         self.content_text = str(response.content)
         self.status_code = response.status_code or -1
         self.reason = response.reason or ''
-        self.json = response.json() or dict()
 
-        # Additional data to be populated by sub-classes
+        # Data to be populated by sub-classes
         self.names = collections.OrderedDict()
         self.data = collections.OrderedDict()
+
+        # Response JSON
+        try:
+            self.json = response.json() or dict()
+        except Exception as e:
+            logging.warning("Warning:{0}".format(e.args or ""))#
+            # This service does not return a JSON so just use the text instead
+            self.data.update({'text': response.text})
 
     def to_string(self):
         return 'RESPONSE ' + self.reason + ' ({code})'.format(code=str(self.status_code))
@@ -86,51 +86,78 @@ class TinkAPIResponse:
 class MonitoringService(TinkAPI):
     def __init__(self):
         super().__init__()
-        self.service_group = '/api/v1/monitoring/'
 
     def ping(self):
-        response = requests.get(url=self.service_url('ping'))
-        content = response.content
-        return content
+        # Target API specifications
+        url = self.url_root
+        method = 'GET'
+        postfix = '/api/v1/monitoring/ping'
+        # Request headers
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        # Log Request
+        logging.debug('POST {dest}'.format(
+                dest=req.endpoint, data=req.data))
+        # Fire the request against the API endpoint
+        response = requests.get(url=req.endpoint)
+        # Process the response
+        resp = TinkAPIResponse(response)
+
+        return req, resp
 
     def health_check(self):
-        response = requests.get(url=self.service_url('healthy'))
-        content = response.content
-        return content
+        # Target API specifications
+        url = self.url_root
+        method = 'GET'
+        postfix = '/api/v1/monitoring/healthy'
+        # Request headers
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        # Log Request
+        logging.debug('POST {dest}'.format(
+                dest=req.endpoint))
+        # Fire the request against the API endpoint
+        response = requests.get(url=req.endpoint)
+        # Process the response
+        resp = TinkAPIResponse(response)
+        return req, resp
 
 class CategoryService(TinkAPI):
     def __init__(self):
         super().__init__()
 
     def list_categories(self):
-        self.service_group = '/api/v1/monitoring/'
-        endpoint = self.url_root + '/api/v1/oauth/authorization-grant'
-        response = requests.get(url=self.url + '/api/v1/categories')
-        content = response.content
-        return content
+        # Target API specifications
+        url = self.url_root
+        method = 'GET'
+        postfix = '/api/v1/categories'
+        # Request headers
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        # Log Request
+        logging.debug('POST {dest}'.format(
+                dest=req.endpoint))
+        # Fire the request against the API endpoint
+        response = requests.get(url=req.endpoint)
+        # Process the response
+        resp = TinkAPIResponse(response)
+        return req, resp
 
 
 class UserService(TinkAPI):
     def __init__(self):
         super().__init__()
 
-    def activate_user(self, ext_user_id, label, locale, market, client_access_token):
+    def activate_user(self, ext_user_id, locale, market, client_access_token):
         # Target API specifications
         url = self.url_root
         method = 'POST'
-        postfix = '/connector/users'
-
-        # Prepare the request
+        postfix = '/api/v1/user/create'
+        # Request headers
         req = TinkAPIRequest(method=method, endpoint=url+postfix)
         req.headers.update({'Authorization: Bearer': client_access_token})
         req.headers.update({'Content-Type': 'application/json'})
-
-        req.data.update({'client_access_token': client_access_token})
-        req.data.update({'externalId': ext_user_id})
-        req.data.update({'label': label})
+        # Request body
+        req.data.update({'external_user_id': ext_user_id})
         req.data.update({'locale': locale})
         req.data.update({'market': market})
-
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
                 dest=req.endpoint, data=req.data))
@@ -151,6 +178,11 @@ class UserService(TinkAPI):
     def delete_user(self, ext_user_id):
         pass
 
+    def get_user(self, ext_user_id):
+        # Target API specifications
+        url = self.url_root
+        method = 'GET'
+        postfix = '/api/v1/user'
 
 class OAuthService(TinkAPI):
     def __init__(self):
@@ -168,9 +200,7 @@ class OAuthService(TinkAPI):
              secret and not exposed to any public client.
 
     """
-    def authorize_client_access(self, client_id, client_secret,
-                                grant_type='client_credentials',
-                                scope='authorization:grant,user:create'):
+    def authorize_client_access(self, grant_type, scope):
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -178,11 +208,10 @@ class OAuthService(TinkAPI):
 
         # Prepare the request
         req = TinkAPIRequest(method=method, endpoint=url+postfix)
-        req.data.update({'client_id': client_id})
-        req.data.update({'client_secret': client_secret})
+        req.data.update({'client_id': secret.TINK_CLIENT_ID})
+        req.data.update({'client_secret': secret.TINK_CLIENT_SECRET})
         req.data.update({'grant_type': grant_type})
         req.data.update({'scope': scope})
-
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
                 dest=req.endpoint, data=req.data))
@@ -239,11 +268,38 @@ class OAuthService(TinkAPI):
 
     """ 
     Get the OAuth access token 
-    ​https://docs.tink.com/api/#exchange-access-tokens
+    ​https://api.tink.se/api/v1/oauth/token
     """
-    def get_user_oauth_access_token(self, ):
-        pass
+    def get_oauth_access_token(self, code, ):
+        # Target API specifications
+        url = self.url_root
+        method = 'POST'
+        postfix = '/api/v1/oauth/token'
 
+        # Prepare the request
+        req = TinkAPIRequest(method=method, endpoint=url+postfix)
+        req.headers.update({'Authorization: Bearer': client_access_token})
+        req.data.update({'client_access_token': client_access_token})
+        req.data.update({'user_id': user_id})
+        req.data.update({'external_user_id': ext_user_id})
+        req.data.update({'scope': scope})
+
+        # Log Request
+        logging.debug('POST {dest} using data {data}'.format(
+                dest=req.endpoint, data=req.data))
+        # Fire the request against the API endpoint
+        response = requests.post(url=req.endpoint, data=req.data)
+        # Process the response
+        resp = OAuth2AuthorizeResponse(response)
+        # Log the result depending on the HTTP status code
+        if resp.content and resp.status_code == 200:
+            logging.debug('RESPONSE from {dest} Response => {data}'.format(
+                    dest=req.endpoint, data=str(resp.to_string())))
+        else:
+            logging.debug('RESPONSE from {dest} not as expected => {msg}'.format(
+                    dest=req.endpoint, msg=resp.to_string()))
+
+        return req, resp
 
 class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
 
@@ -254,13 +310,6 @@ class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
         self.names = {'access_token', 'token_type', 'expires_in', 'scope', 'errorMessage', 'errorCode'}
         # Get relevant data out of the JSON => Facilitates string formatting for UI outputs
         self.data = {key: value for key, value in self.json.items() if key in self.names}
-
-        # Save relevant data in dedicated member variables => Facilitates data flow
-        if self.status_code == 200:
-            self.access_token = self.data['access_token']
-            self.token_type = self.data['token_type']
-            self.expires_in = self.data['expires_in']
-            self.scope = self.data['scope']
 
 
 class OAuth2AuthorizeResponse(TinkAPIResponse):
