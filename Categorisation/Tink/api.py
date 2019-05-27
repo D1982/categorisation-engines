@@ -31,10 +31,16 @@ class TinkAPIRequest:
         self.names = collections.OrderedDict()
 
     def to_string(self):
-        return '{m} {t}'.format(m=self.method, t=self.endpoint)
+        return 'REQUEST: {m} {t}'.format(m=self.method, t=self.endpoint)
 
     def to_string_formatted(self):
         text = self.to_string()
+
+        text += os.linesep*2 + '*** Header ***:'
+        for k, v in self.headers.items():
+            text += os.linesep + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
+
+        text += os.linesep*2 + '*** Body ***:'
         for k, v in self.data.items():
             text += os.linesep + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
 
@@ -50,9 +56,9 @@ class TinkAPIRequest:
 class TinkAPIResponse:
     def __init__(self, response):
         # Data from requests.Response object
-        self.text = response.text
+        self.text = response.text or ''
         self.content = response.content or '{}'
-        self.content_text = str(response.content)
+        self.content_text = str(response.content) or ''
         self.status_code = response.status_code or -1
         self.reason = response.reason or ''
 
@@ -69,14 +75,20 @@ class TinkAPIResponse:
             self.data.update({'text': response.text})
 
     def to_string(self):
-        return 'RESPONSE ' + self.reason + ' ({code})'.format(code=str(self.status_code))
+        return 'RESPONSE: ' + self.reason + ' ({code})'.format(code=str(self.status_code))
 
     def to_string_formatted(self):
         text = self.to_string()
-        for k, v in self.data.items():
-            text += os.linesep + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
 
-        return text
+        if self.json:
+            for k, v in self.json.items():
+                text += os.linesep + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
+
+        if self.data:
+            for k, v in self.data.items():
+                text += os.linesep + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
+
+        return text + os.linesep*2
 
     # Abstract Methods
     def to_string_custom(self):
@@ -152,7 +164,7 @@ class UserService(TinkAPI):
         postfix = '/api/v1/user/create'
         # Request headers
         req = TinkAPIRequest(method=method, endpoint=url+postfix)
-        req.headers.update({'Authorization: Bearer': client_access_token})
+        req.headers.update({'Authorization': 'Bearer ' + client_access_token})
         req.headers.update({'Content-Type': 'application/json'})
         # Request body
         req.data.update({'external_user_id': ext_user_id})
@@ -162,7 +174,7 @@ class UserService(TinkAPI):
         logging.debug('POST {dest} using data {data}'.format(
                 dest=req.endpoint, data=req.data))
         # Fire the request against the API endpoint
-        response = requests.post(url=req.endpoint, data=req.data)
+        response = requests.post(url=req.endpoint, data=req.data, headers=req.headers)
         # Process the response
         resp = UserActivationResponse(response)
         # Log the result depending on the HTTP status code
@@ -334,9 +346,10 @@ class UserActivationResponse(TinkAPIResponse):
 
         # Define fields of interest referring to the official API documentation
         self.names = {'user_id', 'errorMessage', 'errorCode'}
-        # Get relevant data out of the JSON => Facilitates string formatting for UI outputs
-        self.data = {key: value for key, value in self.json.items() if key in self.names}
 
         # Save relevant data in dedicated member variables => Facilitates data flow
         if self.status_code == 204:
             self.user_id = self.data['user_id']
+
+            # Get relevant data out of the JSON => Facilitates string formatting for UI outputs
+            self.data = {key: value for key, value in self.json.items() if key in self.names}

@@ -11,6 +11,11 @@ class TinkModel:
         logging.info("Initiated:" + "TinkModel.__init__()")
         self.dao = dao
 
+        self.access_token = ''
+        self.token_type = ''
+        self.expires_in = ''
+        self.scope = ''
+
     def test_connectivity(self):
         s = api.MonitoringService()
 
@@ -39,25 +44,56 @@ class TinkModel:
 
         return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
-    def activate_users(self):
-        self.dao.read_users()
-        self.authentication()
+    def activate_user(self, ext_user_id, locale, market):
+        # Instantiate API wrapper
         svc = api.UserService()
-        # TODO: Remove hard coded parameters and replace by DAO access
-        (request, response) = svc.activate_user(
-                ext_user_id='42', locale='UK', market='en_UK', client_access_token=self.client_access_token)
-        return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
+        # Fire request and catch both the complete request and the response
+        (request, response) = svc.activate_user(
+            ext_user_id=ext_user_id, locale=locale, market=market, client_access_token=self.access_token)
+
+        result = ''
+        # Return a summarized string - in that case for the UI console
+        return request.to_string_formatted() + os.linesep * 2 + response.to_string_formatted()
+
+    """Create users in the Tink platform
+    Reads users from a DAO, gets an access token from Tink's API and creates all users
+    Hints: 
+    1. At the moment there is only one authentication step meaning if the token
+    would expire due to longer runtime the current implementation would fail.
+    
+    2. It is clear that it would be more efficient to use one single API wrapper
+    """
+    def activate_users(self):
+        # Get user data
+        users = self.dao.read_users()
+
+        # Get an access token
+        self.authentication() # TODO: Check whether access token is still valid instead of doing too much API calls
+
+        # Create all users
+        result = ''
+        for e in users:
+            ext_user_id = e['external_user_id']
+            locale = e['locale']
+            market = e['market']
+
+            result += self.activate_user(ext_user_id, locale, market)
+
+        return result
+
+    """Get Users
+    SJ (Tink): The short answer is that you cannot get back the external_user_id from the API(!)
+    But instead of granting access to the user_id you can instead use the
+    {{host}}/api/v1/oauth/authorization-grant
+    with
+    scope=accounts:read,transactions:read,statistics:read,user:read,investments:read,credentials:write,credentials:read,credentials:refresh,user:delete& *external_user_id=your_external_id* (edited)
+    """
     def get_user(self):
         pass
-        """
-        SJ (Tink): The short answer is that you cannot get back the external_user_id from the API(!)
-        But instead of granting access to the user_id you can instead use the
-        {{host}}/api/v1/oauth/authorization-grant
-        with
-        scope=accounts:read,transactions:read,statistics:read,user:read,investments:read,credentials:write,credentials:read,credentials:refresh,user:delete& *external_user_id=your_external_id* (edited)
-        """
 
+    """Delete Users
+    """
     def delete_users(self):
         # TODO: Remove hard coded parameters and replace by     DAO access
         # Users currently in platform:

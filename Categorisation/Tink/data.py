@@ -29,6 +29,7 @@ class TinkDAO:
         # File handler utility
         self.file_handler = util.FileHandler()
 
+
     def bind_data_source(self, src_type, locator):
         if src_type == cfg.TinkEntityType.UserEntity:
             self.user_src = locator
@@ -37,9 +38,14 @@ class TinkDAO:
         elif src_type == cfg.TinkEntityType.TransactionEntity:
             self.trx_src = locator
 
-    def read_users(self):
-        data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=self.fieldnames_user)
-        return data
+    def read_users(self, force_read=True):
+
+        if not self.users or force_read is True:
+            data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=self.fieldnames_user)
+
+            self.users = data  # Returns a List<OrderedDict>
+
+        return self.users
 
     def read_accounts(self):
         util.FileHandler.read_csv_file(self.acc_src, self.fieldnames_user)
