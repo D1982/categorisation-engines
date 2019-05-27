@@ -48,12 +48,24 @@ class TinkModel:
                 ext_user_id='42', locale='UK', market='en_UK', client_access_token=self.client_access_token)
         return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
+    def get_user(self):
+        pass
+        """
+        SJ (Tink): The short answer is that you cannot get back the external_user_id from the API(!)
+        But instead of granting access to the user_id you can instead use the
+        {{host}}/api/v1/oauth/authorization-grant
+        with
+        scope=accounts:read,transactions:read,statistics:read,user:read,investments:read,credentials:write,credentials:read,credentials:refresh,user:delete& *external_user_id=your_external_id* (edited)
+        """
+
     def delete_users(self):
         # TODO: Remove hard coded parameters and replace by     DAO access
         # Users currently in platform:
         # ext_user_id: 42 => user_id: 7ccf20dd556945ae91febe31a8cb155b
         # ext_user_id: 42 => user_id: 8b9ddbe02c234f39bf8a581eb300f09a
         # ext_user_id: 43 => user_id: ca73adc9e4624ab285c7c203f8192722
+
+
         svc = api.UserService()
         (request, response) = svc.delete_user(42)
         return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
