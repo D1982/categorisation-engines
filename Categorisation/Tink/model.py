@@ -44,17 +44,16 @@ class TinkModel:
 
         return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
-    def activate_user(self, ext_user_id, locale, market):
+    def activate_user(self, ext_user_id, label, market, locale):
         # Instantiate API wrapper
         svc = api.UserService()
 
         # Fire request and catch both the complete request and the response
         (request, response) = svc.activate_user(
-            ext_user_id=ext_user_id, locale=locale, market=market, client_access_token=self.access_token)
+            ext_user_id=ext_user_id, label=label, market=market, locale=locale, client_access_token=self.access_token)
 
-        result = ''
         # Return a summarized string - in that case for the UI console
-        return request.to_string_formatted() + os.linesep * 2 + response.to_string_formatted()
+        return request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
 
     """Create users in the Tink platform
     Reads users from a DAO, gets an access token from Tink's API and creates all users
@@ -75,10 +74,11 @@ class TinkModel:
         result = ''
         for e in users:
             ext_user_id = e['external_user_id']
-            locale = e['locale']
+            label = e['label']
             market = e['market']
+            locale = e['locale']
 
-            result += self.activate_user(ext_user_id, locale, market)
+            result += self.activate_user(ext_user_id, label, market, locale)
 
         return result
 
