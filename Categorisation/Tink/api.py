@@ -65,6 +65,7 @@ class TinkAPIResponse:
         # Data to be populated by sub-classes
         self.names = collections.OrderedDict()
         self.data = collections.OrderedDict()
+        self.json = dict()
 
         # Response JSON
         try:
