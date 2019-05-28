@@ -96,6 +96,8 @@ class TinkAPIResponse:
         pass
 
 
+""" Wrapper class for the Tink Monitoring Service
+"""
 class MonitoringService(TinkAPI):
     def __init__(self):
         super().__init__()
