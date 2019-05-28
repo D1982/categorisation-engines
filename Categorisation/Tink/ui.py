@@ -9,7 +9,7 @@ import Categorisation.Common.config as cfg
 import os
 import tkinter as tk
 import tkinter.scrolledtext as tkst
-import easygui as gui
+#import easygui as gui
 import logging
 
 from tkinter import filedialog
