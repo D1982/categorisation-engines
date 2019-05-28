@@ -8,7 +8,7 @@ import os
 import collections
 import logging
 import requests
-
+import json
 
 class TinkAPI:
     def __init__(self):
@@ -157,7 +157,7 @@ class UserService(TinkAPI):
     def __init__(self):
         super().__init__()
 
-    def activate_user(self, ext_user_id, locale, market, client_access_token):
+    def activate_user(self, ext_user_id, label, market, locale, client_access_token):
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -168,13 +168,14 @@ class UserService(TinkAPI):
         req.headers.update({'Content-Type': 'application/json'})
         # Request body
         req.data.update({'external_user_id': ext_user_id})
-        req.data.update({'locale': locale})
+        #req.data.update({'label': label})
         req.data.update({'market': market})
+        req.data.update({'locale': locale})
         # Log Request
         logging.debug('POST {dest} using data {data}'.format(
                 dest=req.endpoint, data=req.data))
         # Fire the request against the API endpoint
-        response = requests.post(url=req.endpoint, data=req.data, headers=req.headers)
+        response = requests.post(url=req.endpoint, data=json.dumps(req.data), headers=req.headers)
         # Process the response
         resp = UserActivationResponse(response)
         # Log the result depending on the HTTP status code
