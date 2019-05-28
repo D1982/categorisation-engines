@@ -17,7 +17,7 @@ class TinkDAO:
         self.trx_src = 'unbound'
 
         # Field names of interest
-        self.fieldnames_user = ('external_user_id', 'label', 'locale', 'market')
+        self.fieldnames_user = ('external_user_id', 'label', 'market', 'locale')
         self.fieldnames_acc = ('x', 'y', 'z')
         self.fieldnames_trx = ('x', 'y', 'z')
 
