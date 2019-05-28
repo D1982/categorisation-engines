@@ -1,4 +1,4 @@
-external_user_id;label;locale;market
-42;Daniel Ott;en_UK; UK
-43;Simon the Soccerer;en_UK; UK
-44;Pelin Teeee;UK;en_UK; UK
+external_user_id;label;market;locale
+42;Daniel Ott;GB;en_GB
+43;Simon the Soccerer;GB;en_GB
+44;Pelin Teeee;GB;en_GB
