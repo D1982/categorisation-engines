@@ -30,7 +30,7 @@ IN_FILE_PATTERN_TINK = 'data/TinkReq*.csv'
 OUT_FILE_PATTERN_TINK = 'data/TinkResp*.csv'
 
 # UI
-UI_STRING_MAX_WITH = 100
+UI_STRING_MAX_WITH = 200
 
 # Enumerations
 class TinkEntityType(Enum):
