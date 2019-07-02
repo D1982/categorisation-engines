@@ -5,6 +5,7 @@ import Categorisation.Tink.model as model
 import Categorisation.Tink.api as api
 
 import Categorisation.Common.config as cfg
+import Categorisation.Common.util as utl
 
 import os
 import tkinter as tk
@@ -70,7 +71,7 @@ class TinkUI:
         self.label_file_patterns = tk.Label(self.file_frame, bg='lavender', text='File patterns:')
         self.label_file_in = tk.Label(self.file_frame, text='Input:')
         self.label_file_out = tk.Label(self.file_frame, text='Output:')
-
+        # ---
         self.label_files = tk.Label(self.file_frame, bg='lavender', text='Files:')
         self.label_file_users = tk.Label(self.file_frame, text='Input file Users:')
         self.label_file_accounts = tk.Label(self.file_frame, text='Input file Users:')
@@ -81,6 +82,10 @@ class TinkUI:
         self.entry_user_file = tk.Entry(self.file_frame, width=40)
         self.entry_acc_file = tk.Entry(self.file_frame, width=40)
         self.entry_trx_file = tk.Entry(self.file_frame, width=40)
+
+        self.show_userdata_button = tk.Button(self.file_frame, fg='violet', text='Show User Data')
+        self.show_accdata_button = tk.Button(self.file_frame, fg='violet', text='Show Account Data')
+        self.show_trxdata_button = tk.Button(self.file_frame, fg='violet', text='Show Trx Data')
 
         self.label_user_file = tk.Label(self.file_frame, text='User file:')
         self.label_account_file = tk.Label(self.file_frame, text='Account file:')
@@ -103,6 +108,10 @@ class TinkUI:
         self.entry_user_file.grid(row=4, column=2, sticky=tk.W)
         self.entry_acc_file.grid(row=5, column=2, sticky=tk.W)
         self.entry_trx_file.grid(row=6, column=2, sticky=tk.W)
+
+        self.show_userdata_button.grid(row=4, column=3, sticky=tk.W)
+        self.show_accdata_button.grid(row=5, column=3, sticky=tk.W)
+        self.show_trxdata_button.grid(row=6, column=3, sticky=tk.W)
 
     def setup_config_frame(self):
 
@@ -194,6 +203,10 @@ class TinkUI:
 
     # Assign the commands to the buttons
     def button_command_binding(self):
+        self.show_userdata_button['command'] = self.button_show_userdata
+        self.show_accdata_button['command'] = self.button_show_accdata
+        self.show_trxdata_button['command'] = self.button_show_trxdata
+
         self.test_button['command'] = self.button_check_connectivity
         self.auth_button['command'] = self.button_authenticate
         self.activate_users_button['command'] = self.button_activate_users
@@ -203,6 +216,35 @@ class TinkUI:
         self.save_button['command'] = self.save_output_to_file
 
     """ Button Actions """
+    # Action for button 'Show User Data'
+    def button_show_userdata(self):
+        self.clear_result_log()
+        self.put_result_log('*** User data ***')
+        result_list = self.model.read_user_data()
+
+        if result_list:
+            text = utl.list_to_string(result_list)
+            self.put_result_log(text)
+
+    # Action for button 'Show Account Data'
+    def button_show_accdata(self):
+        self.clear_result_log()
+        self.put_result_log('*** Account data ***')
+        result_list = self.model.read_account_data()
+
+        if result_list:
+            text = utl.list_to_string(result_list)
+            self.put_result_log(text)
+
+    # Action for button 'Show Account Data'
+    def button_show_trxdata(self):
+        self.clear_result_log()
+        self.put_result_log('*** Transaction data ***')
+        result_list = self.model.read_transaction_data()
+
+        if result_list:
+            text = utl.list_to_string(result_list)
+            self.put_result_log(text)
 
     # Action for button 'Test API connectivity'
     def button_check_connectivity(self):
@@ -229,7 +271,7 @@ class TinkUI:
 
     # Action for button 'Clear'
     def button_clear_log(self):
-        self.result_log.delete(1.0, tk.END)
+        self.clear_result_log()
 
     # Action for button 'Save to file'
     def save_output_to_file(self):
@@ -252,15 +294,13 @@ class TinkUI:
 
     """ Output """
 
+    def clear_result_log(self):
+        self.result_log.delete(1.0, tk.END)
+
     def put_result_log(self, text):
         # self.result_log['text'] += os.linesep*2 + text
         self.result_log.insert(tk.INSERT, os.linesep*2 + text)
         self.result_log.see(tk.END)
-
-
-    def print_result_log(self, text):
-        # Place the resulting logs into the label
-        self.put_result_log(text)
 
     def run(self):
         # Start the application
