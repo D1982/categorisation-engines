@@ -18,8 +18,13 @@ class TinkDAO:
 
         # Field names of interest
         self.fieldnames_user = ('external_user_id', 'label', 'market', 'locale')
-        self.fieldnames_acc = ('x', 'y', 'z')
-        self.fieldnames_trx = ('x', 'y', 'z')
+        self.fieldnames_acc = ('userExternalId', 'externalId','availableCredit',
+                               'balance', 'name', 'type', 'flags', 'number',
+                               'reservedAmount')
+
+        self.fieldnames_trx = ('amount', 'date', 'description', 'externalId',
+                               'payload', 'pending', 'tinkId', 'type')
+
 
         # Data collections
         self.users = collections.OrderedDict()
@@ -47,10 +52,19 @@ class TinkDAO:
 
         return self.users
 
-    def read_accounts(self):
-        util.FileHandler.read_csv_file(self.acc_src, self.fieldnames_user)
+    def read_accounts(self, force_read=True):
+        if not self.accounts or force_read is True:
+            data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=self.fieldnames_acc)
 
-    def read_transactions(self):
-        util.FileHandler.read_csv_file(self.trx_src, self.fieldnames_user)
+            self.accounts = data  # Returns a List<OrderedDict>
 
+        return self.accounts
+
+    def read_transactions(self, force_read=True):
+        if not self.transactions or force_read is True:
+            data = self.file_handler.read_csv_file(filename=self.trx_src, fieldnames=self.fieldnames_trx)
+
+            self.transactions = data  # Returns a List<OrderedDict>
+
+        return self.transactions
 
