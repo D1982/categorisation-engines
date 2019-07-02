@@ -1,0 +1,2 @@
+amount;date;description;externalId;payload;pending;tinkId;type
+4200;2019-06-20;Daniel's Payment at Sixt;42000;payload;false;string;CREDIT_CARD
