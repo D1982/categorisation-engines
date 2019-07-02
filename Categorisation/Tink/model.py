@@ -16,6 +16,17 @@ class TinkModel:
         self.expires_in = ''
         self.scope = ''
 
+    # Read test data from files
+    def read_user_data(self):
+        return self.dao.read_users()
+
+    def read_account_data(self):
+        return self.dao.read_accounts()
+
+    def read_transaction_data(self):
+        return self.dao.read_transactions()
+
+    # Health checks
     def test_connectivity(self):
         s = api.MonitoringService()
 
