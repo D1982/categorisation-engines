@@ -1,9 +1,17 @@
+"""Encapsulation of data access for the Tink client."""
+
 import Categorisation.Common.util as util
 import Categorisation.Common.config as cfg
 
-
 import collections
 import logging
+
+
+"""Class that provides data access for the Tink client application.
+
+The Data Access Object is the single point of contact for any interaction with data sources
+like files, databases or similar. 
+"""
 
 
 class TinkDAO:

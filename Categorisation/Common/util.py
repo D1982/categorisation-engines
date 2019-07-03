@@ -1,4 +1,4 @@
-""" Common utilities
+"""Common utilities.
 
 Basic utilities e.g. for dealing with files (data, JSON).
 Working With JSON Data in Python: https://realpython.com/python-json/
@@ -11,8 +11,12 @@ import json
 import os.path
 
 
+"""File handling utility class"""
+
+
 class FileHandler:
 
+    """Read a JSON file from the local file system."""
     def read_json_file(self, filename):
         extension = os.path.splitext(filename)[1]
         if extension == '.json':
@@ -20,11 +24,13 @@ class FileHandler:
                 json_dict = json.load(json_data)
         return json_dict
 
+    """Write a JSON file to the local file system."""
     def write_json_file(self, json_data, filename):
         jsonfile = open(filename, 'w')
         json.dump(json_data, jsonfile)
         jsonfile.write('\n')
 
+    """Read a CSV file from the local file system."""
     def read_csv_file(self, filename, fieldnames, skip_header=True):
         extension = os.path.splitext(filename)[1]
         if extension == '.data' or extension == '.txt' or extension == '.csv':
@@ -37,12 +43,20 @@ class FileHandler:
                 csv_data.append(row)
         return csv_data
 
+    """Write a CSV file to the local file system."""
     def write_csv_file(self, data, fieldnames, filename):
         csvfile = open(filename, 'w')
         csvwriter = csv.DictWriter(csvfile, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
         csvwriter.writeheader()
         for rec in data:
             csvwriter.writerow(rec)
+
+
+"""Function to print a list as a better readable formatted string.
+
+The considered input format is a list of tuples List<Tuple>.
+The output format is key1:value1, key2:value2, ...
+"""
 
 
 def list_to_string(lst):
