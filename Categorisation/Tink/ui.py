@@ -4,6 +4,9 @@ import Categorisation.Common.config as cfg
 import Categorisation.Common.util as utl
 
 import os
+import sys
+import logging
+
 import tkinter as tk
 import tkinter.scrolledtext as tkst
 
@@ -13,6 +16,10 @@ from tkinter import filedialog
 class TinkUI:
 
     def __init__(self, facade):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self._model = facade  # Linked model
 
         # --- Setup main window structure
@@ -68,6 +75,10 @@ class TinkUI:
 
     """Setup the main window."""
     def create_windows(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Widgets
         self.window = tk.Tk()
         self.window.title('Tink API Testing')
@@ -78,6 +89,10 @@ class TinkUI:
 
     """Setup the frames."""
     def create_frames(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Widgets
         self.header_frame = tk.Frame(master=self.window, padx=5, pady=5)
         self.file_frame = tk.Frame(master=self.window, padx=5, pady=5)
@@ -93,6 +108,10 @@ class TinkUI:
 
     """Setup the elements within the file frame."""
     def setup_file_frame(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Widgets
         self.label_file_patterns = tk.Label(self.file_frame, bg='lavender', text='File patterns:')
         self.label_file_in = tk.Label(self.file_frame, text='Input:')
@@ -151,6 +170,10 @@ class TinkUI:
 
     """Setup the elements within the command frame."""
     def setup_command_frame(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Widgets
         self.label_commands = tk.Label(self.command_frame, bg='lavender', text='Commands:')
         self.test_button = tk.Button(self.command_frame, fg='blue', text='Test API connectivity')
@@ -168,6 +191,9 @@ class TinkUI:
 
     """Setup the elements within the result frame."""
     def setup_result_frame(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
 
         # Widgets
         self.label_results = tk.Label(self.result_frame, bg='lavender', text='Results:')
@@ -190,6 +216,10 @@ class TinkUI:
 
     """Initialization of the UI components e.g. with default data."""
     def ui_data(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         root_path = self.entry_file_in['text']
         in_pattern = cfg.IN_FILE_PATTERN_TINK
         out_pattern = cfg.OUT_FILE_PATTERN_TINK
@@ -223,6 +253,10 @@ class TinkUI:
 
     """Setup event handlers assigning actions to buttons."""
     def button_command_binding(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.show_userdata_button['command'] = self.button_show_userdata
         self.show_accdata_button['command'] = self.button_show_accdata
         self.show_trxdata_button['command'] = self.button_show_trxdata
@@ -237,12 +271,20 @@ class TinkUI:
 
     """Main thread running the ui application in the main window."""
     def run(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.window.mainloop()
 
     # --- Event Handlers
 
     """Event Handler for button to display user data."""
     def button_show_userdata(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.clear_result_log()
         self.put_result_log('*** User data ***')
         result_list = self._model.read_user_data()
@@ -253,6 +295,10 @@ class TinkUI:
 
     """Event Handler for button to display account data."""
     def button_show_accdata(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.clear_result_log()
         self.put_result_log('*** Account data ***')
         result_list = self._model.read_account_data()
@@ -263,6 +309,10 @@ class TinkUI:
 
     """Event Handler for button to display transaction data."""
     def button_show_trxdata(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.clear_result_log()
         self.put_result_log('*** Transaction data ***')
         result_list = self._model.read_transaction_data()
@@ -273,6 +323,10 @@ class TinkUI:
 
     """Event Handler (Callback) for Checkbox 'Pre-delete'."""
     def chkbox_delete_cb(self, event=None):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         val = self.chkbox_delete_val.get()
         self._model.delete_flag = val
         print(self._model.delete_flag)
@@ -280,6 +334,10 @@ class TinkUI:
 
     """Event Handler (Callback) for Checkbox 'Use proxy'."""
     def chkbox_proxy_cb(self, event=None):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         val = self.chkbox_proxy_val.get()
         self._model.proxy_flag = val
         print(self._model.proxy_flag)
@@ -292,28 +350,48 @@ class TinkUI:
 
     """Event Handler for button to authorize client access."""
     def button_authenticate(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.put_result_log('*** Authorize client access ***')
         result = self._model.authorize_client()
         self.put_result_log(result)
 
     """Event Handler for button to create a users."""
     def button_activate_users(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.put_result_log('*** Activate users ***')
         result = self._model.activate_users()
         self.put_result_log(result)
 
     """Event Handler for button to delete users."""
     def button_delete_users(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.put_result_log('*** Delete existing users ***')
         result = self._model.delete_users()
         self.put_result_log(result)
 
     """Event Handler for button to clear the output."""
     def button_clear_log(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.clear_result_log()
 
     """Event Handler for button to save the output into a file."""
     def save_output_to_file(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         type_list = [('Text files', '*.txt')]
         file_name = filedialog.asksaveasfilename(
             filetypes=type_list, defaultextension='*.txt'
@@ -328,6 +406,10 @@ class TinkUI:
     Currently the source data locations are solely files).
     """
     def data_bindings(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Provide required input data to the data access object (source data locations, here files)
         self._model.dao.bind_data_source(cfg.TinkEntityType.UserEntity, self.entry_user_file.get())
         self._model.dao.bind_data_source(cfg.TinkEntityType.AccountEntity, self.entry_acc_file.get())

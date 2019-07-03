@@ -3,6 +3,7 @@
 import Categorisation.Common.util as util
 import Categorisation.Common.config as cfg
 
+import sys
 import collections
 import logging
 
@@ -17,7 +18,9 @@ like files, databases or similar.
 class TinkDAO:
 
     def __init__(self):
-        logging.info("Initiated:" + "TinkDAO.__init__()")
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
 
         # Data sources
         self.user_src = 'unbound'
@@ -44,6 +47,10 @@ class TinkDAO:
 
 
     def bind_data_source(self, src_type, locator):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         if src_type == cfg.TinkEntityType.UserEntity:
             self.user_src = locator
         elif src_type == cfg.TinkEntityType.AccountEntity:
@@ -52,6 +59,9 @@ class TinkDAO:
             self.trx_src = locator
 
     def read_users(self, force_read=True):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
 
         if not self.users or force_read is True:
             data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=self.fieldnames_user)
@@ -61,6 +71,10 @@ class TinkDAO:
         return self.users
 
     def read_accounts(self, force_read=True):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         if not self.accounts or force_read is True:
             data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=self.fieldnames_acc)
 
@@ -69,6 +83,10 @@ class TinkDAO:
         return self.accounts
 
     def read_transactions(self, force_read=True):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         if not self.transactions or force_read is True:
             data = self.file_handler.read_csv_file(filename=self.trx_src, fieldnames=self.fieldnames_trx)
 

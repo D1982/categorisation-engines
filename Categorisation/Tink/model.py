@@ -22,7 +22,9 @@ print appropriately to the output.
 class TinkModel:
 
     def __init__(self, dao):
-        logging.info("Initiated:" + "TinkModel.__init__()")
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
 
         # Data Access Object
         self.dao = dao
@@ -44,19 +46,31 @@ class TinkModel:
 
     # Read test data from files
     def read_user_data(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         return self.dao.read_users()
 
     def read_account_data(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         return self.dao.read_accounts()
 
     def read_transaction_data(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         return self.dao.read_transactions()
 
     """Test the API connectivity."""
     def test_connectivity(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
-        logging.info(result_log)
+        logging.debug(result_log)
 
         s = api.MonitoringService()
 
@@ -72,12 +86,15 @@ class TinkModel:
 
     """Authorize the client (Tink customer account)."""
     def authorize_client(self, grant_type='client_credentials', scope='authorization:grant', ):
-        result_log = ''
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Call API
         s = api.OAuthService()
         (request, response) = s.authorize_client_access(grant_type=grant_type, scope=scope)
-        # Save output parameters in dedicated member variables => Facilitates data flow
 
+        # Save output parameters in dedicated member variables => Facilitates data flow
         if response.status_code == 200:
             self.access_token= response.data['access_token']
             self.token_type = response.data['token_type']
@@ -97,7 +114,10 @@ class TinkModel:
     This is to be considered as a workaround resp. the only way to delete an existing user.
     """
     def authorize_client_delete(self, grant_type='client_credentials', scope='user:delete', delete_dict=None):
-        result_log = ''
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         if not delete_dict:
             msg = 'Method authorize_client_delete() was invoked without data to be deleted'
             logging.warning(msg)
@@ -143,7 +163,10 @@ class TinkModel:
     2. It is clear that it would be more efficient to use one single API wrapper
     """
     def activate_users(self):
-        result_log = ''
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Get user data
         users = self.dao.read_users()
         #  Authorize client to create users
@@ -161,7 +184,10 @@ class TinkModel:
 
     """Initiates the creation of a single user in the Tink platform."""
     def activate_user(self, ext_user_id, label, market, locale, client_access_token):
-        result_log = ''
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Make sure that there is a valid client_access_token available
         if not client_access_token:
             result_log += self.authorize_client(scope='user:create')
@@ -189,7 +215,10 @@ class TinkModel:
     scope=accounts:read,transactions:read,statistics:read,user:read,investments:read,credentials:write,credentials:read,credentials:refresh,user:delete& *external_user_id=your_external_id* (edited)
     """
     def user_exists(self, user_id=None, external_user_id=None):
-        result_log = ''
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         if user_id:
             delete_dict = {'user_id': user_id}
         elif external_user_id:
@@ -208,7 +237,7 @@ class TinkModel:
     def delete_users(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
-        logging.info(result_log)
+        logging.debug(result_log)
 
         # Check if pre-delete is allowed
         if not self.delete_flag:
@@ -235,7 +264,11 @@ class TinkModel:
         result_log += request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
         return result_log
 
-    def get_categories(self):
+    def get_categories(self):#
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         service = api.CategoryService()
         return service.list_categories()
 

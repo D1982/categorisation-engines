@@ -4,6 +4,7 @@ import Categorisation.Common.config as cfg
 import Categorisation.Common.secret as secret
 
 import os
+import sys
 import collections
 import logging
 import requests
@@ -14,6 +15,10 @@ import json
 
 class TinkAPI:
     def __init__(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.url_root = cfg.API_URL_TINK
         self.service_group = None
         self.service = None
@@ -29,6 +34,10 @@ class TinkAPI:
 
 class TinkAPIRequest:
     def __init__(self, method, endpoint):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         self.method = method
         self.endpoint = endpoint
         self.headers = collections.OrderedDict()
@@ -61,6 +70,10 @@ class TinkAPIRequest:
 
 class TinkAPIResponse:
     def __init__(self, response):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Data from requests.Response object
         self.text = response.text or ''
         self.content = response.content or '{}'
@@ -109,9 +122,17 @@ class TinkAPIResponse:
 
 class MonitoringService(TinkAPI):
     def __init__(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__()
 
     def ping(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'GET'
@@ -129,6 +150,10 @@ class MonitoringService(TinkAPI):
         return req, resp
 
     def health_check(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'GET'
@@ -150,9 +175,17 @@ class MonitoringService(TinkAPI):
 
 class CategoryService(TinkAPI):
     def __init__(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__()
 
     def list_categories(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'GET'
@@ -174,10 +207,18 @@ class CategoryService(TinkAPI):
 
 class UserService(TinkAPI):
     def __init__(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__()
 
     """Create a new user in the Tink platform."""
     def activate_user(self, ext_user_id, label, market, locale, client_access_token):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -211,6 +252,10 @@ class UserService(TinkAPI):
 
     """Delete an existing user in the Tink platform."""
     def delete_user(self, user_id, ext_user_id, client_access_token):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -244,6 +289,10 @@ class UserService(TinkAPI):
 
 class OAuthService(TinkAPI):
     def __init__(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__()
 
     """Authorize access to the client (company account).
@@ -256,6 +305,10 @@ class OAuthService(TinkAPI):
     appropriate refresh token that should also be kept as a secret (like the client secret)
     """
     def authorize_client_access(self, grant_type, scope, delete_dict=None):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -299,6 +352,10 @@ class OAuthService(TinkAPI):
     https://docs.tink.com/enterprise/api/#create-an-authorization-for-the-given-user-id-with-requested-scopes
     """
     def grant_user_access(self, client_access_token, user_id, ext_user_id, scope='user:read'):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -334,6 +391,10 @@ class OAuthService(TinkAPI):
     ​https://api.tink.se/api/v1/oauth/token
     """
     def get_oauth_access_token(self, code, ):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         # Target API specifications
         url = self.url_root
         method = 'POST'
@@ -371,6 +432,10 @@ class OAuthService(TinkAPI):
 class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
 
     def __init__(self, response):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__(response)
 
         # Define fields of interest referring to the official API documentation
@@ -385,6 +450,10 @@ class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
 class OAuth2AuthorizeResponse(TinkAPIResponse):
 
     def __init__(self, response):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__(response)
 
         # Define fields of interest referring to the official API documentation
@@ -403,6 +472,10 @@ class OAuth2AuthorizeResponse(TinkAPIResponse):
 class UserActivationResponse(TinkAPIResponse):
 
     def __init__(self, response):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__(response)
 
         # Define fields of interest referring to the official API documentation
@@ -422,6 +495,10 @@ class UserActivationResponse(TinkAPIResponse):
 class UserDeleteResponse(TinkAPIResponse):
 
     def __init__(self, response):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         super().__init__(response)
 
         # Define fields of interest referring to the official API documentation

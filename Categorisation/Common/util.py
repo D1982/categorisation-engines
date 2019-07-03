@@ -9,7 +9,8 @@ import Categorisation.Common.config as cfg
 import csv
 import json
 import os.path
-
+import logging
+import sys
 
 """File handling utility class"""
 
@@ -18,6 +19,10 @@ class FileHandler:
 
     """Read a JSON file from the local file system."""
     def read_json_file(self, filename):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         extension = os.path.splitext(filename)[1]
         if extension == '.json':
             with open(filename) as json_data:
@@ -26,12 +31,20 @@ class FileHandler:
 
     """Write a JSON file to the local file system."""
     def write_json_file(self, json_data, filename):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         jsonfile = open(filename, 'w')
         json.dump(json_data, jsonfile)
         jsonfile.write('\n')
 
     """Read a CSV file from the local file system."""
     def read_csv_file(self, filename, fieldnames, skip_header=True):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         extension = os.path.splitext(filename)[1]
         if extension == '.data' or extension == '.txt' or extension == '.csv':
             csvfile = open(filename, 'r')
@@ -45,6 +58,10 @@ class FileHandler:
 
     """Write a CSV file to the local file system."""
     def write_csv_file(self, data, fieldnames, filename):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
         csvfile = open(filename, 'w')
         csvwriter = csv.DictWriter(csvfile, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
         csvwriter.writeheader()
