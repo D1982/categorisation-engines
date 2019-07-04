@@ -34,7 +34,7 @@ class TinkDAO:
                                'reservedAmount')
 
         self.fieldnames_trx = ('amount', 'date', 'description', 'externalId',
-                               'payload', 'pending', 'tinkId', 'type')
+                               'payload', 'pending', 'tinkId', 'type', 'n26cat', 'currency')
 
 
         # Data collections
