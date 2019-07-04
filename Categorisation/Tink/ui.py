@@ -81,7 +81,7 @@ class TinkUI:
 
         # Widgets
         self.window = tk.Tk()
-        self.window.title('Tink API Testing')
+        self.window.title('Tink Client Application for API Testing')
 
         # Layout
         self.window.grid_rowconfigure(1, weight=1)
@@ -250,6 +250,8 @@ class TinkUI:
         self.entry_proxy.config(state='normal')
         self.entry_proxy.insert(0, cfg.PROXY_URL + ':' + cfg.PROXY_PORT)
         self.entry_proxy.config(state='readonly')
+
+        self.result_log.insert(tk.INSERT, 'Tink Client Application started: Please choose an option ...')
 
     """Setup event handlers assigning actions to buttons."""
     def button_command_binding(self):
