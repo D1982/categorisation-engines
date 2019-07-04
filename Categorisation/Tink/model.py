@@ -264,6 +264,53 @@ class TinkModel:
         result_log += request.to_string_formatted() + os.linesep*2 + response.to_string_formatted()
         return result_log
 
+    """Initiates the ingestion of accounts in the Tink platform."""
+    def ingest_accounts(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+    """Initiates the deletion of accounts in the Tink platform."""
+    def delete_accounts(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+    """Initiates the retrieval of a list of all accounts in the Tink platform."""
+    def list_accounts(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+    """Initiates the ingestion of transactions in the Tink platform."""
+    def ingest_trx(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+    """Initiates the deletion of transactions in the Tink platform."""
+    def delete_trx(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+    """Initiates the retrieval of a list of all transactions in the Tink platform."""
+    def list_trx(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+    """Process the full PoC pileline.#
+    Create users
+    Ingest accounts
+    Ingest transactions
+    """
+    def process(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+
     def get_categories(self):#
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)

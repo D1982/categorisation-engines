@@ -176,18 +176,34 @@ class TinkUI:
 
         # Widgets
         self.label_commands = tk.Label(self.command_frame, bg='lavender', text='Commands:')
-        self.test_button = tk.Button(self.command_frame, fg='blue', text='Test API connectivity')
-        self.test_button = tk.Button(self.command_frame, fg='blue', text='Test API connectivity')
-        self.auth_button = tk.Button(self.command_frame, fg='blue', text='Authorize client access')
-        self.activate_users_button = tk.Button(self.command_frame, fg='blue', text='Create users')
-        self.delete_users_button = tk.Button(self.command_frame, fg='blue', text='Delete users')
+        self.test_button = tk.Button(self.command_frame, fg='orange', text='Test API connectivity')
+
+        self.activate_users_button = tk.Button(self.command_frame, fg='green', text='Create user(s)')
+        self.delete_users_button = tk.Button(self.command_frame, fg='green', text='Delete user(s)')
+
+        self.ingest_accounts_button = tk.Button(self.command_frame, fg='blue', text='Ingest account(s)')
+        self.delete_accounts_button = tk.Button(self.command_frame, fg='blue', text='Delete account(s)')
+        self.list_accounts_button = tk.Button(self.command_frame, fg='blue', text='List account(s)')
+
+        self.ingest_trx_button = tk.Button(self.command_frame, fg='violet', text='Ingest transaction(s)')
+        self.delete_trx_button = tk.Button(self.command_frame, fg='violet', text='Delete transaction(s)')
+        self.list_trx_button = tk.Button(self.command_frame, fg='violet', text='List transaction(s)')
+
+        self.process_button = tk.Button(self.command_frame, fg='red', text='Process all (the full workflow)')
 
         # Layout
         self.label_commands.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
         self.test_button.grid(row=1, column=1, sticky=tk.W)
-        self.auth_button.grid(row=2, column=1, sticky=tk.W)
+        self.process_button.grid(row=1, column=2, sticky=tk.W)
+
         self.activate_users_button.grid(row=3, column=1, sticky=tk.W)
-        self.delete_users_button.grid(row=3, column=2, sticky=tk.W)
+        self.delete_users_button.grid(row=4, column=1, sticky=tk.W)
+        self.ingest_accounts_button.grid(row=3, column=2, sticky=tk.W)
+        self.delete_accounts_button.grid(row=4, column=2, sticky=tk.W)
+        self.list_accounts_button.grid(row=5, column=2, sticky=tk.W)
+        self.ingest_trx_button.grid(row=3, column=3, sticky=tk.W)
+        self.delete_trx_button.grid(row=4, column=3, sticky=tk.W)
+        self.list_trx_button.grid(row=5, column=3, sticky=tk.W)
 
     """Setup the elements within the result frame."""
     def setup_result_frame(self):
@@ -259,17 +275,21 @@ class TinkUI:
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
 
-        self.show_userdata_button['command'] = self.button_show_userdata
-        self.show_accdata_button['command'] = self.button_show_accdata
-        self.show_trxdata_button['command'] = self.button_show_trxdata
-
-        self.test_button['command'] = self.button_check_connectivity
-        self.auth_button['command'] = self.button_authenticate
-        self.activate_users_button['command'] = self.button_activate_users
-        self.delete_users_button['command'] = self.button_delete_users
-
-        self.clear_button['command'] = self.button_clear_log
-        self.save_button['command'] = self.save_output_to_file
+        self.show_userdata_button['command'] = self.show_userdata_button_cb
+        self.show_accdata_button['command'] = self.show_accdata_button_cb
+        self.show_trxdata_button['command'] = self.show_trxdata_button_cb
+        self.test_button['command'] = self.test_button_cb
+        self.activate_users_button['command'] = self.activate_users_button_cb
+        self.delete_users_button['command'] = self.delete_users_button_cb
+        self.ingest_accounts_button['command'] = self.ingest_accounts_button_cb
+        self.delete_accounts_button['command'] = self.delete_accounts_button_cb
+        self.list_accounts_button['command'] = self.list_accounts_button_cb
+        self.ingest_trx_button['command'] = self.ingest_trx_button_cb
+        self.delete_trx_button['command'] = self.delete_trx_button_cb
+        self.list_trx_button['command'] = self.list_trx_button_cb
+        self.process_button['command'] = self.process_button_cb
+        self.clear_button['command'] = self.clear_button_cb
+        self.save_button['command'] = self.save_button_cb
 
     """Main thread running the ui application in the main window."""
     def run(self):
@@ -282,7 +302,7 @@ class TinkUI:
     # --- Event Handlers
 
     """Event Handler for button to display user data."""
-    def button_show_userdata(self):
+    def show_userdata_button_cb(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
@@ -296,7 +316,7 @@ class TinkUI:
             self.put_result_log(text)
 
     """Event Handler for button to display account data."""
-    def button_show_accdata(self):
+    def show_accdata_button_cb(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
@@ -310,7 +330,7 @@ class TinkUI:
             self.put_result_log(text)
 
     """Event Handler for button to display transaction data."""
-    def button_show_trxdata(self):
+    def show_trxdata_button_cb(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
@@ -346,22 +366,12 @@ class TinkUI:
 
 
     """Event Handler for button to test the API connectivity."""
-    def button_check_connectivity(self):
+    def test_button_cb(self):
         result = self._model.test_connectivity()
         self.put_result_log(result)
 
-    """Event Handler for button to authorize client access."""
-    def button_authenticate(self):
-        # Log current method running
-        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
-        logging.debug(result_log)
-
-        self.put_result_log('*** Authorize client access ***')
-        result = self._model.authorize_client()
-        self.put_result_log(result)
-
     """Event Handler for button to create a users."""
-    def button_activate_users(self):
+    def activate_users_button_cb(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
@@ -371,7 +381,7 @@ class TinkUI:
         self.put_result_log(result)
 
     """Event Handler for button to delete users."""
-    def button_delete_users(self):
+    def delete_users_button_cb(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
@@ -380,8 +390,78 @@ class TinkUI:
         result = self._model.delete_users()
         self.put_result_log(result)
 
+    """Event Handler for button to ingest accounts."""
+    def ingest_accounts_button_cb(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+        self.put_result_log('*** Ingest accounts ***')
+        result = self._model.ingest_accounts()
+        self.put_result_log(result)
+
+    """Event Handler for button to delete accounts."""
+    def delete_accounts_button_cb(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+        self.put_result_log('*** Delete accounts ***')
+        result = self._model.delete_accounts()
+        self.put_result_log(result)
+
+    """Event Handler for button to list accounts."""
+    def list_accounts_button_cb(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+        self.put_result_log('*** List accounts ***')
+        result = self._model.list_accounts()
+        self.put_result_log(result)
+
+    """Event Handler for button to ingest transactions."""
+    def ingest_trx_button_cb(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+        self.put_result_log('*** Ingest transactions ***')
+        result = self._model.ingest_trx()
+        self.put_result_log(result)
+
+    """Event Handler for button to delete transactions."""
+    def delete_trx_button_cb(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+        self.put_result_log('*** Delete transactions ***')
+        result = self._model.delete_trx()
+        self.put_result_log(result)
+
+    """Event Handler for button to list transactions."""
+    def list_trx_button_cb(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+        self.put_result_log('*** List transactions ***')
+        result = self._model.list_trx()
+        self.put_result_log(result)
+
+    """Event Handler for button to list transactions."""
+    def process_button_cb(self):
+        # Log current method running
+        result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(result_log)
+
+        self.put_result_log('*** Process All ***')
+        result = self._model.list_trx()
+        self.put_result_log(result)
+
     """Event Handler for button to clear the output."""
-    def button_clear_log(self):
+    def clear_button_cb(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
@@ -389,7 +469,7 @@ class TinkUI:
         self.clear_result_log()
 
     """Event Handler for button to save the output into a file."""
-    def save_output_to_file(self):
+    def save_button_cb(self):
         # Log current method running
         result_log = '+++ {c}.{m} +++\n'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(result_log)
