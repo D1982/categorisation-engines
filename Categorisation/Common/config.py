@@ -22,7 +22,7 @@ IN_FILE_PATTERN_TINK = 'data/TinkReq*.csv'  # Default file pattern for input fil
 
 OUT_FILE_PATTERN_TINK = 'data/TinkResp*.csv'  # Default file pattern for output files of the Tink PoC
 
-TINK_LOGFILE = 'tink.log'  # Default name of the Tink processing log file
+TINK_LOGFILE = 'logs/tink.log'  # Default name of the Tink processing log file
 
 UI_STRING_MAX_WITH = 200  # Default value for the with of the output text in the ui
 

@@ -1,0 +1,30 @@
+DEBUG:root:+++ TinkDAO.__init__ +++
+
+DEBUG:root:+++ TinkModel.__init__ +++
+
+DEBUG:root:+++ TinkUI.__init__ +++
+
+DEBUG:root:+++ TinkUI.create_windows +++
+
+DEBUG:root:+++ TinkUI.create_frames +++
+
+DEBUG:root:+++ TinkUI.setup_file_frame +++
+
+DEBUG:root:+++ TinkUI.setup_command_frame +++
+
+DEBUG:root:+++ TinkUI.setup_result_frame +++
+
+DEBUG:root:+++ TinkUI.button_command_binding +++
+
+DEBUG:root:+++ TinkUI.ui_data +++
+
+DEBUG:root:+++ TinkUI.data_bindings +++
+
+DEBUG:root:+++ TinkDAO.bind_data_source +++
+
+DEBUG:root:+++ TinkDAO.bind_data_source +++
+
+DEBUG:root:+++ TinkDAO.bind_data_source +++
+
+DEBUG:root:+++ TinkUI.run +++
+
