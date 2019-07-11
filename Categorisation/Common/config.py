@@ -27,15 +27,17 @@ TINK_LOGFILE = 'logs/tink.log'  # Default name of the Tink processing log file
 UI_STRING_MAX_WITH = 200  # Default value for the with of the output text in the ui
 
 """Enumeration of entity type that can be a source of data."""
-# TODO: This class is to be decommissioned
-class TinkEntityType(Enum):
+
+
+class TinkEntityType(Enum):  # TODO: This class is to be decommissioned
     UserEntity = 'UserEntity'
     AccountEntity = 'AccountEntity'
     TransactionEntity = 'TransactionEntity'
 
 
 """Enumeration of different types of data sources."""
-# TODO: This class is to be decommissioned
-class DataSourceType(Enum):
+
+
+class DataSourceType(Enum):  # TODO: This class is to be decommissioned
     CSVFileSource = 'CSVFileSource'
     TinkUI = 'TinkUI'
