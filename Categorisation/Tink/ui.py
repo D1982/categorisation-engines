@@ -115,50 +115,34 @@ class TinkUI:
         :return: void
         """
         # Widgets
-        self.label_file_patterns = tk.Label(self.file_frame, bg='lavender', text='File patterns:')
-        self.label_file_in = tk.Label(self.file_frame, text='Input:')
-        self.label_file_out = tk.Label(self.file_frame, text='Output:')
-
         self.label_files = tk.Label(self.file_frame, bg='lavender', text='Files:')
-        self.label_file_users = tk.Label(self.file_frame, text='Input file Users:')
-        self.label_file_accounts = tk.Label(self.file_frame, text='Input file Users:')
-        self.label_file_trx = tk.Label(self.file_frame, text='Input file Users:')
 
-        self.entry_file_out = tk.Entry(self.file_frame, width=30)
-        self.entry_file_in = tk.Entry(self.file_frame, width=30)
+        self.label_file_users = tk.Label(self.file_frame, text='User data:')
+        self.label_file_accounts = tk.Label(self.file_frame, text='Account data:')
+        self.label_file_trx = tk.Label(self.file_frame, text='Transaction data:')
+
         self.entry_user_file = tk.Entry(self.file_frame, width=40)
         self.entry_acc_file = tk.Entry(self.file_frame, width=40)
         self.entry_trx_file = tk.Entry(self.file_frame, width=40)
 
-        self.show_userdata_button = tk.Button(self.file_frame, fg='violet', text='Show User Data')
-        self.show_accdata_button = tk.Button(self.file_frame, fg='violet', text='Show Account Data')
-        self.show_trxdata_button = tk.Button(self.file_frame, fg='violet', text='Show Trx Data')
-
-        self.label_user_file = tk.Label(self.file_frame, text='User file:')
-        self.label_account_file = tk.Label(self.file_frame, text='Account file:')
-        self.label_trx_file = tk.Label(self.file_frame, text='Transaction file:')
+        self.show_userdata_button = tk.Button(self.file_frame, fg='violet', text='Show')
+        self.show_accdata_button = tk.Button(self.file_frame, fg='violet', text='Show')
+        self.show_trxdata_button = tk.Button(self.file_frame, fg='violet', text='Show')
 
         # Layout
-        self.label_file_patterns.grid(row=0, column=1, padx=0, pady=5, sticky=tk.W)
-        self.label_file_in.grid(row=1, column=1, sticky=tk.E)
-        self.entry_file_in.grid(row=1, column=2, sticky=tk.W)
+        self.label_files.grid(row=0, column=1, padx=0, pady=5, sticky=tk.W)
 
-        self.label_file_out.grid(row=2, column=1, sticky=tk.E)
-        self.entry_file_out.grid(row=2, column=2, sticky=tk.W)
+        self.label_file_users.grid(row=1, column=1, sticky=tk.E)
+        self.label_file_accounts.grid(row=2, column=1, sticky=tk.E)
+        self.label_file_trx.grid(row=3, column=1, sticky=tk.E)
 
-        self.label_files.grid(row=3, column=1, padx=0, pady=5, sticky=tk.W)
+        self.entry_user_file.grid(row=1, column=2, sticky=tk.W)
+        self.entry_acc_file.grid(row=2, column=2, sticky=tk.W)
+        self.entry_trx_file.grid(row=3, column=2, sticky=tk.W)
 
-        self.label_user_file.grid(row=4, column=1, sticky=tk.E)
-        self.label_account_file.grid(row=5, column=1, sticky=tk.E)
-        self.label_trx_file.grid(row=6, column=1, sticky=tk.E)
-
-        self.entry_user_file.grid(row=4, column=2, sticky=tk.W)
-        self.entry_acc_file.grid(row=5, column=2, sticky=tk.W)
-        self.entry_trx_file.grid(row=6, column=2, sticky=tk.W)
-
-        self.show_userdata_button.grid(row=4, column=3, sticky=tk.W)
-        self.show_accdata_button.grid(row=5, column=3, sticky=tk.W)
-        self.show_trxdata_button.grid(row=6, column=3, sticky=tk.W)
+        self.show_userdata_button.grid(row=1, column=5, sticky=tk.W)
+        self.show_accdata_button.grid(row=2, column=5, sticky=tk.W)
+        self.show_trxdata_button.grid(row=3, column=5, sticky=tk.W)
 
     def setup_config_frame(self):
         """
@@ -227,7 +211,7 @@ class TinkUI:
             master=self.result_frame,
             wrap=tk.WORD,
             width=cfg.UI_STRING_MAX_WITH,
-            height=10,
+            height=15,
             bg='beige'
         )
         self.save_button = tk.Button(self.result_frame, text='Save logs to file')
@@ -245,28 +229,21 @@ class TinkUI:
 
         :return: void
         """
-        root_path = self.entry_file_in['text']
-        in_pattern = cfg.IN_FILE_PATTERN_TINK
-        out_pattern = cfg.OUT_FILE_PATTERN_TINK
-
-        self.entry_file_in.insert(1, cfg.IN_FILE_PATTERN_TINK)
-        self.entry_file_out.insert(1, cfg.OUT_FILE_PATTERN_TINK)
-
         # Set User file string
         text = self.entry_user_file
         text.config(state='normal')
-        text.insert(0, root_path + in_pattern.replace('*', 'Users'))
+        text.insert(0, cfg.IN_FILE_PATTERN_TINK.replace('*', 'Users'))
         text.config(state='readonly')
 
         # Set Accounts file string
         text = self.entry_acc_file
         text.config(state='normal')
-        text.insert(0, root_path + in_pattern.replace('*', 'Accounts'))
+        text.insert(0, cfg.IN_FILE_PATTERN_TINK.replace('*', 'Accounts'))
         text.config(state='readonly')
 
         # Set Transactions file string
         self.entry_trx_file.config(state='normal')
-        self.entry_trx_file.insert(0, root_path + in_pattern.replace('*', 'Transactions'))
+        self.entry_trx_file.insert(0, cfg.IN_FILE_PATTERN_TINK.replace('*', 'Transactions'))
         self.entry_trx_file.config(state='readonly')
 
         # Checkbuttons
