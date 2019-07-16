@@ -7,7 +7,9 @@ import Categorisation.Common.config as cfg
 import Categorisation.Common.util as utl
 
 import sys
+import os
 import logging
+import datetime
 
 import tkinter as tk
 import tkinter.scrolledtext as tkst
@@ -16,6 +18,8 @@ from tkinter import filedialog
 
 
 class TinkUI:
+
+    WELCOME_TEXT = 'Tink Client Application started: Please choose an option ...'
 
     def __init__(self, facade):
         """
@@ -253,8 +257,7 @@ class TinkUI:
         self.entry_proxy.config(state='normal')
         self.entry_proxy.insert(0, cfg.PROXY_URL + ':' + cfg.PROXY_PORT)
         self.entry_proxy.config(state='readonly')
-
-        self.result_log.insert(tk.INSERT, 'Tink Client Application started: Please choose an option ...')
+        self.put_result_log(text=TinkUI.WELCOME_TEXT, nl=2, time=False)
 
     def button_command_binding(self):
         """
@@ -340,7 +343,6 @@ class TinkUI:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
         val = self.chkbox_delete_val.get()
         self._model.delete_flag = val
-        print(self._model.delete_flag)
 
     def chkbox_proxy_cb(self, event=None):
         """
@@ -352,7 +354,6 @@ class TinkUI:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
         val = self.chkbox_proxy_val.get()
         self._model.proxy_flag = val
-        print(self._model.proxy_flag)
 
     def test_button_cb(self):
         """
@@ -360,8 +361,15 @@ class TinkUI:
 
         :return: void
         """
+        self.put_result_log(text='*** API Health Checks ***', clear=True, time=False)
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self._model.test_connectivity()
+        multi_result = model.TinkModelMultiResult()
+        multi_result = self._model.test_connectivity()
+        text = ''
+        if isinstance(multi_result, model.TinkModelMultiResult):
+            for e in multi_result.results:
+                text += e.response.request.to_string_formatted() + e.response.to_string_formatted()
+        self.put_result_log(text)
 
     def list_categories_button_cb(self):
         """
@@ -369,8 +377,11 @@ class TinkUI:
 
         :return: void
         """
+        self.put_result_log(text='*** List categories ***', clear=True, time=False)
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self._model.list_categories()
+        result = self._model.list_categories()
+        text = result.response.request.to_string_formatted() + result.response.to_string_custom()
+        self.put_result_log(text)
 
     def activate_users_button_cb(self):
         """
@@ -378,10 +389,11 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
         self.put_result_log('*** Activate users ***')
+        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
         result = self._model.activate_users()
-        self.put_result_log(result)
+        msg = result.response.request.to_string_formatted() + result.response.to_string_custom()
+        self.put_result_log(text=msg, clear=True)
 
     def delete_users_button_cb(self):
         """
@@ -392,7 +404,6 @@ class TinkUI:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
         self.put_result_log('*** Delete existing users ***')
         result = self._model.delete_users()
-        self.put_result_log(result)
 
     def ingest_accounts_button_cb(self):
         """
@@ -403,7 +414,6 @@ class TinkUI:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
         self.put_result_log('*** Ingest accounts ***')
         result = self._model.ingest_accounts()
-        self.put_result_log(result)
 
     def delete_accounts_button_cb(self):
         """
@@ -508,18 +518,30 @@ class TinkUI:
     # --- Helpers
 
     """W"""
-    def put_result_log(self, text, clear=False):
+    def put_result_log(self, text: str, clear=False, nl: int = 1, time=True, scroll=False):
         """
         Write to the output (in the ui log area).
 
         :param text: the text to be displayed in the ui log area.
         :param clear: flag indicating whether to clear the log before printing.
+        :param nl: number of newlines between the current text and the new text
+        :param time: flag indicating whether to show the time at the beginning of the line
+        :param scroll: flag indicating whether to scroll automatically with the text
+
         :return: void
         """
         if clear:
             self.clear_result_log()
-        self.result_log.insert(tk.INSERT, text)
-        self.result_log.see(tk.END)
+
+        if time:
+            date_time = utl.strdate(datetime.datetime.now()) + ': '
+        else:
+            date_time = ''
+
+        self.result_log.insert(tk.INSERT, date_time + text + os.linesep * nl)
+
+        if scroll:
+            self.result_log.see(tk.END)
 
     """"""
     def clear_result_log(self):
