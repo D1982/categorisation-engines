@@ -105,3 +105,11 @@ def list_to_string(lst):
         text = text[:-1] + os.linesep
 
     return text
+
+
+def strdate(date):
+    """
+    :param date: A date like e.g. datetime.datetime.now()
+    :return: a formatted date string following the pattern DD.MM.YYYY HH:MM:SS
+    """
+    return date.strftime('%d.%m.%Y %H:%M:%S')
