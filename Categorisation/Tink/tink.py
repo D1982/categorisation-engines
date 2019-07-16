@@ -1,6 +1,4 @@
-""" Tink Application
-
-"""
+"""The entry point to initiate the Tink client application."""
 
 import Categorisation.Tink.ui as ui
 import Categorisation.Tink.model as model
@@ -11,6 +9,10 @@ import logging
 
 
 def main():
+    """
+    Main function starting the Tink client application.
+    :return: void
+    """
     # Initiate Logger
     logging.basicConfig(filename=cfg.TINK_LOGFILE, level=logging.DEBUG)
 
@@ -27,5 +29,6 @@ def main():
     app.run()
 
 
+"""Tink client application Entry Point"""
 if __name__ == '__main__':
     main()
