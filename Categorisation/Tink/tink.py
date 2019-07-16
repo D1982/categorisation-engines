@@ -8,11 +8,11 @@ import Categorisation.Common.config as cfg
 import logging
 
 
-"""Main function starting the Tink client application."""
-
-
 def main():
-
+    """
+    Main function starting the Tink client application.
+    :return: void
+    """
     # Initiate Logger
     logging.basicConfig(filename=cfg.TINK_LOGFILE, level=logging.DEBUG)
 
