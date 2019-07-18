@@ -19,6 +19,15 @@ from tkinter import filedialog
 
 class TinkUI:
 
+    """
+    This class manages the user interface for the Tink Client application.
+    The communication with Tinks API goes over a dedicated facade "model".
+    The logical communication flow can be considered as follows:
+    - ui.TinkUI uses model.TinkModel in order to perform any action
+    - model.TinkModel uses data.TinkDAO (Data Access Object) e.g. to read data form files
+    - model.TinkModel uses api.* in order to communicate with Tink's API endpoints
+    """
+
     WELCOME_TEXT = 'Tink Client Application started: Please choose an option ...'
 
     def __init__(self, facade):
@@ -404,6 +413,8 @@ class TinkUI:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
         self.put_result_log('*** Delete existing users ***')
         result = self._model.delete_users()
+        print(result)
+
 
     def ingest_accounts_button_cb(self):
         """
