@@ -12,10 +12,12 @@ import os.path
 import logging
 import sys
 
-"""File handling utility class"""
-
 
 class FileHandler:
+
+    """
+    File handling utility class.
+    """
 
     def read_json_file(self, filename):
         """
@@ -82,12 +84,6 @@ class FileHandler:
         csv_writer.writeheader()
         for rec in data:
             csv_writer.writerow(rec)
-
-
-"""
-
-T ...
-"""
 
 
 def list_to_string(lst):
