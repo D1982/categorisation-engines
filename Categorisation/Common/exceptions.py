@@ -23,3 +23,15 @@ class TestModeWarning(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
         self.text = message
+
+
+class ExUserNotExisting(Exception):
+
+    """
+    Exception that indicates that a user does not exist within the Tink platform.
+    """
+
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+        self.text = message
