@@ -493,7 +493,7 @@ class OAuthService(TinkAPI):
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
         logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(h=request.data))
+        logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
         response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
 
