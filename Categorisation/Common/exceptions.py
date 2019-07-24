@@ -1,7 +1,9 @@
 """Custom Exceptions."""
 
+import Categorisation.Tink.model as model
 
-class ResponseMissingEntries(Exception):
+
+class ResponseMissingEntriesError(Exception):
 
     """
     Exception that can be raised whenever there are missing data response to an api request.
@@ -25,13 +27,15 @@ class TestModeWarning(Exception):
         self.text = message
 
 
-class ExUserNotExisting(Exception):
+class UserNotExistingError(Exception):
 
     """
     Exception that indicates that a user does not exist within the Tink platform.
     """
 
-    def __init__(self, message):
+    def __init__(self, message, result_list: model.TinkModelResultList):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
         self.text = message
+        self.result_list = result_list
+
