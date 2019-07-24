@@ -3,6 +3,7 @@
 import Categorisation.Tink.model as model
 
 
+# Castlight related exception classes
 class ResponseMissingEntriesError(Exception):
 
     """
@@ -27,15 +28,28 @@ class TestModeWarning(Exception):
         self.text = message
 
 
+# Tink related exception classes
 class UserNotExistingError(Exception):
 
     """
     Exception that indicates that a user does not exist within the Tink platform.
     """
 
-    def __init__(self, message, result_list: model.TinkModelResultList):
+    def __init__(self, message, result_list):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
         self.text = message
         self.result_list = result_list
 
+
+class ParameterError(Exception):
+
+    """
+    Exception that indicates that parameter had not the expected value(s)
+    """
+
+    def __init__(self, message, result_list):
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+        self.text = message
+        self.result_list = result_list
