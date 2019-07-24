@@ -1,6 +1,40 @@
 """Common configuration items."""
 
+import logging
+
 from enum import Enum
+
+
+# Enumerations
+
+class TinkEntityType(Enum):  # TODO: This class is to be decommissioned
+    """
+    Enumeration of entity type that can be a source of data.
+    """
+    UserEntity = 'UserEntity'
+    AccountEntity = 'AccountEntity'
+    TransactionEntity = 'TransactionEntity'
+
+
+class DataSourceType(Enum):  # TODO: This class is to be decommissioned
+    """
+    Enumeration of different types of data sources.
+    """
+    CSVFileSource = 'CSVFileSource'
+    TinkUI = 'TinkUI'
+
+class MessageDetailLevel(Enum):
+    """
+    Enumeration of different message detail levels.
+
+    This values are being used in different areas of the code in order to
+    steer the way text output is being composed.
+    """
+    Low = 'Low message detail restricted to the minimum'
+    Medium = 'Medium message detail including important additional information'
+    High = 'High message detail including some debugging information'
+
+# Constants
 
 CSV_DELIMITER = ';'  # Default delimiter for csv file processing
 
@@ -26,18 +60,6 @@ TINK_LOGFILE = 'logs/tink.log'  # Default name of the Tink processing log file
 
 UI_STRING_MAX_WITH = 200  # Default value for the with of the output text in the ui
 
-"""Enumeration of entity type that can be a source of data."""
+LOG_LEVEL = logging.DEBUG  # Default log level for logging
 
-
-class TinkEntityType(Enum):  # TODO: This class is to be decommissioned
-    UserEntity = 'UserEntity'
-    AccountEntity = 'AccountEntity'
-    TransactionEntity = 'TransactionEntity'
-
-
-"""Enumeration of different types of data sources."""
-
-
-class DataSourceType(Enum):  # TODO: This class is to be decommissioned
-    CSVFileSource = 'CSVFileSource'
-    TinkUI = 'TinkUI'
+UI_RESULT_LOG_MSG_DETAIL = MessageDetailLevel.Low
