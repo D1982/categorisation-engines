@@ -181,7 +181,7 @@ class CastlightAPIv1(CastlightAPI):
         len2=len(response_dict["classifications"])
 
         if len1 != len2:
-            raise ex.ResponseMissingEntries(
+            raise ex.ResponseMissingEntriesError(
                 "Number of elements in request {p1} and response {p1} do not equal".format(p1=len1, p2=len2))
 
 
@@ -337,7 +337,7 @@ class Castlight:
 
                 try:
                     result_data = self.api.get_result_data(transactions, categories)
-                except ex.ResponseMissingEntries as e:
+                except ex.ResponseMissingEntriesError as e:
                     logging.error("EXCEPTION: " + e.text)
 
         # --- Categorise Transactions using API version 2
@@ -362,7 +362,7 @@ class Castlight:
                         categorised_transactions = json.loads(response_str)
                         try:
                             result_data = self.api.get_result_data(transactions, categorised_transactions)
-                        except ex.ResponseMissingEntries as e:
+                        except ex.ResponseMissingEntriesError as e:
                             logging.error("EXCEPTION: " + e.text)
                         msg = "Categorisation Job on server finished successfully."
                         logging.info(msg)
