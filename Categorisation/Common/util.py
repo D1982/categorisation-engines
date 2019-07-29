@@ -109,3 +109,14 @@ def strdate(date):
     :return: a formatted date string following the pattern DD.MM.YYYY HH:MM:SS
     """
     return date.strftime('%d.%m.%Y %H:%M:%S')
+
+
+def message_detail_level():
+    """
+    Returns the value of the MessageDetailLevel currently set
+    :return: cfg.MessageDetailLevel (Currently hard coded to cfg.UI_RESULT_LOG_MSG_DETAIL)
+    """
+    # TODO: Ideally the message detail level is to be gathered from a new field in the ui
+    level = cfg.UI_RESULT_LOG_MSG_DETAIL
+
+    return level
