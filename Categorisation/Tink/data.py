@@ -9,6 +9,7 @@ import logging
 
 
 class TinkDAO:
+
     """
     Class that provides data access for the Tink client application.
 
@@ -17,21 +18,20 @@ class TinkDAO:
 
     """
 
+    fieldnames_user = ('userExternalId', 'label', 'market', 'locale')
+
+    fieldnames_acc = ('userExternalId', 'externalId', 'availableCredit', 'balance', 'name',
+                      'type', 'flags', 'number', 'reservedAmount')
+
+    fieldnames_trx = ('amount', 'date', 'description', 'externalId', 'payload', 'pending',
+                      'tinkId', 'type', 'n26cat', 'currency')
+
     def __init__(self):
         """ Initialization. """
         # Data sources
         self.user_src = 'unbound'
         self.acc_src = 'unbound'
         self.trx_src = 'unbound'
-
-        # Field names of interest
-        self.fieldnames_user = ('userExternalId', 'label', 'market', 'locale')
-        self.fieldnames_acc = ('userExternalId', 'externalId','availableCredit',
-                               'balance', 'name', 'type', 'flags', 'number',
-                               'reservedAmount')
-
-        self.fieldnames_trx = ('amount', 'date', 'description', 'externalId',
-                               'payload', 'pending', 'tinkId', 'type', 'n26cat', 'currency')
 
         # Data collections
         self.users = collections.OrderedDict()
@@ -67,7 +67,7 @@ class TinkDAO:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
 
         if not self.users or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=self.fieldnames_user)
+            data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=TinkDAO.fieldnames_user)
 
             self.users = data  # Returns a List<OrderedDict>
 
@@ -83,7 +83,7 @@ class TinkDAO:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
 
         if not self.accounts or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=self.fieldnames_acc)
+            data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=TinkDAO.fieldnames_acc)
 
             self.accounts = data  # Returns a List<OrderedDict>
 
@@ -99,9 +99,8 @@ class TinkDAO:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
 
         if not self.transactions or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.trx_src, fieldnames=self.fieldnames_trx)
+            data = self.file_handler.read_csv_file(filename=self.trx_src, fieldnames=TinkDAO.fieldnames_trx)
 
             self.transactions = data  # Returns a List<OrderedDict>
 
         return self.transactions
-
