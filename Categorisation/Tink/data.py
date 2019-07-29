@@ -8,14 +8,14 @@ import collections
 import logging
 
 
-"""Class that provides data access for the Tink client application.
-
-The Data Access Object is the single point of contact for any interaction with data sources
-like files, databases or similar. 
-"""
-
-
 class TinkDAO:
+    """
+    Class that provides data access for the Tink client application.
+
+    The Data Access Object is the single point of contact for any interaction with data sources
+    like files, databases or similar.
+
+    """
 
     def __init__(self):
         """ Initialization. """
