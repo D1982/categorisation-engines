@@ -14,7 +14,7 @@ def main():
     :return: void
     """
     # Initiate Logger
-    logging.basicConfig(filename=cfg.TINK_LOGFILE, level=logging.DEBUG)
+    logging.basicConfig(filename=cfg.TINK_LOGFILE, level=cfg.LOG_LEVEL)
 
     # Create data access object
     dao = data.TinkDAO()
