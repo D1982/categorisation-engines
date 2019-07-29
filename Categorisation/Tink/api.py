@@ -598,6 +598,131 @@ class UserDeleteResponse(TinkAPIResponse):
         return self.to_string_formatted()
 
 
+class AccoungService(TinkAPI):
+
+    """
+    Wrapper class for the Tink account service.
+    """
+
+    def __init__(self):
+        """
+        Initialization.
+        """
+        super().__init__()
+
+    def ingest_accounts(self, ext_user_id, accounts, access_token):
+        """
+        Call the API endpoint /api/v1/user/create
+
+        Create a new user in the Tink platform.
+
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+        :param accounts: A dictionary containing the account data to be ingested
+        :param access_token: The OAuth2 user access token gathered via the endpoint
+
+        :return: A response wrapper object (instance of api.UserActivationResponse)
+        """
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
+        # --- Request
+        request = TinkAPIRequest(method='POST', endpoint=self.url_root+'/api/v1/user/create')
+        # --- Header
+        request.headers.update({'Authorization': 'Bearer ' + client_access_token})
+        request.headers.update({'Content-Type': 'application/json'})
+        # --- Body
+        request.data.update({'market': market})
+        request.data.update({'locale': locale})
+        request.data.update({'label': label})
+        request.data.update({'external_user_id': ext_user_id})
+
+        # --- Logging
+        logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
+        logging.debug('Request Header: {h}'.format(h=request.headers))
+        logging.debug('Request Body: {b}'.format(b=request.data))
+        # --- API call
+        response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
+
+        return UserActivationResponse(request, response)
+
+@TinkAPIResponse.register
+class AccountIngestionResponse(TinkAPIResponse):
+
+    """
+    Abstract wrapper class for AccountIngestionResponse from Tink's account service.
+    """
+
+    def __init__(self, request, response):
+        """
+        Initialization.
+        """
+        super().__init__(request, response)
+
+        # Custom attributes relevant for this response
+
+        # Define fields of interest referring to the official API documentation
+        self.names = {'errorMessage', 'errorCode'}
+
+        # Save fields of interest referring to the official API documentation
+        if isinstance(response, requests.Response) and response.status_code == 200:
+            if isinstance(self.json, dict):
+                self.data = {key: value for key, value in self.json.items() if key in self.names}
+                if 'user_id' in self.data:
+                    self.user_id = self.data['user_id']
+
+    def to_string_custom(self):
+
+        """
+        Implementation of the abstract method of the class api.TinkAPIResponse
+
+        Generic extended string representation of a TinkAPIResponse instance.
+
+        :return: a formatted, human readable string representation of the data
+        within an instance of this class
+        """
+        # No override required - use standard output
+        return self.to_string_formatted()
+
+
+class AccountListResponse(TinkAPIResponse):
+
+    """
+    Abstract wrapper class for AccountListResponse from Tink's user service.
+    """
+
+    def __init__(self, request, response):
+        """
+        Initialization.
+        """
+        super().__init__(request, response)
+
+        # Custom attributes relevant for this response
+        self.user_id = None
+
+        # Define fields of interest referring to the official API documentation
+        self.names = {'errorMessage', 'errorCode'}
+
+        # Save fields of interest referring to the official API documentation
+        if isinstance(response, requests.Response) and response.status_code == 204:
+            if isinstance(self.json, dict):
+                self.data = {key: value for key, value in self.json.items() if key in self.names}
+                if 'user_id' in self.data:
+                    self.user_id = self.data['user_id']
+
+    def to_string_custom(self):
+
+        """
+        Implementation of the abstract method of the class api.TinkAPIResponse
+
+        Generic extended string representation of a TinkAPIResponse instance.
+
+        :return: a formatted, human readable string representation of the data
+        within an instance of this class
+        """
+        # No override required - use standard output
+        return self.to_string_formatted()
+
+
 class OAuthService(TinkAPI):
 
     """
