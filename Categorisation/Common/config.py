@@ -23,6 +23,7 @@ class DataSourceType(Enum):  # TODO: This class is to be decommissioned
     CSVFileSource = 'CSVFileSource'
     TinkUI = 'TinkUI'
 
+
 class MessageDetailLevel(Enum):
     """
     Enumeration of different message detail levels.
@@ -33,6 +34,16 @@ class MessageDetailLevel(Enum):
     Low = 'Low message detail restricted to the minimum'
     Medium = 'Medium message detail including important additional information'
     High = 'High message detail including some debugging information'
+
+
+class HTTPStatusCode(Enum):  # TODO: This class is to be decommissioned
+    """
+    Enumeration of different http status code groups
+    """
+    Code2xx = '2xx = Codes between >= 200 and <= 299'
+    Code4xx = '4xx = Codes between >= 400 and <= 499'
+    Code5xx = '5xx = Codes between >= 500 and <= 599'
+
 
 # Constants
 
