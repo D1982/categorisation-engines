@@ -309,12 +309,18 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.clear_result_log()
-        result = self._model.read_user_data()
-        if result:
-            text = utl.list_to_string(result)
-            self.put_result_log(text)
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        self.put_result_log(text='*** User data ***', clear=True, time=False)
+        lst_data = self._model.read_user_data()
+
+        if data:
+            text = utl.list_to_string(lst_data)
+        else:
+            text = 'No data available'
+
+        self.put_result_log(text=text, time=False)
 
     def show_accdata_button_cb(self):
         """
@@ -322,12 +328,15 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.clear_result_log()
-        result = self._model.read_account_data()
-        if result:
-            text = utl.list_to_string(result)
-            self.put_result_log(text)
+        self.put_result_log(text='*** Account data ***', clear=True, time=False)
+        lst_data = self._model.read_account_data()
+
+        if data:
+            text = utl.list_to_string(lst_data)
+        else:
+            text = 'No data available'
+
+        self.put_result_log(text=text, time=False)
 
     def show_trxdata_button_cb(self):
         """
@@ -335,12 +344,15 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.clear_result_log()
-        result = self._model.read_transaction_data()
-        if result:
-            text = utl.list_to_string(result)
-            self.put_result_log(text)
+        self.put_result_log(text='*** Transaction data ***', clear=True, time=False)
+        lst_data = self._model.read_transaction_data()
+
+        if data:
+            text = utl.list_to_string(lst_data)
+        else:
+            text = 'No data available'
+
+        self.put_result_log(text=text, time=False)
 
     def chkbox_delete_cb(self, event=None):
         """
@@ -370,15 +382,18 @@ class TinkUI:
 
         :return: void
         """
+        # Title
         self.put_result_log(text='*** API Health Checks ***', clear=True, time=False)
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        multi_result = model.TinkModelMultiResult()
-        multi_result = self._model.test_connectivity()
-        text = ''
-        if isinstance(multi_result, model.TinkModelMultiResult):
-            for e in multi_result.results:
-                text += e.response.request.to_string_formatted() + e.response.to_string_formatted()
-        self.put_result_log(text)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        # Perform action
+        rl: model.TinkModelResultList = self._model.test_connectivity()
+
+        # Print results
+        self.put_result_log(rl.summary())
 
     def list_categories_button_cb(self):
         """
@@ -386,11 +401,19 @@ class TinkUI:
 
         :return: void
         """
+        # Title
         self.put_result_log(text='*** List categories ***', clear=True, time=False)
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        result = self._model.list_categories()
-        text = result.response.request.to_string_formatted() + result.response.to_string_custom()
-        self.put_result_log(text)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        # Perform action
+        rl: model.TinkModelResultList = self._model.list_categories()
+
+        # Print results
+        r = rl.first()
+        self.put_result_log(r.response.to_string_custom())
 
     def activate_users_button_cb(self):
         """
@@ -398,11 +421,18 @@ class TinkUI:
 
         :return: void
         """
-        self.put_result_log('*** Activate users ***')
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        result = self._model.activate_users()
-        msg = result.response.request.to_string_formatted() + result.response.to_string_custom()
-        self.put_result_log(text=msg, clear=True)
+        # Title
+        self.put_result_log(text='*** Activate (create) users ***', clear=True, time=False)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        # Perform action
+        rl: model.TinkModelResultList = self._model.activate_users()
+
+        # Print results
+        self.put_result_log(rl.summary(filters={'endpoint': 'user/create'}))
 
     def delete_users_button_cb(self):
         """
@@ -410,11 +440,18 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.put_result_log('*** Delete existing users ***')
-        result = self._model.delete_users()
-        print(result)
+        # Title
+        self.put_result_log(text='*** Delete users ***', clear=True, time=False)
 
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        # Perform action
+        rl: model.TinkModelResultList = self._model.delete_users()
+
+        # Print results
+        self.put_result_log(rl.summary(filters={'endpoint': 'user/delete'}))
 
     def ingest_accounts_button_cb(self):
         """
@@ -422,9 +459,14 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.put_result_log('*** Ingest accounts ***')
-        result = self._model.ingest_accounts()
+        # Title
+        self.put_result_log(text='*** Ingest accounts ***', clear=True, time=True)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        self.put_result_log('NOT YET IMPLEMENTED')
 
     def delete_accounts_button_cb(self):
         """
@@ -432,10 +474,14 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.put_result_log('*** Delete accounts ***')
-        result = self._model.delete_accounts()
-        self.put_result_log(result)
+        # Title
+        self.put_result_log(text='*** Delete accounts ***', clear=True, time=True)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        self.put_result_log('NOT YET IMPLEMENTED')
 
     def list_accounts_button_cb(self):
         """
@@ -443,10 +489,14 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.put_result_log('*** List accounts ***')
-        result = self._model.list_accounts()
-        self.put_result_log(result)
+        # Title
+        self.put_result_log(text='*** List accounts ***', clear=True, time=True)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        self.put_result_log('NOT YET IMPLEMENTED')
 
     def ingest_trx_button_cb(self):
         """
@@ -454,10 +504,14 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.put_result_log('*** Ingest transactions ***')
-        result = self._model.ingest_trx()
-        self.put_result_log(result)
+        # Title
+        self.put_result_log(text='*** Ingest transactions ***', clear=True, time=True)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        self.put_result_log('NOT YET IMPLEMENTED')
 
     def delete_trx_button_cb(self):
         """
@@ -465,10 +519,14 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        self.put_result_log('*** Delete transactions ***')
-        result = self._model.delete_trx()
-        self.put_result_log(result)
+        # Title
+        self.put_result_log(text='*** Delete transactions ***', clear=True, time=True)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        self.put_result_log('NOT YET IMPLEMENTED')
 
     def list_trx_button_cb(self):
         """
@@ -476,8 +534,14 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        result = self._model.list_trx()
+        # Title
+        self.put_result_log(text='*** List transactions ***', clear=True, time=True)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        self.put_result_log('NOT YET IMPLEMENTED')
 
     def process_button_cb(self):
         """
@@ -485,9 +549,22 @@ class TinkUI:
 
         :return: void
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        result = self._model.process()
-        self.put_result_log(result)
+        # Title
+        self.put_result_log(text='*** Process full workflow ***', clear=True, time=True)
+
+        # Logging
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.debug(msg)
+
+        # Perform actions
+        rl1: model.TinkModelResultList = self._model.delete_users()
+        self.put_result_log(rl1.summary(filters={'endpoint': 'user/delete'}))
+
+        self.put_result_log(text=os.linesep, time=False)
+
+        rl2: model.TinkModelResultList = self._model.activate_users()
+        self.put_result_log(rl2.summary(filters={'endpoint': 'user/create'}))
+
 
     def clear_button_cb(self):
         """
@@ -527,8 +604,6 @@ class TinkUI:
         self._model.dao.bind_data_source(cfg.TinkEntityType.TransactionEntity, self.entry_trx_file.get())
 
     # --- Helpers
-
-    """W"""
     def put_result_log(self, text: str, clear=False, nl: int = 1, time=True, scroll=False):
         """
         Write to the output (in the ui log area).
@@ -554,7 +629,6 @@ class TinkUI:
         if scroll:
             self.result_log.see(tk.END)
 
-    """"""
     def clear_result_log(self):
         """
         Clear the output (in the ui log area).
@@ -562,5 +636,3 @@ class TinkUI:
         :return: void
         """
         self.result_log.delete(1.0, tk.END)
-
-

@@ -1,6 +1,8 @@
 """Direct access to Tink's API endpoints. """
+from json import JSONDecodeError
 
 import Categorisation.Common.config as cfg
+import Categorisation.Common.util as utl
 import Categorisation.Common.secret as secret
 import Categorisation.Tink.api as api
 
@@ -14,10 +16,11 @@ import json
 import abc  # https://pymotw.com/3/abc/
 
 
-"""Base class for all service wrapper classes accessing Tink API services."""
-
-
 class TinkAPI:
+
+    """
+    Base class for all service wrapper classes accessing Tink API services.
+    """
 
     def __init__(self, url_root=cfg.API_URL_TINK):
         """
@@ -26,16 +29,16 @@ class TinkAPI:
         :param url_root: URL root string of the API
         """
         self.url_root: str = url_root
-
         self.partner_info: dict = dict()
         self.partner_info['client_id'] = secret.TINK_CLIENT_ID
         self.partner_info['client_secret'] = secret.TINK_CLIENT_SECRET
 
 
-"""Wrapper class for a request to the Tink API."""
-
-
 class TinkAPIRequest(metaclass=abc.ABCMeta):
+
+    """
+    Wrapper class for a request to the Tink API.
+    """
 
     def __init__(self, method: str, endpoint: str):
         """
@@ -48,11 +51,10 @@ class TinkAPIRequest(metaclass=abc.ABCMeta):
         self.endpoint: str = endpoint
         self.headers: collections.OrderedDict = collections.OrderedDict()
         self.data: collections.OrderedDict = collections.OrderedDict()
-        self.status_code: str = '0'
-        self.reason: str = 'Dummy'
 
     def to_string(self):
         text = 'HTTP Request: {m} {t}'.format(m=self.method, t=self.endpoint)
+
         return str(text)
 
     def to_string_formatted(self):
@@ -67,41 +69,52 @@ class TinkAPIRequest(metaclass=abc.ABCMeta):
         return str(text)
 
 
-"""Abstract wrapper class for a response object of the Python requests library.
-
-The intention of this class is to enrich the response object f the requests library
-with additional information and functionality like e.g. the method to_string_formatted()
-"""
-
-
 class TinkAPIResponse(metaclass=abc.ABCMeta):
 
-    def __init__(self, request: api.TinkAPIRequest, response: requests.Response):
+    """
+    Abstract wrapper class for a response object of the Python requests library.
+
+    The intention of this class is to enrich the response object f the requests library
+    with additional information and functionality like e.g. the method to_string_formatted()
+    """
+
+    def __init__(self, request: api.TinkAPIRequest, response: requests.Response = None):
         """
         Initialization.
 
         :param request: corresponding TinkAPIRequest for that TinkAPIResponse
         :param response: an instance of the class requests.Response
         """
-        # Store the corresponding TinkAPIRequest for that TinkAPIResponse
-        self.request: api.TinkAPIRequest = request
-        self.response_orig: requests.Response = response
-
         # Data to be populated by sub-classes
         self.names: tuple
         self.data: collections.OrderedDict = collections.OrderedDict()
         self.json: dict = dict()
 
+        self.status_code: int = -1
+        self.reason: str = ''
+        self.content: bytes = b''
+        self.text: str = ''
+
         # Response JSON
         try:
-            if self.response_orig:
+            if response:
                 self.json = response.json() or dict()
         except Exception as e:
             logging.warning("Exception in Function call requests.response.json() -> {e}".format(e=e))
             # This service does not return a JSON so just use the text instead
             self.json = {'text': response.text}
 
-    """"""
+        # Response Attributes
+        if isinstance(response, requests.Response):
+            self.status_code = response.status_code
+            self.reason = response.reason
+            self.content = response.content
+            self.text = response.text
+
+        # Store the corresponding TinkAPIRequest and the requests.Response
+        self.request: api.TinkAPIRequest = request
+        self.response_orig: requests.Response = response
+
     def to_string(self):
         """
         Minimalistic string representation of a TinkAPIResponse instance.
@@ -109,9 +122,13 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         :return: a formatted, human readable string representation of the data
         within an instance of this class
         """
-        if self.response_orig:
-            text = 'HTTP Response: ' + self.response_orig.reason + ' ({code})'.format(
-                                                code=str(self.response_orig.status_code))
+        if self.response_orig is not None:
+            code = self.response_orig.status_code
+            reason = self.response_orig.reason
+            text = 'HTTP Response: {c} ({r})'.format(c=code, r=reason)
+        else:
+            text = os.linesep + 'HTTP Response: Unbound'
+
         return str(text)
 
     def to_string_formatted(self):
@@ -136,7 +153,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         if self.data:
             for k, v in self.data.items():
                 if k not in self.json:
-                    text += 'Data > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH] + os.linesep
+                    text += 'Data > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
 
         return str(text)
 
@@ -152,17 +169,93 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         special way of formatting. See as an example the class api.CategoryService which has
         it'S own method in order to print a list of categories.
 
-
         :return: a formatted, human readable string representation of the data
         within an instance of this class
         """
         return ''
 
+    def http_status(self, group: cfg.HTTPStatusCode = None):
+        """
+        Checks whether a http status code is >= 200 and < 300.
 
-"""Wrapper class for the Tink monitoring service."""
+        :param group: http status code group according to cfg.HTTPStatusCode
+        :return: True if the http status code of this request belongs
+        to group, otherwise False
+        """
+        if not group:
+            return False
+        # 2xx
+        if group == cfg.HTTPStatusCode.Code2xx:
+            if self.status_code in range(200, 299):
+                return True
+            else:
+                return False
+        # 4xx
+        if group == cfg.HTTPStatusCode.Code4xx:
+            if self.status_code in range(400, 499):
+                return True
+            else:
+                return False
+        # 5xx
+        if group == cfg.HTTPStatusCode.Code5xx:
+            if self.status_code in range(500, 599):
+                return True
+            else:
+                return False
+
+    def summary(self):
+        """
+        Print a summary of the response and the corresponding request.
+
+        :return: Text as a string
+        """
+        summary_text = ''
+        payload_text = ''
+
+        level = utl.message_detail_level()
+
+        try:
+            payload = json.loads(self.text)
+            payload_text = payload
+        except JSONDecodeError as e:
+            logging.warning(str(e))
+            payload_text = ''
+
+        # Payload for errors (4xx status code)
+        if self.http_status(cfg.HTTPStatusCode.Code4xx):
+            if 'errorMessage' in payload:
+                payload_text = payload['errorMessage']
+            elif 'errorCode' in payload:
+                payload_text = payload['errorCode']
+        # Payload per specific successful responses (2xx status code)
+        elif self.http_status(cfg.HTTPStatusCode.Code2xx):
+            if self.request.endpoint.find('/api/v1/monitoring/') != -1:
+                payload_text = self.text
+            if self.request.endpoint.find('/user/create') != -1:
+                if 'user_id' in payload:
+                    payload_text = 'user_id:{u}'.format(u=payload['user_id'])
+        else:
+            payload_text = ''
+
+        if level == cfg.MessageDetailLevel.Low:
+            summary_text = '{s}: {p}'.format(s=self.to_string(),
+                                             p=payload_text)
+        elif level == cfg.MessageDetailLevel.Medium:
+            summary_text = '{s} {p}: {c}'.format(s=self.to_string(),
+                                                 p=self.payload_text,
+                                                 c=self.content)
+        elif level == cfg.MessageDetailLevel.High:
+            summary_text = '{s} {req}: {resp}'.format(s=self.to_string(),
+                                                      req=self.request.to_string_formatted(),
+                                                      resp=self.to_string_formatted())
+        return summary_text
 
 
 class MonitoringService(TinkAPI):
+
+    """
+    Wrapper class for the Tink monitoring service.
+    """
 
     def __init__(self):
         """
@@ -176,7 +269,9 @@ class MonitoringService(TinkAPI):
 
         :return: A response wrapper object (instance of api.MonitoringResponse)
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/monitoring/ping')
         response = requests.get(url=request.endpoint)
 
@@ -188,18 +283,56 @@ class MonitoringService(TinkAPI):
 
         :return: A response wrapper object (instance of api.TinkAPIResponse)
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/monitoring/healthy')
         response = requests.get(url=request.endpoint)
 
         return MonitoringResponse(request, response)
 
 
-"""Wrapper class for the Tink monitoring service response."""
+@TinkAPIResponse.register
+class DummyResponse(TinkAPIResponse):
+
+    """
+    Wrapper class for an empty or not existing response.
+
+    An example would be that an action do delete a user was stopped
+    before an appropriate API request was sent because a previous check
+    found out that the user did not exist.
+    """
+
+    def __init__(self, ):
+        """
+        Initialization.
+        """
+        request = TinkAPIRequest(method='DummyMethod', endpoint='DummyEndpoint')
+        super().__init__(request, None)
+
+        # Define fields of interest referring to the official API documentation
+        self.names = {'errorMessage', 'errorCode'}
+
+    def to_string_custom(self):
+
+        """
+        Implementation of the abstract method of the class api.TinkAPIResponse
+
+        Generic extended string representation of a TinkAPIResponse instance.
+
+        :return: a formatted, human readable string representation of the data
+        within an instance of this class
+        """
+        # No override required - use standard output
+        return self.to_string_formatted()
 
 
 @TinkAPIResponse.register
 class MonitoringResponse(TinkAPIResponse):
+
+    """
+    Wrapper class for the Tink monitoring service response.
+    """
 
     def __init__(self, request, response):
         """
@@ -224,10 +357,11 @@ class MonitoringResponse(TinkAPIResponse):
         return self.to_string_formatted()
 
 
-"""Wrapper class for the Tink category service."""
-
-
 class CategoryService(TinkAPI):
+
+    """
+    Wrapper class for the Tink category service.
+    """
 
     def __init__(self):
         """
@@ -241,18 +375,21 @@ class CategoryService(TinkAPI):
 
         :return: A response wrapper object (instance of api.CategoryResponse)
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/categories')
         response = requests.get(url=request.endpoint)
 
         return CategoryResponse(request, response)
 
 
-"""Wrapper class for a Tink category service response."""
-
-
 @TinkAPIResponse.register
 class CategoryResponse(TinkAPIResponse):
+
+    """
+    Wrapper class for a Tink category service response.
+    """
 
     def __init__(self, request, response):
         """
@@ -264,7 +401,7 @@ class CategoryResponse(TinkAPIResponse):
         self.names = {'primaryName', 'secondaryName', 'typeName', 'code', 'type', 'errorMessage', 'errorCode'}
 
         # Save fields of interest referring to the official API documentation
-        if response and response.status_code == 200:
+        if isinstance(response, requests.Response) and response.status_code == 200:
             if isinstance(self.json, dict):
                 self.data = {key: value for key, value in self.json.items() if key in self.names}
 
@@ -292,10 +429,11 @@ class CategoryResponse(TinkAPIResponse):
         return str(text)
 
 
-"""Wrapper class for the Tink user service."""
-
-
 class UserService(TinkAPI):
+
+    """
+    Wrapper class for the Tink user service.
+    """
 
     def __init__(self):
         """
@@ -317,21 +455,24 @@ class UserService(TinkAPI):
         /api/v1/oauth/token which can be called using OAuthService.authorize_client_access(...)
         :return: A response wrapper object (instance of api.UserActivationResponse)
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root+'/api/v1/user/create')
         # --- Header
         request.headers.update({'Authorization': 'Bearer ' + client_access_token})
         request.headers.update({'Content-Type': 'application/json'})
         # --- Body
-        request.data.update({'external_user_id': ext_user_id})
-        request.data.update({'label': label})
         request.data.update({'market': market})
         request.data.update({'locale': locale})
+        request.data.update({'label': label})
+        request.data.update({'external_user_id': ext_user_id})
+
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
         logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(h=request.data))
+        logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
         response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
 
@@ -354,28 +495,31 @@ class UserService(TinkAPI):
         /api/v1/oauth/token which can be called using OAuthService.grant_user_access(...)
         :return: A response wrapper object (instance of api.UserDeleteResponse)
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/user/delete')
         # --- Header
         request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
-        request.headers.update({'Authorization': 'Bearer ' + access_token})
+        request.headers.update({'Authorization': 'Bearer {t}'.format(t=access_token)})
         request.headers.update({'Content-Type': 'application/json'})
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
         logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(h=request.data))
+        logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
         response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
 
         return UserDeleteResponse(request, response)
 
 
-"""Abstract wrapper class for UserActivationResponse from Tink's user service."""
-
-
 @TinkAPIResponse.register
 class UserActivationResponse(TinkAPIResponse):
+
+    """
+    Abstract wrapper class for UserActivationResponse from Tink's user service.
+    """
 
     def __init__(self, request, response):
         """
@@ -390,10 +534,10 @@ class UserActivationResponse(TinkAPIResponse):
         self.names = {'user_id', 'errorMessage', 'errorCode'}
 
         # Save fields of interest referring to the official API documentation
-        if response and response.status_code == 204:
+        if isinstance(response, requests.Response) and response.status_code == 200:
             if isinstance(self.json, dict):
                 self.data = {key: value for key, value in self.json.items() if key in self.names}
-                if 'user_id' in self.data.items():
+                if 'user_id' in self.data:
                     self.user_id = self.data['user_id']
 
     def to_string_custom(self):
@@ -408,13 +552,14 @@ class UserActivationResponse(TinkAPIResponse):
         """
         # No override required - use standard output
         return self.to_string_formatted()
-
-
-"""Abstract wrapper class for UserDeleteResponse from Tink's user service."""
 
 
 class UserDeleteResponse(TinkAPIResponse):
 
+    """
+    Abstract wrapper class for UserDeleteResponse from Tink's user service.
+    """
+
     def __init__(self, request, response):
         """
         Initialization.
@@ -428,10 +573,10 @@ class UserDeleteResponse(TinkAPIResponse):
         self.names = {'user_id', 'errorMessage', 'errorCode'}
 
         # Save fields of interest referring to the official API documentation
-        if response and response.status_code == 204:
+        if isinstance(response, requests.Response) and response.status_code == 204:
             if isinstance(self.json, dict):
                 self.data = {key: value for key, value in self.json.items() if key in self.names}
-                if 'user_id' in self.data.items():
+                if 'user_id' in self.data:
                     self.user_id = self.data['user_id']
 
     def to_string_custom(self):
@@ -448,10 +593,11 @@ class UserDeleteResponse(TinkAPIResponse):
         return self.to_string_formatted()
 
 
-"""Wrapper class for the Tink OAuth service."""
-
-
 class OAuthService(TinkAPI):
+
+    """
+    Wrapper class for the Tink OAuth service.
+    """
 
     def __init__(self):
         """
@@ -477,25 +623,28 @@ class OAuthService(TinkAPI):
 
         :return: OAuth2AuthenticationTokenResponse
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/oauth/token')
         # --- Body
+        request.data.update({'scope': scope})
+        if delete_dict:  # TODO: Add accounts in case of deletion for accounts is also working
+            if 'ext_user_id' in delete_dict:
+                request.data.update({'ext_user_id': delete_dict['ext_user_id']})
+            elif 'user_id' in delete_dict:
+                request.data.update({'user_id': delete_dict['user_id']})
         request.data.update({'client_id': secret.TINK_CLIENT_ID})
         request.data.update({'client_secret': secret.TINK_CLIENT_SECRET})
         request.data.update({'grant_type': grant_type})
-        request.data.update({'scope': scope})
-        if delete_dict:  # TODO: Add accounts in case of deletion for accounts is also working
-            if 'external_user_id' in delete_dict:
-                request.data.update({'ext_user_id': delete_dict['external_user_id']})
-            elif 'user_id' in delete_dict:
-                request.data.update({'user_id': delete_dict['user_id']})
+
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
         logging.debug('Request Header: {h}'.format(h=request.headers))
         logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
-        response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
+        response = requests.post(url=request.endpoint, data=request.data)
 
         return OAuth2AuthenticationTokenResponse(request, response)
 
@@ -515,21 +664,23 @@ class OAuthService(TinkAPI):
         :return: TinkModelResult containing an instance of api.OAuth2AuthorizeResponse with an
         authorization code {CODE}.
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/oauth/authorization-grant')
         # --- Headers
-        request.headers.update({'Authorization: Bearer': client_access_token})
+        request.headers.update({'Authorization': 'Bearer {t}'.format(t=client_access_token)})
         # --- Body
         request.data.update({'scope': scope})
         if user_id:
             request.data.update({'user_id': user_id})
-        else:
-            request.data.update({'ext_user_id': ext_user_id})
+        elif ext_user_id:
+            request.data.update({'external_user_id': ext_user_id})
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
         logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(h=request.data))
+        logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
         response = requests.post(url=request.endpoint, data=request.data, headers=request.headers)
 
@@ -549,7 +700,9 @@ class OAuthService(TinkAPI):
         :return: TinkModelResult containing an instance of api.OAuth2AuthenticationTokenResponse with a
         client access token {ACCESS_TOKEN}.
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        logging.info(msg)
+
         # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/oauth/token')
         # --- Body
@@ -560,18 +713,19 @@ class OAuthService(TinkAPI):
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
         logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(h=request.data))
+        logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
         response = requests.post(url=request.endpoint, data=request.data)
 
         return OAuth2AuthenticationTokenResponse(request, response)
 
 
-"""Abstract wrapper class for a AuthenticationResponse from Tink's OAuth service."""
-
-
 @TinkAPIResponse.register
 class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
+
+    """
+    Abstract wrapper class for a AuthenticationResponse from Tink's OAuth service.
+    """
 
     def __init__(self, request, response):
         """
@@ -587,21 +741,21 @@ class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
         self.id_hint = None
 
         # Define fields of interest referring to the official API documentation
-        self.names = {'access_token', 'token_type', 'expires_in', 'scope', 'id_hint' 'errorMessage', 'errorCode'}
+        self.names = {'access_token', 'token_type', 'expires_in', 'scope', 'id_hint', 'errorMessage', 'errorCode'}
 
         # Save fields of interest referring to the official API documentation
-        if response and response.status_code == 200:
+        if isinstance(response, requests.Response) and response.status_code == 200:
             if isinstance(self.json, dict):
                 self.data = {key: value for key, value in self.json.items() if key in self.names}
-                if 'access_token' in self.data.items():
+                if 'access_token' in self.data:
                     self.access_token = self.data['access_token']
-                if 'token_type' in self.data.items():
+                if 'token_type' in self.data:
                     self.token_type = self.data['token_type']
-                if 'expires_in' in self.data.items():
+                if 'expires_in' in self.data:
                     self.expires_in = self.data['expires_in']
-                if 'scope' in self.data.items():
+                if 'scope' in self.data:
                     self.scope = self.data['scope']
-                if 'id_hint' in self.data.items():
+                if 'id_hint' in self.data:
                     self.id_hint = self.data['id_hint']
 
     def to_string_custom(self):
@@ -618,10 +772,12 @@ class OAuth2AuthenticationTokenResponse(TinkAPIResponse):
         return self.to_string_formatted()
 
 
-"""Abstract wrapper class for a AuthorizeResponse from Tink's OAuth service."""
-
 @TinkAPIResponse.register
 class OAuth2AuthorizeResponse(TinkAPIResponse):
+
+    """
+    Abstract wrapper class for a AuthorizeResponse from Tink's OAuth service.
+    """
 
     def __init__(self, request, response):
         """
@@ -639,10 +795,10 @@ class OAuth2AuthorizeResponse(TinkAPIResponse):
         self.data = {key: value for key, value in self.json.items() if key in self.names}
 
         # Save fields of interest referring to the official API documentation
-        if response and response.status_code == 200:
+        if isinstance(response, requests.Response) and response.status_code == 200:
             if isinstance(self.json, dict):
                 self.data = {key: value for key, value in self.json.items() if key in self.names}
-                if 'code' in self.data.items():
+                if 'code' in self.data:
                     self.code = self.data['code']
 
     def to_string_custom(self):
