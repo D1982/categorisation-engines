@@ -13,7 +13,7 @@ import logging
 import sys
 
 
-class FileHandler:
+class FileHandler:  # TODO: Add exception handlers here
 
     """
     File handling utility class.
