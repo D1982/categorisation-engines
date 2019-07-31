@@ -466,7 +466,11 @@ class TinkUI:
         msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.debug(msg)
 
-        self.put_result_log('NOT YET IMPLEMENTED')
+        # Perform action
+        rl: model.TinkModelResultList = self._model.ingest_accounts()
+
+        # Print results
+        self.put_result_log(rl.summary(filters={'endpoint': '/accounts'}))
 
     def delete_accounts_button_cb(self):
         """
