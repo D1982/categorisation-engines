@@ -6,6 +6,8 @@ import Categorisation.Common.exceptions as ex
 import Categorisation.Common.config as cfg
 import Categorisation.Common.util as utl
 import Categorisation.Tink.api as api
+import Categorisation.Tink.data as data
+
 
 import logging
 import os
@@ -433,6 +435,7 @@ class TinkModel:
             response: api.OAuth2AuthenticationTokenResponse = rl.last().response
             client_access_token = response.access_token
             logging.info(msg + ' => client_access_token:{t}'.format(t=client_access_token))
+            result_list.append(rl)
         else:
             logging.error(rl.last().response.summary())
 
@@ -519,13 +522,39 @@ class TinkModel:
         """
         Initiates the ingestion of accounts in the Tink platform.
 
-        :return: TinkModelResult
+        :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
+        containing instances of api.AccountIngestionResponse with a status code:
+        STATUS CODE	DESCRIPTION
+        204	Accounts created.
+        400	The payload does not pass validation.
+        401	User not found, has no credentials, or has more than one set of credentials.
+        409	Account already exists.
         """
         msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.info(msg)
 
+        # Get account data
+        accounts_raw = self.dao.read_accounts()
+
         # Wrapper for the results
-        result_list = TinkModelResultList(msg='')
+        result_list = TinkModelResultList(result=None, action=msg, msg='Ingest accounts')
+
+        try:
+            accounts: data.TinkAccountList(accounts_raw)
+        except AttributeError as e:
+            logging.debug(e)
+            raise e
+
+        service = api.AccoungService
+        users = self.dao.read_users()
+
+        if users:
+            for e in users:
+                # Get user attributes
+                ext_user_id = e['userExternalId']
+                user_accounts = accounts.get_data(ext_user_id)
+                rl = service.ingest_accounts(ext_user_id, user_accounts)
+                result_list.append(rl)
 
         return result_list
 
@@ -553,7 +582,7 @@ class TinkModel:
         logging.info(msg)
 
         # Wrapper for the results
-        result_list = TinkModelResultList(msg='')
+        result_list = TinkModelResultList
 
         return result_list
 
