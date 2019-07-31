@@ -108,7 +108,7 @@ class TinkDAO:
         return self.transactions
 
 
-class TinkEntity:
+class TinkEntity(metaclass=abc.ABCMeta):
 
     """
     Generic object representation of a Tink data structure.
@@ -129,6 +129,15 @@ class TinkEntity:
             if f not in data:
                 msg = 'Field {f} expected but not found in data {d}'.format(f=f, d=data)
                 raise AttributeError(msg)
+
+    @abc.abstractmethod
+    def json(self):
+        """
+        Creates a json representation of the data (record) contained.
+
+        :return: list(OrderedDict) that complies with the API endpoint input data structure
+        """
+        raise NotImplementedError()
 
 
 class TinkEntityList(metaclass=abc.ABCMeta):
@@ -151,7 +160,17 @@ class TinkEntityList(metaclass=abc.ABCMeta):
     def get_data(self, ext_user_id: str):
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def json(self):
+        """
+        Creates a json representation of the data contained.
 
+        :return: list(OrderedDict) that complies with the API endpoint input data structure
+        """
+        raise NotImplementedError()
+
+
+@TinkEntity.register
 class TinkAccount(TinkEntity):
 
     """
@@ -166,6 +185,17 @@ class TinkAccount(TinkEntity):
         :param data: the raw data as a list(OrderedDict).
         """
         super().__init__(data)
+
+    def json(self):
+        """
+        Creates a json representation of the data (record) contained.
+
+        :return: list(OrderedDict) that complies with the API endpoint input data structure
+        """
+        json = collections.OrderedDict()
+
+        for field in TinkDAO.fieldnames_acc:
+            json[field] = self.data[field]
 
 
 @TinkEntityList.register
@@ -196,5 +226,20 @@ class TinkAccountList(TinkEntityList):
         for e in self.data:
             key = 'userExternalId'
             if key in e:
-                lst.append(e)
+                if e[key] == ext_user_id:
+                    lst.append(e)
+        return lst
+
+    def json(self):
+        """
+        Creates a json representation of the data contained.
+
+        :return: list(OrderedDict) that complies with the API endpoint input data structure
+        """
+        json_list = list()
+
+        for e in self.data:
+            json_list.append(e.json())
+
+        return json_list
 
