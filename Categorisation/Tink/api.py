@@ -5,6 +5,8 @@ import Categorisation.Common.config as cfg
 import Categorisation.Common.util as utl
 import Categorisation.Common.secret as secret
 import Categorisation.Tink.api as api
+import Categorisation.Tink.data as data
+
 
 import os
 import sys
@@ -604,37 +606,36 @@ class AccoungService(TinkAPI):
     Wrapper class for the Tink account service.
     """
 
-    def __init__(self):
+    def __init__(self, url_root=cfg.API_URL_TINK_CONNECTOR):
         """
         Initialization.
         """
-        super().__init__()
+        super().__init__(url_root)
 
-    def ingest_accounts(self, ext_user_id, accounts, access_token):
+    def ingest_accounts(self, ext_user_id, accounts: data.TinkAccountList, client_access_token):
         """
-        Call the API endpoint /api/v1/user/create
+        Call the Connector API endpoint users/{{external-user-id}}/accounts
 
-        Create a new user in the Tink platform.
+        Ingest a list of accunts into the space of an existing user in the Tink platform.
 
         :param ext_user_id: external user reference (this is NOT the Tink internal id)
         :param accounts: A dictionary containing the account data to be ingested
-        :param access_token: The OAuth2 user access token gathered via the endpoint
+        :param client_access_token: The client access token gathered via the endpoint
+        /api/v1/oauth/token which can be called using OAuthService.authorize_client_access(...)
 
-        :return: A response wrapper object (instance of api.UserActivationResponse)
+        :return: a response wrapper object (instance of api.AccountIngestionResponse)
         """
         msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.info(msg)
 
         # --- Request
-        request = TinkAPIRequest(method='POST', endpoint=self.url_root+'/api/v1/user/create')
+        endpoint = self.url_root+'/users/{u}/accounts'.format(u=ext_user_id)
+        request = TinkAPIRequest(method='POST', endpoint=endpoint)
         # --- Header
         request.headers.update({'Authorization': 'Bearer ' + client_access_token})
         request.headers.update({'Content-Type': 'application/json'})
         # --- Body
-        request.data.update({'market': market})
-        request.data.update({'locale': locale})
-        request.data.update({'label': label})
-        request.data.update({'external_user_id': ext_user_id})
+        request.data.update({'accounts': accounts})
 
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
@@ -643,7 +644,7 @@ class AccoungService(TinkAPI):
         # --- API call
         response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
 
-        return UserActivationResponse(request, response)
+        return AccountIngestionResponse(request, response)
 
 @TinkAPIResponse.register
 class AccountIngestionResponse(TinkAPIResponse):
