@@ -7,6 +7,8 @@ import sys
 import collections
 import logging
 
+import abc  # https://pymotw.com/3/abc/
+
 
 class TinkDAO:
 
@@ -104,3 +106,95 @@ class TinkDAO:
             self.transactions = data  # Returns a List<OrderedDict>
 
         return self.transactions
+
+
+class TinkEntity:
+
+    """
+    Generic object representation of a Tink data structure.
+
+    This class can be used to inherit from in sub-classes.
+    """
+
+    def __init__(self, fields: tuple, data: collections.OrderedDict()):
+        """
+        Initialization.
+
+        :param data: the raw data as an OrderedDict.
+        """
+        self.data: collections.OrderedDict() = data
+
+        # Check that all expected fields are provided
+        for f in fields:
+            if f not in data:
+                msg = 'Field {f} expected but not found in data {d}'.format(f=f, d=data)
+                raise AttributeError(msg)
+
+
+class TinkEntityList(metaclass=abc.ABCMeta):
+
+    """
+    Generic object representation of a Tink data structure list.
+
+    This class can be used to inherit from in sub-classes.
+    """
+
+    def __init__(self, data: list(collections.OrderedDict())):
+        """
+        Initialization.
+
+        :param data: the raw data as list of OrderedDict.
+        """
+        self.data: list(collections.OrderedDict()) = data
+
+    @abc.abstractmethod
+    def get_data(self, ext_user_id: str):
+        raise NotImplementedError()
+
+
+class TinkAccount(TinkEntity):
+
+    """
+    Object representation of a Tink account data structure.
+
+    This object can be used in order to create lists of accounts.
+    """
+
+    def __init__(self, data: collections.OrderedDict()):
+        """
+        Initialization
+        :param data: the raw data as a list(OrderedDict).
+        """
+        super().__init__(data)
+
+
+@TinkEntityList.register
+class TinkAccountList(TinkEntityList):
+    """
+    Object representation of a Tink account data structure.
+
+    This object can be used in order to create lists of accounts.
+    """
+    def __init__(self, data: collections.OrderedDict()):
+        """
+        Initialization
+        :param data: the raw data as a list(OrderedDict).
+        """
+        self.data = data
+
+    def get_data(self, ext_user_id):
+        """
+        This method returns a list that contains all the account data that belongs to a
+        certain user.
+
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+
+        :return: A list(OrderedDict) of accounts (account data) that belong to the user.
+        """
+
+        lst = list()
+        for e in self.data:
+            key = 'userExternalId'
+            if key in e:
+                lst.append(e)
+
