@@ -281,10 +281,11 @@ class TinkModel:
 
         # Make sure that there is a valid client_access_token available
         if not client_access_token:
-            # --- 1. Authorize client
+            # --- Authorize client
             rl = self.authorize_client(scope='authorization:grant,user:create')
             response: api.OAuth2AuthenticationTokenResponse = rl.first().response
 
+            # TODO: Refactor using TinkModelResultList pattern (see ingest_accounts)
             if response.status_code == 200:
                 result_status = TinkModelResultStatus.Success
                 client_access_token = response.access_token
@@ -535,6 +536,7 @@ class TinkModel:
 
         # Get account data
         accounts_raw = self.dao.read_accounts()
+        accounts = data.TinkAccountList(accounts_raw)
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Ingest accounts')
@@ -545,15 +547,30 @@ class TinkModel:
             logging.debug(e)
             raise e
 
-        service = api.AccoungService
+        service = api.AccoungService()
         users = self.dao.read_users()
 
+        # --- Authorize client
+        rl = self.authorize_client(scope='authorization:grant,accounts:write')
+        response: api.OAuth2AuthenticationTokenResponse = rl.last().response
+
+        # TODO: Refactor using standard pattern (see ingest_accounts)
+        if rl.status() == TinkModelResultStatus.Success:
+            client_access_token = response.access_token
+        else:
+            logging.error(response.summary())
+
+        result_list.append(rl)
+
+        # --- Ingest accounts per user
         if users:
             for e in users:
                 # Get user attributes
                 ext_user_id = e['userExternalId']
                 user_accounts = accounts.get_data(ext_user_id)
-                rl = service.ingest_accounts(ext_user_id, user_accounts)
+                rl = service.ingest_accounts(ext_user_id=ext_user_id,
+                                             accounts=user_accounts,
+                                             client_access_token=client_access_token)
                 result_list.append(rl)
 
         return result_list
