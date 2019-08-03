@@ -534,27 +534,13 @@ class TinkModel:
         msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
         logging.info(msg)
 
-        # Get account data
-        accounts_raw = self.dao.read_accounts()
-        accounts = data.TinkAccountList(accounts_raw)
-
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Ingest accounts')
-
-        try:
-            accounts: data.TinkAccountList(accounts_raw)
-        except AttributeError as e:
-            logging.debug(e)
-            raise e
-
-        service = api.AccoungService()
-        users = self.dao.read_users()
 
         # --- Authorize client
         rl = self.authorize_client(scope='authorization:grant,accounts:write')
         response: api.OAuth2AuthenticationTokenResponse = rl.last().response
 
-        # TODO: Refactor using standard pattern (see ingest_accounts)
         if rl.status() == TinkModelResultStatus.Success:
             client_access_token = response.access_token
         else:
@@ -563,13 +549,26 @@ class TinkModel:
         result_list.append(rl)
 
         # --- Ingest accounts per user
+        users = self.dao.read_users()
+
+        # Get account data for ALL users from data source
+        acc_data = self.dao.read_accounts()
+        try:
+            acc_entities = data.TinkAccountList(acc_data)
+        except NotImplementedError as e1:
+            logging.debug(e1)
+            raise e1
+        except AttributeError as e2:
+            logging.debug(e2)
+            raise e2
+
+        service = api.AccoungService()
+
         if users:
             for e in users:
-                # Get user attributes
                 ext_user_id = e['userExternalId']
-                user_accounts = accounts.get_data(ext_user_id)
                 rl = service.ingest_accounts(ext_user_id=ext_user_id,
-                                             accounts=user_accounts,
+                                             accounts=acc_entities,
                                              client_access_token=client_access_token)
                 result_list.append(rl)
 
