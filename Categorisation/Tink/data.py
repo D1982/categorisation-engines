@@ -2,11 +2,11 @@
 
 import Categorisation.Common.util as util
 import Categorisation.Common.config as cfg
+import Categorisation.Common.exceptions as ex
 
 import sys
 import collections
 import logging
-
 import abc  # https://pymotw.com/3/abc/
 
 
@@ -20,13 +20,28 @@ class TinkDAO:
 
     """
 
-    input_fieldnames_user = ('userExternalId', 'label', 'market', 'locale')
+    # Standard fields for entity User
+    fields_user_input = ('userExternalId', 'label', 'market', 'locale')
 
-    input_fieldnames_acc = ('userExternalId', 'externalId', 'availableCredit', 'balance',
-                            'name', 'type', 'flags', 'number', 'reservedAmount')
+    fields_user_extra = ()
 
-    input_fieldnames_trx = ('amount', 'date', 'description', 'externalId', 'payload',
-                            'pending', 'tinkId', 'type', 'n26cat', 'currency')
+    fields_user = fields_user_input + fields_user_extra
+
+    # Standard fields for entity Account
+    fields_acc_input = ('userExternalId', 'externalId', 'availableCredit', 'balance',
+                        'name', 'type', 'flags', 'number', 'reservedAmount')
+
+    fields_acc_extra = ('closed', 'payload')
+
+    fields_acc = fields_acc_input + fields_acc_extra
+
+    # Standard fields for entity Transaction
+    fields_trx_input = ('amount', 'date', 'description', 'externalId', 'payload',
+                        'pending', 'tinkId', 'type', 'n26cat', 'currency')
+
+    fields_trx_extra = ()
+
+    fields_trx = fields_trx_input
 
     def __init__(self):
         """ Initialization. """
@@ -69,7 +84,7 @@ class TinkDAO:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
 
         if not self.users or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=TinkDAO.input_fieldnames_user)
+            data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=TinkDAO.fields_user_input)
 
             self.users = data  # Returns a List<OrderedDict>
 
@@ -85,7 +100,7 @@ class TinkDAO:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
 
         if not self.accounts or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=TinkDAO.input_fieldnames_acc)
+            data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=TinkDAO.fields_acc_input)
 
             self.accounts = data  # Returns a List<OrderedDict>
 
@@ -101,7 +116,7 @@ class TinkDAO:
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
 
         if not self.transactions or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.trx_src, fieldnames=TinkDAO.input_fieldnames_trx)
+            data = self.file_handler.read_csv_file(filename=self.trx_src, fieldnames=TinkDAO.fields_trx_input)
 
             self.transactions = data  # Returns a List<OrderedDict>
 
@@ -116,26 +131,29 @@ class TinkEntity(metaclass=abc.ABCMeta):
     This class can be used to inherit from in sub-classes.
     """
 
-    def __init__(self, fields: tuple, data: collections.OrderedDict()):
+    def __init__(self, fields: tuple, data: collections.OrderedDict = None):
         """
         Initialization.
-
+        :param fields: The expected fields provided as keys in data.
         :param data: the raw data as an OrderedDict.
         """
-        self.data: collections.OrderedDict() = data
+        if not isinstance(data, collections.OrderedDict):
+            raise ex.ParameterError(f'Expected a parameter of type OrderedDict')
+        else:
+            self.data = data
 
-        # Check that all expected fields are provided
+        # Make sure that all expected fields are provided within data
         for f in fields:
             if f not in data:
                 msg = 'Field {f} expected but not found in data {d}'.format(f=f, d=data)
                 raise AttributeError(msg)
 
     @abc.abstractmethod
-    def json(self):
+    def get_data(self):
         """
-        Creates a json representation of the data (record) contained.
+        This method returns the data belonging to a single TinkEntity instance.
 
-        :return: list(OrderedDict) that complies with the API endpoint input data structure
+        :return: the data of a single entity wrapped within an instance of this class.
         """
         raise NotImplementedError()
 
@@ -148,24 +166,51 @@ class TinkEntityList(metaclass=abc.ABCMeta):
     This class can be used to inherit from in sub-classes.
     """
 
-    def __init__(self, data: list(collections.OrderedDict())):
+    def __init__(self, lst: list = list()):
         """
-        Initialization.
+        Converts a standard list into a list of TinkEntity object references that
+        can be used as an input for the constructor of the class TinkEntityList.
 
-        :param data: the raw data as list of OrderedDict.
+        :param lst:  A list of TinkEntity object references or any other typing.
+        :return: a list of TinkEntity object references wrapping the input data.
+        :raise: AttributeError if one of the elements in parameter lst does not conform
+        with the the field requirements when trying to create an entity object from it.
+        :raise: NotImplementedError if the type of this instance does not support the
+        creation of an entity object from it - see TinkEntity.__init__()
         """
-        self.data: list(collections.OrderedDict()) = data
+        self.entities = list()
+
+        if len(lst) == 0:
+            raise AttributeError(f'Expected a list containing elements in parameter lst')
+
+        for e in lst:
+            if isinstance(self, TinkAccountList):
+                if isinstance(e, TinkAccount):
+                    self.entities.append(e)
+                else:
+                    try:
+                        entity = TinkAccount(fields=TinkDAO.fields_acc_input,
+                                             data=e)
+                        self.entities.append(entity)
+                    except AttributeError as ex_att:
+                        raise ex_att
+                # TODO: Add transaction scope here
+            else:
+                raise NotImplementedError(f"Type of {str(type(self))} not supported")
 
     @abc.abstractmethod
     def get_data(self, ext_user_id: str):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def json(self):
         """
-        Creates a json representation of the data contained.
+        This method returns the contained TinkEntity data.
 
-        :return: list(OrderedDict) that complies with the API endpoint input data structure
+        :param ext_user_id: external user reference (this is NOT the Tink internal id).
+        If provided then the data returned will be restricted to the records that belong
+        to the user ext_user_id.
+
+        :return: the wrapped data as a standard list[OrderedDict]
+        this class.
+
+        :raise NotImplementedError if this method was not implemented in a sub-class.
         """
         raise NotImplementedError()
 
@@ -174,28 +219,50 @@ class TinkEntityList(metaclass=abc.ABCMeta):
 class TinkAccount(TinkEntity):
 
     """
-    Object representation of a Tink account data structure.
-
+    An object representation of a Tink account data structure.
     This object can be used in order to create lists of accounts.
     """
 
-    def __init__(self, data: collections.OrderedDict()):
+    def __init__(self, fields: tuple, data: collections.OrderedDict = None):
         """
         Initialization
-        :param data: the raw data as a list(OrderedDict).
+        :param fields: The expected fields provided as keys in data.
+        :param data: the raw data as an OrderedDict.
         """
-        super().__init__(data)
 
-    def json(self):
+        super().__init__(fields, data)
+
+    def get_data(self):
         """
-        Creates a json representation of the data (record) contained.
+        This method returns the data belonging to a single TinkEntity instance.
 
-        :return: list(OrderedDict) that complies with the API endpoint input data structure
+        :return: the data of a single entity wrapped within an instance of this class.
         """
-        json = collections.OrderedDict()
+        data = collections.OrderedDict()
 
-        for field in TinkDAO.input_fieldnames_acc:
-            json[field] = self.data[field]
+        fields_unmapped_str = ''
+
+        for field in TinkDAO.fields_acc:
+            if field in TinkDAO.fields_acc_input:
+                data[field] = self.data[field]
+            elif field in TinkDAO.fields_acc_extra:
+                if field == 'flags':
+                    # field "flags" is specified as an array
+                    data[field] = (data[field])
+                elif field == 'closed':
+                    data[field] = ''
+                elif field == 'payload':
+                    data[field] = ''
+                else:
+                    if fields_unmapped_str == '':
+                        fields_unmapped_str += f'{field}'
+                    else:
+                        fields_unmapped_str += f', {field}'
+
+        if fields_unmapped_str != '':
+            raise RuntimeError(f'Unmapped fields in: {str(type(self))} {fields_unmapped_str}')
+
+        return data
 
 
 @TinkEntityList.register
@@ -205,41 +272,36 @@ class TinkAccountList(TinkEntityList):
 
     This object can be used in order to create lists of accounts.
     """
-    def __init__(self, data: collections.OrderedDict()):
-        """
-        Initialization
-        :param data: the raw data as a list(OrderedDict).
-        """
-        self.data = data
 
-    def get_data(self, ext_user_id):
+    def __init__(self, lst: list = None):
         """
-        This method returns a list that contains all the account data that belongs to a
-        certain user.
+        Initialization.
 
-        :param ext_user_id: external user reference (this is NOT the Tink internal id)
-
-        :return: A list(OrderedDict) of accounts (account data) that belong to the user.
+        :param lst: a list of TinkEntity object references.
         """
+        super().__init__(lst)
 
+    def get_data(self, ext_user_id: str = None):
+        """
+        This method returns the contained TinkEntity data.
+
+        :param ext_user_id: external user reference (this is NOT the Tink internal id).
+        If provided then the data returned will be restricted to the records that belong
+        to the user ext_user_id.
+
+        :return: the wrapped data as a standard list[OrderedDict]
+        this class.
+        """
         lst = list()
-        for e in self.data:
-            key = 'userExternalId'
-            if key in e:
-                if e[key] == ext_user_id:
-                    lst.append(e)
+
+        if ext_user_id:
+            # Add only data to the result list if it belongs to the user ext_user_id
+            for entity in self.entities:
+                if entity.data['userExternalId'] == ext_user_id:
+                    lst.append(entity.get_data())
+        else:
+            # Add all the data to the result list
+            lst = self.entities
+
         return lst
-
-    def json(self):
-        """
-        Creates a json representation of the data contained.
-
-        :return: list(OrderedDict) that complies with the API endpoint input data structure
-        """
-        json_list = list()
-
-        for e in self.data:
-            json_list.append(e.json())
-
-        return json_list
 
