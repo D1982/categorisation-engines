@@ -635,13 +635,15 @@ class AccoungService(TinkAPI):
         request.headers.update({'Authorization': 'Bearer ' + client_access_token})
         request.headers.update({'Content-Type': 'application/json'})
         # --- Body
-        request.data.update({'accounts': accounts})
+        user_accounts = accounts.get_data(ext_user_id=ext_user_id)
+        request.data.update({'accounts': user_accounts})
 
         # --- Logging
         logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
         logging.debug('Request Header: {h}'.format(h=request.headers))
         logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
+        # TODO: Some fields from file (userExternalId) should not go to the API
         response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
 
         return AccountIngestionResponse(request, response)
