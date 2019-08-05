@@ -643,7 +643,7 @@ class AccoungService(TinkAPI):
         logging.debug('Request Header: {h}'.format(h=request.headers))
         logging.debug('Request Body: {b}'.format(b=request.data))
         # --- API call
-        # TODO: Some fields from file (userExternalId) should not go to the API
+        # TODO: Check why a) 400 (Bad Request) but b) reported as "Successfully completed"
         response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
 
         return AccountIngestionResponse(request, response)
