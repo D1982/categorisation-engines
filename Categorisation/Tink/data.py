@@ -33,8 +33,8 @@ class TinkDAO:
 
     fields_acc_map = ('flags', 'closed', 'payload')
 
-    fields_acc_input = ('externalId', 'availableCredit', 'balance', 'closed',
-                        'name', 'type', 'flags', 'number', 'reservedAmount', 'payload')
+    fields_acc_api = ('externalId', 'availableCredit', 'balance', 'closed',
+                      'name', 'type', 'flags', 'number', 'reservedAmount', 'payload')
 
     # Standard fields for entity Transaction
 
@@ -244,10 +244,13 @@ class TinkAccount(TinkEntity):
 
         fields_unmapped_str = ''
 
-        for field in TinkDAO.fields_acc_api:
-            if field in TinkDAO.fields_acc_input:
+        for field in TinkDAO.fields_acc_input:
+
+            if field in TinkDAO.fields_acc_api:
+                # Field to be provided to the API as is
                 data[field] = self.data[field]
             elif field in TinkDAO.fields_acc_map:
+                # Field to be mapped against the API
                 if field == 'flags':
                     # field "flags" is specified as an array
                     data[field] = (data[field])
