@@ -21,21 +21,23 @@ class TinkDAO:
     """
 
     # Standard fields for entity User
+
     fields_user_input = ('userExternalId', 'label', 'market', 'locale')
 
-    fields_user_map = ()
-
-    fields_user = fields_user_input + fields_user_map
+    fields_user_api = ('userExternalId', 'label', 'market', 'locale')
 
     # Standard fields for entity Account
+
     fields_acc_input = ('userExternalId', 'externalId', 'availableCredit', 'balance',
                         'name', 'type', 'flags', 'number', 'reservedAmount')
 
-    fields_acc_map = ('closed', 'payload')
+    fields_acc_map = ('flags', 'closed', 'payload')
 
-    fields_acc = fields_acc_input + fields_acc_map
+    fields_acc_input = ('externalId', 'availableCredit', 'balance', 'closed',
+                        'name', 'type', 'flags', 'number', 'reservedAmount', 'payload')
 
     # Standard fields for entity Transaction
+
     fields_trx_input = ('amount', 'date', 'description', 'externalId', 'payload',
                         'pending', 'tinkId', 'type', 'n26cat', 'currency')
 
@@ -242,7 +244,7 @@ class TinkAccount(TinkEntity):
 
         fields_unmapped_str = ''
 
-        for field in TinkDAO.fields_acc:
+        for field in TinkDAO.fields_acc_api:
             if field in TinkDAO.fields_acc_input:
                 data[field] = self.data[field]
             elif field in TinkDAO.fields_acc_map:
