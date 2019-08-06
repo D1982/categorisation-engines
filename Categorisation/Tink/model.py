@@ -567,10 +567,22 @@ class TinkModel:
         if users:
             for e in users:
                 ext_user_id = e['userExternalId']
-                rl = service.ingest_accounts(ext_user_id=ext_user_id,
-                                             accounts=acc_entities,
-                                             client_access_token=client_access_token)
-                result_list.append(rl)
+
+                msg = f'Ingest accounts for ext_user_id:{ext_user_id}'
+
+                response: api.AccountIngestionResponse = None
+                response = service.ingest_accounts(ext_user_id=ext_user_id,
+                                                   accounts=acc_entities,
+                                                   client_access_token=client_access_token)
+
+                if response.http_status(cfg.HTTPStatusCode.Code2xx):
+                    result_status = TinkModelResultStatus.Success
+                    logging.info(msg + ' => Done')
+                else:
+                    logging.error(response.summary())
+                    result_status = TinkModelResultStatus.Error
+
+                result_list.append(TinkModelResult(result_status, response, msg))
 
         return result_list
 
