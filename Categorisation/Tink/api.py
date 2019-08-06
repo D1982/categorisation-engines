@@ -226,6 +226,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             payload_text = payload
         except JSONDecodeError as e:
             logging.warning(str(e))
+            payload = dict()
             payload_text = ''
 
         # Payload for errors (4xx status code)
