@@ -309,7 +309,7 @@ class TinkUI:
 
         :return: void
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         self.put_result_log(text='*** User data ***', clear=True, time=False)
@@ -386,7 +386,7 @@ class TinkUI:
         self.put_result_log(text='*** API Health Checks ***', clear=True, time=False)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         # Perform action
@@ -405,7 +405,7 @@ class TinkUI:
         self.put_result_log(text='*** List categories ***', clear=True, time=False)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         # Perform action
@@ -425,7 +425,7 @@ class TinkUI:
         self.put_result_log(text='*** Activate (create) users ***', clear=True, time=False)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         # Perform action
@@ -444,7 +444,7 @@ class TinkUI:
         self.put_result_log(text='*** Delete users ***', clear=True, time=False)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         # Perform action
@@ -463,7 +463,7 @@ class TinkUI:
         self.put_result_log(text='*** Ingest accounts ***', clear=True, time=True)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         # Perform action
@@ -482,7 +482,7 @@ class TinkUI:
         self.put_result_log(text='*** Delete accounts ***', clear=True, time=True)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         self.put_result_log('NOT YET IMPLEMENTED')
@@ -497,7 +497,7 @@ class TinkUI:
         self.put_result_log(text='*** List accounts ***', clear=True, time=True)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         self.put_result_log('NOT YET IMPLEMENTED')
@@ -512,7 +512,7 @@ class TinkUI:
         self.put_result_log(text='*** Ingest transactions ***', clear=True, time=True)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         self.put_result_log('NOT YET IMPLEMENTED')
@@ -527,7 +527,7 @@ class TinkUI:
         self.put_result_log(text='*** Delete transactions ***', clear=True, time=True)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         self.put_result_log('NOT YET IMPLEMENTED')
@@ -542,7 +542,7 @@ class TinkUI:
         self.put_result_log(text='*** List transactions ***', clear=True, time=True)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         self.put_result_log('NOT YET IMPLEMENTED')
@@ -557,7 +557,7 @@ class TinkUI:
         self.put_result_log(text='*** Process full workflow ***', clear=True, time=True)
 
         # Logging
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         # Perform actions

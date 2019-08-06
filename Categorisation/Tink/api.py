@@ -277,7 +277,7 @@ class MonitoringService(TinkAPI):
 
         :return: A response wrapper object (instance of api.MonitoringResponse)
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/monitoring/ping')
@@ -291,7 +291,7 @@ class MonitoringService(TinkAPI):
 
         :return: A response wrapper object (instance of api.TinkAPIResponse)
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/monitoring/healthy')
@@ -383,7 +383,7 @@ class CategoryService(TinkAPI):
 
         :return: A response wrapper object (instance of api.CategoryResponse)
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/categories')
@@ -463,7 +463,7 @@ class UserService(TinkAPI):
         /api/v1/oauth/token which can be called using OAuthService.authorize_client_access(...)
         :return: A response wrapper object (instance of api.UserActivationResponse)
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # --- Request
@@ -503,7 +503,7 @@ class UserService(TinkAPI):
         /api/v1/oauth/token which can be called using OAuthService.grant_user_access(...)
         :return: A response wrapper object (instance of api.UserDeleteResponse)
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # --- Request
@@ -626,7 +626,7 @@ class AccoungService(TinkAPI):
 
         :return: a response wrapper object (instance of api.AccountIngestionResponse)
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # --- Request
@@ -757,7 +757,7 @@ class OAuthService(TinkAPI):
 
         :return: OAuth2AuthenticationTokenResponse
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # --- Request
@@ -798,7 +798,7 @@ class OAuthService(TinkAPI):
         :return: TinkModelResult containing an instance of api.OAuth2AuthorizeResponse with an
         authorization code {CODE}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # --- Request
@@ -834,7 +834,7 @@ class OAuthService(TinkAPI):
         :return: TinkModelResult containing an instance of api.OAuth2AuthenticationTokenResponse with a
         client access token {ACCESS_TOKEN}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # --- Request

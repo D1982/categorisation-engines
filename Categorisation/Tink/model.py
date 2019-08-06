@@ -53,7 +53,7 @@ class TinkModel:
 
     """Read user test data from files."""
     def read_user_data(self):
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         return self.dao.read_users()
@@ -61,14 +61,14 @@ class TinkModel:
 
     """Read account test data from files."""
     def read_account_data(self):
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         return self.dao.read_accounts()
 
     """Read transaction test data from files."""
     def read_transaction_data(self):
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         return self.dao.read_transactions()
@@ -80,7 +80,7 @@ class TinkModel:
 
         :return: TinkModelResultList wrapping TinkModelResult objects of all AP calls performed
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         service = api.MonitoringService()
@@ -119,7 +119,7 @@ class TinkModel:
         containing an instance of api.OAuth2AuthenticationTokenResponse with a
         client access token {ACCESS_TOKEN}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         service = api.OAuthService()
@@ -151,7 +151,7 @@ class TinkModel:
         containing an instance of api.OAuth2AuthenticationTokenResponse with a
         client access token {ACCESS_TOKEN}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         if not delete_dict:
@@ -197,7 +197,7 @@ class TinkModel:
         :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
         containing an instance of api.OAuth2AuthorizeResponse with an authorization code {CODE}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         service = api.OAuthService()
@@ -241,7 +241,7 @@ class TinkModel:
         containing an instance of api.OAuth2AuthenticationTokenResponse with a
         client access token {ACCESS_TOKEN}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         service = api.OAuthService()
@@ -272,7 +272,7 @@ class TinkModel:
         containing an instance of api.UserActivationResponse with a unique identifier of
         the user created {USER_ID}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -343,7 +343,7 @@ class TinkModel:
         containing instances of api.UserActivationResponse with a unique identifier of
         the users deleted {USER_ID}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Get user data
@@ -374,7 +374,7 @@ class TinkModel:
 
         :return: Boolean - True if the user exists, otherwise False
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
         try:
             self.delete_user(ext_user_id=ext_user_id, no_delete=True)
@@ -407,7 +407,7 @@ class TinkModel:
 
         :raise: ExUserNotExisting in case the user to be deleted does not exist
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
         # Prepare a dictionary that contains the user to be deleted
@@ -495,7 +495,7 @@ class TinkModel:
         containing instances of api.UserDeleteResponse with a unique identifier of
         the users deleted {USER_ID}.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Get user data
@@ -531,7 +531,7 @@ class TinkModel:
         401	User not found, has no credentials, or has more than one set of credentials.
         409	Account already exists.
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -592,7 +592,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -606,7 +606,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -620,7 +620,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -634,7 +634,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -648,7 +648,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -668,7 +668,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         # Wrapper for the results
@@ -697,7 +697,7 @@ class TinkModel:
 
         :return: TinkModelResultList
         """
-        msg = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         service = api.CategoryService()
