@@ -142,6 +142,7 @@ class TinkEntity(metaclass=abc.ABCMeta):
         if not isinstance(data, collections.OrderedDict):
             raise ex.ParameterError(f'Expected a parameter of type OrderedDict')
         else:
+            self.fields = fields
             self.data = data
 
         # Make sure that all expected fields are provided within data
@@ -216,6 +217,11 @@ class TinkEntityList(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
+    def contains_data(self, ext_user_id: str):
+        if len(self.get_data(ext_user_id)) > 0:
+            return True
+        else:
+            return False
 
 @TinkEntity.register
 class TinkAccount(TinkEntity):
@@ -240,34 +246,35 @@ class TinkAccount(TinkEntity):
 
         :return: the data of a single entity wrapped within an instance of this class.
         """
-        data = collections.OrderedDict()
+        rdata = collections.OrderedDict()
 
         fields_unmapped_str = ''
 
         for field in TinkDAO.fields_acc_input:
 
-            if field in TinkDAO.fields_acc_api:
-                # Field to be provided to the API as is
-                data[field] = self.data[field]
-            elif field in TinkDAO.fields_acc_map:
+            if field in TinkDAO.fields_acc_map:
                 # Field to be mapped against the API
                 if field == 'flags':
                     # field "flags" is specified as an array
-                    data[field] = (data[field])
+                    rdata[field] = list()
+                    rdata[field].append(self.data[field])
                 elif field == 'closed':
-                    data[field] = ''
+                    rdata[field] = ''
                 elif field == 'payload':
-                    data[field] = ''
+                    rdata[field] = ''
                 else:
                     if fields_unmapped_str == '':
                         fields_unmapped_str += f'{field}'
                     else:
                         fields_unmapped_str += f', {field}'
+            elif field in TinkDAO.fields_acc_api:
+                # Field to be provided to the API as is
+                rdata[field] = self.data[field]
 
         if fields_unmapped_str != '':
             raise RuntimeError(f'Unmapped fields in: {str(type(self))} {fields_unmapped_str}')
 
-        return data
+        return rdata
 
 
 @TinkEntityList.register
