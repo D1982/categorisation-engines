@@ -562,7 +562,7 @@ class TinkModel:
             logging.debug(e2)
             raise e2
 
-        service = api.AccoungService()
+        service = api.AccountService()
 
         if users:
             for e in users:
