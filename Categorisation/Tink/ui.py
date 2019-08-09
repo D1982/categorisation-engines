@@ -183,6 +183,7 @@ class TinkUI:
 
         self.activate_users_button = tk.Button(self.command_frame, fg='green', text='Create user(s)')
         self.delete_users_button = tk.Button(self.command_frame, fg='red', text='Delete user(s)')
+        self.list_users_button = tk.Button(self.command_frame, fg='blue', text='List user(s)')
 
         self.ingest_accounts_button = tk.Button(self.command_frame, fg='green', text='Ingest account(s)')
         self.delete_accounts_button = tk.Button(self.command_frame, fg='red', text='Delete account(s)')
@@ -203,6 +204,7 @@ class TinkUI:
 
         self.activate_users_button.grid(row=3, column=1, sticky=tk.W)
         self.delete_users_button.grid(row=4, column=1, sticky=tk.W)
+        self.list_users_button.grid(row=5, column=1, sticky=tk.W)
         self.ingest_accounts_button.grid(row=3, column=2, sticky=tk.W)
         self.delete_accounts_button.grid(row=4, column=2, sticky=tk.W)
         self.list_accounts_button.grid(row=5, column=2, sticky=tk.W)
@@ -283,6 +285,8 @@ class TinkUI:
 
         self.activate_users_button['command'] = self.activate_users_button_cb
         self.delete_users_button['command'] = self.delete_users_button_cb
+        self.list_users_button['command'] = self.list_users_button_cb
+
         self.ingest_accounts_button['command'] = self.ingest_accounts_button_cb
         self.delete_accounts_button['command'] = self.delete_accounts_button_cb
         self.list_accounts_button['command'] = self.list_accounts_button_cb
@@ -452,6 +456,25 @@ class TinkUI:
 
         # Print results
         self.put_result_log(rl.summary(filters={'endpoint': 'user/delete'}))
+
+    def list_users_button_cb(self):
+        """
+        Event Handler for the corresponding button (equal name)
+
+        :return: void
+        """
+        # Title
+        self.put_result_log(text='*** List users ***', clear=True, time=True)
+
+        # Logging
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.debug(msg)
+
+        # Perform action
+        rl: model.TinkModelResultList = self._model.get_users()
+
+        # Print results
+        self.put_result_log(rl.summary(filters={'endpoint': '/user'}))
 
     def ingest_accounts_button_cb(self):
         """
