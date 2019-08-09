@@ -63,6 +63,8 @@ API_URL_TINK = 'https://api.tink.se'  # Tink enterprise API endpoint URL
 
 API_URL_TINK_CONNECTOR = 'https://api.tink.com/connector'  # Tink connector API endpoint URL
 
+API_CALL_DELAY_IN_SECS = 2  # Minimum delay between dependent API calls in seconds
+
 IN_FILE_PATTERN_TINK = 'data/TinkReq*.csv'  # Default file pattern for input files of the Tink PoC
 
 OUT_FILE_PATTERN_TINK = 'data/TinkResp*.csv'  # Default file pattern for output files of the Tink PoC
