@@ -218,6 +218,15 @@ class TinkEntityList(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def contains_data(self, ext_user_id: str):
+        """
+        This method checks if there is data available for a certain user.
+
+        :param ext_user_id: external user reference (this is NOT the Tink internal id).
+        If provided then the data returned will be restricted to the records that belong
+        to the user ext_user_id.
+
+        :return: True if there exists data for ext_user_id, otherwise False
+        """
         if len(self.get_data(ext_user_id)) > 0:
             return True
         else:
