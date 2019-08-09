@@ -521,6 +521,40 @@ class UserService(TinkAPI):
 
         return UserDeleteResponse(request, response)
 
+    def get_user(self, access_token):
+        """
+        Call the API endpoint /api/v1/user
+
+        Get information of an existing user in the Tink platform.
+
+        The client_access_token must have been gathered from a call like
+        authorize_client(..., scope='user:delete', delete_dict) whereas
+        delete_dict should have contained the user_id or ext_user_id of the
+        user that should be deleted.
+
+        Otherwise this call will fail with code 401 Unauthorized
+
+        :param access_token: The OAuth2 user access token gathered via the endpoint
+        /api/v1/oauth/token which can be called using OAuthService.grant_user_access(...)
+        :return: A response wrapper object (instance of api.UserResponse)
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        # --- Request
+        request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/user/delete')
+        # --- Header
+        request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
+        request.headers.update({'Authorization': 'Bearer {t}'.format(t=access_token)})
+        request.headers.update({'Content-Type': 'application/json'})
+        # --- Logging
+        logging.debug(f'{request.method} {request.endpoint}')
+        logging.debug(f'Request Header: {request.headers}')
+        logging.debug(f'Request Body: {request.data}')
+        # --- API call
+        response = requests.post(url=request.endpoint, headers=request.headers)
+
+        return UserResponse(request, response)
 
 @TinkAPIResponse.register
 class UserActivationResponse(TinkAPIResponse):
@@ -561,7 +595,7 @@ class UserActivationResponse(TinkAPIResponse):
         # No override required - use standard output
         return self.to_string_formatted()
 
-
+@TinkAPIResponse.register
 class UserDeleteResponse(TinkAPIResponse):
 
     """
@@ -601,7 +635,47 @@ class UserDeleteResponse(TinkAPIResponse):
         return self.to_string_formatted()
 
 
-class AccoungService(TinkAPI):
+@TinkAPIResponse.register
+class UserResponse(TinkAPIResponse):
+
+    """
+    Abstract wrapper class for UserResponse from Tink's user service.
+    """
+
+    def __init__(self, request, response):
+        """
+        Initialization.
+        """
+        super().__init__(request, response)
+
+        # Custom attributes relevant for this response
+        self.user_id = None
+
+        # Define fields of interest referring to the official API documentation
+        self.names = {'created', 'user_id', 'errorMessage', 'errorCode'}
+
+        # Save fields of interest referring to the official API documentation
+        if isinstance(response, requests.Response) and response.status_code == 204:
+            if isinstance(self.json, dict):
+                self.data = {key: value for key, value in self.json.items() if key in self.names}
+                if 'user_id' in self.data:
+                    self.user_id = self.data['user_id']
+
+    def to_string_custom(self):
+
+        """
+        Implementation of the abstract method of the class api.TinkAPIResponse
+
+        Generic extended string representation of a TinkAPIResponse instance.
+
+        :return: a formatted, human readable string representation of the data
+        within an instance of this class
+        """
+        # No override required - use standard output
+        return self.to_string_formatted()
+
+
+class AccountService(TinkAPI):
 
     """
     Wrapper class for the Tink account service.
