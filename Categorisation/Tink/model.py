@@ -570,6 +570,10 @@ class TinkModel:
 
                 msg = f'Ingest accounts for ext_user_id:{ext_user_id}'
 
+                if not acc_entities.contains_data(ext_user_id):
+                    logging.info(msg + ' => Skipped (No accounts found)')
+                    continue
+
                 response: api.AccountIngestionResponse = None
                 response = service.ingest_accounts(ext_user_id=ext_user_id,
                                                    accounts=acc_entities,
@@ -685,8 +689,12 @@ class TinkModel:
             msg = 'Pre-Delete skipped: Deletion of existing objects in the Tink platform is disabled.'
             logging.info(msg)
 
-        # Re-Create users
+        # Create users
         rl = self.activate_users()
+        result_list.append(rl)
+
+        # Ingest accounts
+        rl = self.ingest_accounts()
         result_list.append(rl)
 
         return result_list
