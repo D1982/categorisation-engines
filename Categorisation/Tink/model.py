@@ -8,7 +8,6 @@ import Categorisation.Common.util as utl
 import Categorisation.Tink.api as api
 import Categorisation.Tink.data as data
 
-
 import logging
 import os
 import sys
@@ -112,9 +111,13 @@ class TinkModel:
         """
         Authorize the client (Tink customer account).
 
-        :param grant_type: the grant type. values: authorization_code, refresh_token, client_credentials
+        :param grant_type: the grant type.
+        Possible values: authorization_code, refresh_token, client_credentials
         :param scope: the requested scope when using client credentials.
+        Values: https://docs.tink.com/enterprise/api/#available-scopes
         :param ext_user_id: external user reference (this is NOT the Tink internal id)
+        This parameter can be used in order to delete existing users and accounts.
+        This is a workaround suggested by Tink in order to delete a user-
 
         :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
         containing an instance of api.OAuth2AuthenticationTokenResponse with a
@@ -132,57 +135,9 @@ class TinkModel:
             response = service.authorize_client_access(grant_type=grant_type,
                                                        scope=scope)
 
-        if response.status_code == 200:
+        if response.http_status(cfg.HTTPStatusCode.Code2xx):
             logging.info('Authorized client access')
-            logging.info('Client access token: {t}'.format(t=response.access_token))
-            result_status = TinkModelResultStatus.Success
-        else:
-            logging.error(response.summary())
-            result_status = TinkModelResultStatus.Error
-
-        return TinkModelResultList(TinkModelResult(result_status, response, ''))
-
-    def authorize_client_delete(self, grant_type='client_credentials', scope='user:delete', delete_dict=None):
-        """
-        Authorize the client (Tink customer account) to delete an object in the Tink platform.
-
-        Wrapper for the API endpoint /api/v1/oauth/token
-        This is to be considered as a workaround resp. the only way to delete an existing user.
-
-        :param grant_type: the grant type. values: authorization_code, refresh_token, client_credentials
-        :param scope: the requested scope when using client credentials.
-        :param delete_dict: If delete_dict is provided then the service has to be used to delete data.
-        This is a workaround that can be used in order to delete existing users and accounts
-
-        :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
-        containing an instance of api.OAuth2AuthenticationTokenResponse with a
-        client access token {ACCESS_TOKEN}.
-        """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        if not delete_dict:
-            msg = 'Parameter delete_dict was expected to be provided'
-            logging.error(msg)
-            raise Exception(msg)
-
-        if 'user_id' in delete_dict:
-            key = 'user_id'
-            value = delete_dict[key]
-        elif 'ext_user_id' in delete_dict:
-            key = 'ext_user_id'
-            value = delete_dict[key]
-        else:
-            msg = 'Unexpected keys in parameter delete_dict found'
-            logging.error(msg)
-            raise ex.ParameterError(msg)
-        # TODO: Add here the account_id in case of deletion for accounts is also working
-
-        s = api.OAuthService()
-        response = s.authorize_client_access(grant_type, scope, delete_dict)
-
-        if response.status_code in (200, 204):
-            logging.info('Authorized client access for deletion of {k}:{v} '.format(k=key, v=value))
+            logging.info(f'Client access token: {response.access_token}')
             result_status = TinkModelResultStatus.Success
         else:
             logging.error(response.summary())
@@ -215,12 +170,12 @@ class TinkModel:
         response: api.OAuth2AuthorizeResponse = response
         if response.status_code == 200:
             code = response.data['code']
-            msg = 'Received access code "{c}"'.format(c=code)
+            msg = f'Received access code "{code}"'
             logging.info(msg)
             result_status = TinkModelResultStatus.Success
         elif response.status_code == 404:
             # User does not exist
-            text = 'User ext_user_id:{u} does not exist'.format(u=ext_user_id)
+            text = f'User ext_user_id:{ext_user_id} does not exist'
             logging.warning(text)
             result_status = TinkModelResultStatus.Exception
             rl = TinkModelResultList(TinkModelResult(status=result_status,
@@ -255,7 +210,7 @@ class TinkModel:
         response = service.get_oauth_access_token(code=code, grant_type=grant_type)
 
         if response.status_code == 200:
-            msg = 'Got access_token:{t} using code:{c}'.format(t=response.access_token, c=code)
+            msg = f'Got access_token:{response.access_token} using code:{code}'
             logging.info(msg)
             result_status = TinkModelResultStatus.Success
         else:
@@ -373,16 +328,15 @@ class TinkModel:
 
         return result_list
 
-    def delete_user(self, user_id=None, ext_user_id=None, no_delete=False):
+    def delete_user(self, ext_user_id=None, no_delete=False):
         """
         Delete a user in the Tink platform.
 
         Hint: The parameter no_delete makes sense to not duplicate code since the
         handling of user deletion in the Tink platform is very special for whatever
-        reason. Therefore the method model.user_exists() makes use of this parameter in
-        order to verify if a user exists.
+        reason. Therefore e.g. the method model.user_exists() makes use of this parameter in
+        order to verify whether a user exists.
 
-        :param user_id: The unique Tink user identifier
         :param ext_user_id: external user reference (this is NOT the Tink internal id)
         :param no_delete: Flag to suppress user deletion e.g. in order to only check if the user
         is existing in the Tink platform.
@@ -396,24 +350,14 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
-        # Prepare a dictionary that contains the user to be deleted
-        if user_id:  # TODO: Create a function to encapsulate delete_dict evaluation
-            key = 'user_id'
-            value = user_id
-        elif ext_user_id:
-            key = 'ext_user_id'
-            value = ext_user_id
-
-        delete_dict = {key: value}
-
         # Wrapper for the results
-        msg = 'Delete user with ext_user_id:{e}'.format(e=ext_user_id)
+        msg = f'Delete user with ext_user_id:{ext_user_id}'
         result_list = TinkModelResultList(result=None, action=msg, msg=msg)
 
-        msg = 'Authorize client...'.format(k=key, v=value)
+        msg = 'Authorize client...'
         try:
-            rl = self.authorize_client_delete(scope='authorization:grant,user:delete',
-                                              delete_dict=delete_dict)
+            rl = self.authorize_client(scope='authorization:grant,user:delete',
+                                       ext_user_id=ext_user_id)
             result_list.append(rl)
         except ex.ParameterError as e:
             raise e
@@ -429,7 +373,7 @@ class TinkModel:
         msg = 'Grant access and get the access code...'
         try:
             rl = self.grant_user_access(client_access_token=client_access_token,
-                                        ext_user_id=value,
+                                        ext_user_id=ext_user_id,
                                         scope='user:delete')
             result_list.append(rl)
         except ex.UserNotExistingError as e:
