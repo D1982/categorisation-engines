@@ -854,7 +854,7 @@ class TinkModelResultList:
 
         self.action = action
         if self.action == '':
-            self.action = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+            self.action = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
 
         self.msg = msg
 
@@ -981,7 +981,7 @@ class TinkModelResultList:
             if cnt != 0:
                 if index > 1:
                     sep = ', '
-                text += sep + '{cnt}/{t} steps: {s}'.format(cnt=cnt, t=len(self.results), s=str(s.value))
+                text += sep + f'{cnt}/{len(self.results)} steps: {str(s.value)}'
 
         return text
 
@@ -1007,7 +1007,7 @@ class TinkModelResultList:
         level = utl.message_detail_level()
 
         # Overall status over all results wrapped within this result list
-        text = '{a} ... {s} [{m}]'.format(a=self.action, s=self.status().value, m=self.msg)
+        text = f'{self.action} ... {self.status().value} [{self.msg}]'
 
         # Overall statistics
         if level == cfg.MessageDetailLevel.High:
@@ -1025,14 +1025,14 @@ class TinkModelResultList:
         # Summarize the status of the single steps
         if level == cfg.MessageDetailLevel.Low:
             for r in rl:
-                text += os.linesep + '{a} ... {s}'.format(a=r.action, s=r.status.value)
+                text += os.linesep + f'{r.action} ... {r.status.value}'
                 if r.msg and r.msg != r.status.value:
-                    text += ' [{m}]'.format(m=r.msg)
+                    text += f' [{r.msg}]'
                 if r.response:
-                    text += ' [{s}]'.format(s=r.response.summary())
+                    text += f' [{r.response.summary()}]'
         elif level == cfg.MessageDetailLevel.Medium:
             for i in range(len(self.results)):
-                text += '\nResult #{i}\n{s}'.format(i=i + 1, s=self.results[i].response.summary())
+                text += f'\nResult #{i+1}\n{self.results[i].response.summary()}'
 
         return text
 
