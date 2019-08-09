@@ -569,6 +569,10 @@ class TinkUI:
         rl2: model.TinkModelResultList = self._model.activate_users()
         self.put_result_log(rl2.summary(filters={'endpoint': 'user/create'}))
 
+        self.put_result_log(text=os.linesep, time=False)
+
+        rl3: model.TinkModelResultList = self._model.ingest_accounts()
+        self.put_result_log(rl3.summary(filters={'endpoint': '/accounts'}))
 
     def clear_button_cb(self):
         """
