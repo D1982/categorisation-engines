@@ -492,12 +492,15 @@ class UserService(TinkAPI):
 
         Delete an existing user in the Tink platform.
 
-        The client_access_token must have been gathered from a call like
-        authorize_client_delete(..., scope='user:delete', delete_dict) whereas
-        delete_dict should have contained the user_id or ext_user_id of the
-        user that should be deleted.
-
-        Otherwise this call will fail with code 401 Unauthorized
+        Hint:
+        The access_token can be gathered using the following call sequence
+        within the module Categorisation.Tink.model:
+        1. client_access_token = authorize_client(scope='user:delete',
+                                                  ext_user_id=ext_user_id)
+        => ext_user_id is the user that should be deleted.
+        2. code = grant_user_access(client_access_token, ext_user_id, scope)
+        => ext_user_id is the user for which the information is requested.
+        3. access_token = get_oauth_access_token(code, grant_type)
 
         :param access_token: The OAuth2 user access token gathered via the endpoint
         /api/v1/oauth/token which can be called using OAuthService.grant_user_access(...)
@@ -525,14 +528,15 @@ class UserService(TinkAPI):
         """
         Call the API endpoint /api/v1/user
 
-        Get information of an existing user in the Tink platform.
+        Get information for an existing user in the Tink platform.
 
-        The client_access_token must have been gathered from a call like
-        authorize_client(..., scope='user:delete', delete_dict) whereas
-        delete_dict should have contained the user_id or ext_user_id of the
-        user that should be deleted.
-
-        Otherwise this call will fail with code 401 Unauthorized
+        Hint:
+        The access_token can be gathered using the following call sequence
+        within the module Categorisation.Tink.model:
+        1. client_access_token = model.authorize_client(scope='user:read')
+        2. code = grant_user_access(client_access_token, ext_user_id, scope)
+        => ext_user_id is the user for which the information is requested.
+        3. access_token = get_oauth_access_token(code, grant_type)
 
         :param access_token: The OAuth2 user access token gathered via the endpoint
         /api/v1/oauth/token which can be called using OAuthService.grant_user_access(...)
@@ -814,7 +818,7 @@ class OAuthService(TinkAPI):
         """
         super().__init__()
 
-    def authorize_client_access(self, grant_type, scope, delete_dict=None):
+    def authorize_client_access(self, grant_type, scope, ext_user_id=None):
         """
         Call the API endpoint /api/v1/oauth/token
 
@@ -827,8 +831,11 @@ class OAuthService(TinkAPI):
 
         :param grant_type: the grant type. values: authorization_code, refresh_token, client_credentials
         :param scope: the requested scope when using client credentials.
-        :param delete_dict: If delete_dict is provided then the service has to be used to delete data.
-        This is a workaround that can be used in order to delete existing users and accounts
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+        If provided then the service has to be used to authorize deletion of a user.
+        This is a workaround (provided by Tink) that can be used in order
+        to delete existing users
+        # TODO: Check if the user deletion workaround does also apply to accounts.
 
         :return: OAuth2AuthenticationTokenResponse
         """
@@ -839,19 +846,15 @@ class OAuthService(TinkAPI):
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/oauth/token')
         # --- Body
         request.data.update({'scope': scope})
-        if delete_dict:  # TODO: Add accounts in case of deletion for accounts is also working
-            if 'ext_user_id' in delete_dict:
-                request.data.update({'ext_user_id': delete_dict['ext_user_id']})
-            elif 'user_id' in delete_dict:
-                request.data.update({'user_id': delete_dict['user_id']})
+        if ext_user_id:
+            request.data.update({'ext_user_id': ext_user_id})
         request.data.update({'client_id': secret.TINK_CLIENT_ID})
         request.data.update({'client_secret': secret.TINK_CLIENT_SECRET})
         request.data.update({'grant_type': grant_type})
-
         # --- Logging
-        logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
-        logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(b=request.data))
+        logging.debug(f'{request.method} {request.endpoint}')
+        logging.debug(f'Request Header: {request.headers}')
+        logging.debug(f'Request Body: {request.data}')
         # --- API call
         response = requests.post(url=request.endpoint, data=request.data)
 
