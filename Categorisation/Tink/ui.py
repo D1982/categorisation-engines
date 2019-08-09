@@ -197,21 +197,22 @@ class TinkUI:
 
         # Layout
         self.label_commands.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
-        self.test_button.grid(row=1, column=1, sticky=tk.W)
-        self.list_categories_button.grid(row=1, column=2, sticky=tk.W)
 
-        self.process_button.grid(row=1, column=2, sticky=tk.W)
+        self.test_button.grid(row=1, column=1, sticky=tk.W)
+        self.process_button.grid(row=1, column=2, columnspan=3, sticky=tk.SW)
+
+        self.delete_users_button.grid(row=2, column=1, sticky=tk.W)
+        self.delete_accounts_button.grid(row=2, column=2, sticky=tk.W)
+        self.delete_trx_button.grid(row=2, column=3, sticky=tk.W)
 
         self.activate_users_button.grid(row=3, column=1, sticky=tk.W)
-        self.delete_users_button.grid(row=4, column=1, sticky=tk.W)
-        self.list_users_button.grid(row=5, column=1, sticky=tk.W)
         self.ingest_accounts_button.grid(row=3, column=2, sticky=tk.W)
-        self.delete_accounts_button.grid(row=4, column=2, sticky=tk.W)
-        self.list_accounts_button.grid(row=5, column=2, sticky=tk.W)
         self.ingest_trx_button.grid(row=3, column=3, sticky=tk.W)
-        self.delete_trx_button.grid(row=4, column=3, sticky=tk.W)
-        self.list_trx_button.grid(row=5, column=3, sticky=tk.W)
-        self.process_button.grid(row=7, column=1, columnspan=3, sticky=tk.SW)
+
+        self.list_users_button.grid(row=4, column=1, sticky=tk.W)
+        self.list_accounts_button.grid(row=4, column=2, sticky=tk.W)
+        self.list_trx_button.grid(row=4, column=3, sticky=tk.W)
+        self.list_categories_button.grid(row=4, column=4, sticky=tk.W)
 
     def setup_result_frame(self):
         """
