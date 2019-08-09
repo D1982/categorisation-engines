@@ -553,6 +553,7 @@ class TinkUI:
 
         :return: void
         """
+        # TODO: The code in ui.process_button_cb() should be moved to model.process()
         # Title
         self.put_result_log(text='*** Process full workflow ***', clear=True, time=True)
 
