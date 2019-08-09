@@ -108,12 +108,13 @@ class TinkModel:
 
         return result_list
 
-    def authorize_client(self, grant_type='client_credentials', scope='authorization:grant'):
+    def authorize_client(self, grant_type='client_credentials', scope='authorization:grant', ext_user_id=None):
         """
         Authorize the client (Tink customer account).
 
         :param grant_type: the grant type. values: authorization_code, refresh_token, client_credentials
         :param scope: the requested scope when using client credentials.
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
 
         :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
         containing an instance of api.OAuth2AuthenticationTokenResponse with a
@@ -123,7 +124,13 @@ class TinkModel:
         logging.info(msg)
 
         service = api.OAuthService()
-        response = service.authorize_client_access(grant_type=grant_type, scope=scope)
+        if ext_user_id:
+            response = service.authorize_client_access(grant_type=grant_type,
+                                                       scope=scope,
+                                                       ext_user_id=ext_user_id)
+        else:
+            response = service.authorize_client_access(grant_type=grant_type,
+                                                       scope=scope)
 
         if response.status_code == 200:
             logging.info('Authorized client access')
@@ -368,7 +375,7 @@ class TinkModel:
 
     def delete_user(self, user_id=None, ext_user_id=None, no_delete=False):
         """
-        "Delete a user in the Tink platform.
+        Delete a user in the Tink platform.
 
         Hint: The parameter no_delete makes sense to not duplicate code since the
         handling of user deletion in the Tink platform is very special for whatever
@@ -468,7 +475,7 @@ class TinkModel:
 
     def delete_users(self):
         """
-        "Delete users in the Tink platform.
+        Delete users in the Tink platform.
 
         :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
         containing instances of api.UserDeleteResponse with a unique identifier of
