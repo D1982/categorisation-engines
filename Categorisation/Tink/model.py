@@ -511,13 +511,13 @@ class TinkModel:
         else:
             logging.error(response.summary())
 
-        msg = 'Delete user ext_user_id:{e}'.format(e=ext_user_id)
+        msg = 'Get user ext_user_id:{e}'.format(e=ext_user_id)
         service = api.UserService()
-        response: api.UserDeleteResponse = service.delete_user(access_token=access_token)
+        response: api.UserResponse = service.get_user(access_token=access_token)
 
         if response.status_code in (200, 204):
             result_status = TinkModelResultStatus.Success
-            logging.info(msg + f' => ext_user_id:{ext_user_id} deleted')
+            logging.info(msg + f' => ext_user_id:{ext_user_id} queried')
         else:
             logging.error(response.summary())
             result_status = TinkModelResultStatus.Error
