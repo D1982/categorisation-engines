@@ -13,7 +13,7 @@ import logging
 import sys
 
 
-class FileHandler:  # TODO: Add exception handlers here
+class FileHandler:
 
     """
     File handling utility class.
@@ -23,16 +23,23 @@ class FileHandler:  # TODO: Add exception handlers here
         """
         Read a JSON file from the local file system.
 
-        :param filename: the full qualified filename (path + file)
-        :return: a dictionary representing the json read from the file
+        :param filename: the full qualified filename (path + file).
+        :return: a python ``Object`` (``dict``) representing the json read from the file.
+        :raises: Any exception that could potentially occur will be raised.
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
 
         extension = os.path.splitext(filename)[1]
-        if extension == '.json':
-            with open(filename) as json_data:
-                json_dict = json.load(json_data)
-        return json_dict
+        try:
+            if extension == '.json':
+                with open(filename) as file:
+                    data = json.load(file)
+        except Exception as ex:
+            logging.error(ex)
+            raise
+
+        return data
 
     def write_json_file(self, json_data, filename):
         """
@@ -40,13 +47,21 @@ class FileHandler:  # TODO: Add exception handlers here
 
         :param json_data: A dictionary containing the data to be written
         :param filename: the full qualified filename (path + file)
-        :return:
+        :return: True if the file was written successfully, otherwise False
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
 
-        json_file = open(filename, 'w')
-        json.dump(json_data, json_file)
-        json_file.write('\n')
+        try:
+            json_file = open(filename, 'w')
+            json.dump(json_data, json_file)
+            json_file.write('\n')
+            success = True
+        except Exception as ex:
+            logging.error(ex)
+            success = False
+
+        return success
 
 
     def read_csv_file(self, filename, fieldnames, skip_header=True):
@@ -58,15 +73,26 @@ class FileHandler:  # TODO: Add exception handlers here
         :param skip_header: flag indicating to ignore the first row
         :return: The CSV data as an instance of <class 'list'>: [OrderedDict()]
         """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
         extension = os.path.splitext(filename)[1]
-        if extension == '.data' or extension == '.txt' or extension == '.csv':
-            csvfile = open(filename, 'r')
-            csvreader = csv.DictReader(csvfile, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
-            csv_data = []
-            if skip_header == True:
-                next(csvreader)  # This skips the first row of the data file
-            for row in csvreader:
-                csv_data.append(row)
+        if extension in ('.data', '.txt', '.csv'):
+            csv_file = open(filename, 'r')
+            csv_reader = csv.DictReader(f=csv_file,
+                                        delimiter=cfg.CSV_DELIMITER,
+                                        fieldnames=fieldnames)
+            csv_data = list()
+            if skip_header:
+                next(csv_reader)  # This skips the first row of the data file
+            try:
+                for row in csv_reader:
+                    csv_data.append(row)
+            except Exception as ex:
+                msg = f'csv.DictReader row {csv_reader.line_num} => {ex}'
+                logging.error(msg)
+                raise ex
+
         return csv_data
 
     def write_csv_file(self, data, fieldnames, filename):
@@ -75,16 +101,25 @@ class FileHandler:  # TODO: Add exception handlers here
         :param data: A dictionary containing the data to be written
         :param fieldnames: a tuple of strings containing the name of all the fields of interest
         :param filename: the full qualified filename (path + file)
-        :return:
+        :return: True if the file was written successfully, otherwise False
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
 
-        csv_file = open(filename, 'w')
-        csv_writer = csv.DictWriter(csv_file, delimiter=cfg.CSV_DELIMITER, fieldnames=fieldnames)
-        csv_writer.writeheader()
-        for rec in data:
-            csv_writer.writerow(rec)
+        try:
+            csv_file = open(filename, 'w')
+            csv_writer = csv.DictWriter(f=csv_file,
+                                        delimiter=cfg.CSV_DELIMITER,
+                                        fieldnames=fieldnames)
+            csv_writer.writeheader()
+            for rec in data:
+                csv_writer.writerow(rec)
+            success = True
+        except Exception as ex:
+            logging.error(ex)
+            success = False
 
+        return success
 
 def list_to_string(lst):
     """
