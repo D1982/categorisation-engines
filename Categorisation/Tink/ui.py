@@ -10,7 +10,7 @@ import sys
 import os
 import logging
 import datetime
-
+import time
 import tkinter as tk
 import tkinter.scrolledtext as tkst
 
@@ -562,18 +562,27 @@ class TinkUI:
         logging.debug(msg)
 
         # Perform actions
+
+        # Delete users
         rl1: model.TinkModelResultList = self._model.delete_users()
         self.put_result_log(rl1.summary(filters={'endpoint': 'user/delete'}))
 
+        time.sleep(2)
         self.put_result_log(text=os.linesep, time=False)
 
+        # Activate users
         rl2: model.TinkModelResultList = self._model.activate_users()
         self.put_result_log(rl2.summary(filters={'endpoint': 'user/create'}))
 
+        time.sleep(2)
         self.put_result_log(text=os.linesep, time=False)
 
+        # Ingest accounts
         rl3: model.TinkModelResultList = self._model.ingest_accounts()
         self.put_result_log(rl3.summary(filters={'endpoint': '/accounts'}))
+
+        time.sleep(2)
+        self.put_result_log(text=os.linesep, time=False)
 
     def clear_button_cb(self):
         """
