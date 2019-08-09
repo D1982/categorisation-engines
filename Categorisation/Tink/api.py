@@ -237,13 +237,22 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
                 payload_text = payload['errorCode']
         # Payload per specific successful responses (2xx status code)
         elif self.http_status(cfg.HTTPStatusCode.Code2xx):
+            # https://api.tink.se/api/v1/monitoring
             if self.request.endpoint.find('/api/v1/monitoring/') != -1:
                 payload_text = self.text
-            if self.request.endpoint.find('/user/create') != -1:
+            # https://api.tink.se/api/v1/user/delete
+            elif self.request.endpoint.find('/api/v1/user/delete') != -1:
+                pass
+            # https://api.tink.se/api/v1/user/create
+            elif self.request.endpoint.find('/user/create') != -1:
                 if 'user_id' in payload:
                     payload_text = 'user_id:{u}'.format(u=payload['user_id'])
+            # https://api.tink.com/connector/users/{{ext-user-id}}/accounts
+            elif self.request.endpoint.find('/accounts') != -1:
+                pass
             # TODO: Finalize TinkAPIResponse.summary() for "get user"
-            if self.request.endpoint.find('/user') != -1:
+            # https://api.tink.se/api/v1/user/
+            elif self.request.endpoint.find('/user') != -1:
                 if 'created' in payload and 'user_id' in payload:
                     created = payload['created']
                 else:
