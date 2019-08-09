@@ -242,6 +242,17 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             if self.request.endpoint.find('/user/create') != -1:
                 if 'user_id' in payload:
                     payload_text = 'user_id:{u}'.format(u=payload['user_id'])
+            # TODO: Finalize TinkAPIResponse.summary() for "get user"
+            if self.request.endpoint.find('/user') != -1:
+                if 'created' in payload and 'user_id' in payload:
+                    created = payload['created']
+                else:
+                    created = 'n.a.'
+                if 'user_id' in payload:
+                    user_id = payload['user_id']
+                else:
+                    user_id = 'n.a.'
+                payload_text = f'created:{created},user_id:{user_id}'
         else:
             payload_text = ''
 
@@ -675,8 +686,18 @@ class UserResponse(TinkAPIResponse):
         :return: a formatted, human readable string representation of the data
         within an instance of this class
         """
-        # No override required - use standard output
-        return self.to_string_formatted()
+        text = self.to_string() + os.linesep
+
+        if self.json and isinstance(self.json, list):
+            for e in self.json:
+                if isinstance(e, dict):
+                    for k, v in e.items():
+                        if k in self.names:
+                            text += str(k) + ':' + str(v)[0:cfg.UI_STRING_MAX_WITH] + ', '
+        else:
+            text += self.to_string_formatted()
+
+        return str(text)
 
 
 class AccountService(TinkAPI):
