@@ -15,7 +15,7 @@ import collections
 
 from enum import Enum
 
-
+# TODO: Put 3-Step authentication in delete_user() + get_user() into a method
 class TinkModel:
 
     """
@@ -365,7 +365,7 @@ class TinkModel:
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthenticationTokenResponse = rl.last().response
             client_access_token = response.access_token
-            logging.info(msg + ' => client_access_token:{t}'.format(t=client_access_token))
+            logging.info(msg + f' => client_access_token:{client_access_token}')
             result_list.append(rl)
         else:
             logging.error(rl.last().response.summary())
@@ -382,7 +382,7 @@ class TinkModel:
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthorizeResponse = rl.last().response
             code = response.code
-            logging.debug(msg + ' => code:{c}'.format(c=code))
+            logging.debug(msg + f' => code:{code}')
 
             if no_delete:
                 # Delete is suppressed and therefore we can also stop here
@@ -392,23 +392,24 @@ class TinkModel:
             logging.error(response.summary())
 
         msg = 'Get the OAuth access token to delete a user...'
-        rl = self.get_oauth_access_token(code=code, grant_type='authorization_code')
+        rl = self.get_oauth_access_token(code=code,
+                                         grant_type='authorization_code')
         result_list.append(rl)
 
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthenticationTokenResponse = rl.last().response
             access_token = response.access_token
-            logging.info(msg + ' => access_token:{t}'.format(t=access_token))
+            logging.info(msg + f' => access_token:{access_token}')
         else:
             logging.error(response.summary())
 
-        msg = 'Delete user ext_user_id:{e}'.format(e=ext_user_id)
+        msg = f'Delete user ext_user_id:{ext_user_id}'
         service = api.UserService()
         response: api.UserDeleteResponse = service.delete_user(access_token=access_token)
 
         if response.status_code in (200, 204):
             result_status = TinkModelResultStatus.Success
-            logging.info(msg + ' => ext_user_id:{u} deleted'.format(u=ext_user_id))
+            logging.info(msg + f' => ext_user_id:{ext_user_id} deleted')
         else:
             logging.error(response.summary())
             result_status = TinkModelResultStatus.Error
@@ -440,9 +441,118 @@ class TinkModel:
             if isinstance(e, collections.OrderedDict):
                 if key in e:
                     # Delete user
-                    msg = 'Delete user {k}:{v}...'.format(k=key, v=e[key])
+                    msg = f'Delete user {key}:{e[key]}...'
+                    logging.info(msg)
                     try:
                         rl = self.delete_user(ext_user_id=e[key])
+                        result_list.append(rl)
+                    except ex.UserNotExistingError as e:
+                        result_list.append(e.result_list)
+
+        return result_list
+
+    def get_user(self, ext_user_id=None):
+        """
+        Get a user in the Tink platform.
+
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+
+        :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
+        containing an instance of api.UserDeleteResponse with a unique identifier of
+        the user deleted {USER_ID}.
+        :raise: ExUserNotExisting in case the user to be deleted does not exist
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.debug(msg)
+
+        # Wrapper for the results
+        msg = f'Get information about user with ext_user_id:{ext_user_id}'
+        result_list = TinkModelResultList(result=None, action=msg, msg=msg)
+
+        msg = 'Authorize client...'
+        try:
+            rl = self.authorize_client(scope='authorization:grant,user:read')
+            result_list.append(rl)
+        except ex.ParameterError as e:
+            raise e
+
+        if rl.last().status == TinkModelResultStatus.Success:
+            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
+            client_access_token = response.access_token
+            logging.info(msg + f' => client_access_token:{client_access_token}')
+            result_list.append(rl)
+        else:
+            logging.error(rl.last().response.summary())
+
+        msg = 'Grant access and get the access code...'
+        try:
+            rl = self.grant_user_access(client_access_token=client_access_token,
+                                        ext_user_id=ext_user_id,
+                                        scope='user:read')
+            result_list.append(rl)
+        except ex.UserNotExistingError as e:
+            raise e
+
+        if rl.last().status == TinkModelResultStatus.Success:
+            response: api.OAuth2AuthorizeResponse = rl.last().response
+            code = response.code
+            logging.debug(msg + f' => code:{code}')
+        else:
+            logging.error(response.summary())
+
+        msg = 'Get the OAuth access token to delete a user...'
+        rl = self.get_oauth_access_token(code=code, grant_type='authorization_code')
+        result_list.append(rl)
+
+        if rl.last().status == TinkModelResultStatus.Success:
+            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
+            access_token = response.access_token
+            logging.info(msg + f' => access_token:{access_token}')
+        else:
+            logging.error(response.summary())
+
+        msg = 'Delete user ext_user_id:{e}'.format(e=ext_user_id)
+        service = api.UserService()
+        response: api.UserDeleteResponse = service.delete_user(access_token=access_token)
+
+        if response.status_code in (200, 204):
+            result_status = TinkModelResultStatus.Success
+            logging.info(msg + f' => ext_user_id:{ext_user_id} deleted')
+        else:
+            logging.error(response.summary())
+            result_status = TinkModelResultStatus.Error
+
+        result_list.append(TinkModelResult(result_status, response, msg))
+
+        return result_list
+
+    def get_users(self):
+        """
+        "Get users from the Tink platform.
+
+        :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
+        containing instances of api.UserResponse with a unique identifier of
+        the users {USER_ID}.
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        # Get user data
+        users = self.dao.read_users()
+
+        # Wrapper for the results
+        result_list = TinkModelResultList(result=None, action=msg, msg='Get users')
+
+        # Delete existing users
+        key = 'userExternalId'
+        for e in users:
+            if isinstance(e, collections.OrderedDict):
+                if key in e:
+                    # Get user
+                    msg = f'Get user {key}:{e[key]}...'
+                    logging.info(msg)
+                    try:
+                        rl = self.get_user(ext_user_id=e[key])
                         result_list.append(rl)
                     except ex.UserNotExistingError as e:
                         result_list.append(e.result_list)
@@ -452,7 +562,6 @@ class TinkModel:
     def user_exists(self, ext_user_id):
         """
         Checks if a user does already exist in the Tink platform.
-        :param user_id: the unique Tink user identifier
         :param ext_user_id: external user reference (this is NOT the Tink internal id)
 
         :return: Boolean - True if the user exists, otherwise False
