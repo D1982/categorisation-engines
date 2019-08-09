@@ -591,21 +591,21 @@ class TinkUI:
         rl1: model.TinkModelResultList = self._model.delete_users()
         self.put_result_log(rl1.summary(filters={'endpoint': 'user/delete'}))
 
-        time.sleep(2)
+        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
         self.put_result_log(text=os.linesep, time=False)
 
         # Activate users
         rl2: model.TinkModelResultList = self._model.activate_users()
         self.put_result_log(rl2.summary(filters={'endpoint': 'user/create'}))
 
-        time.sleep(2)
+        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
         self.put_result_log(text=os.linesep, time=False)
 
         # Ingest accounts
         rl3: model.TinkModelResultList = self._model.ingest_accounts()
         self.put_result_log(rl3.summary(filters={'endpoint': '/accounts'}))
 
-        time.sleep(2)
+        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
         self.put_result_log(text=os.linesep, time=False)
 
     def clear_button_cb(self):
