@@ -366,27 +366,6 @@ class TinkModel:
 
         return result_list
 
-    def user_exists(self, ext_user_id):
-        """
-        Checks if a user does already exist in the Tink platform.
-        :param user_id: the unique Tink user identifier
-        :param ext_user_id: external user reference (this is NOT the Tink internal id)
-
-        :return: Boolean - True if the user exists, otherwise False
-        """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-        try:
-            self.delete_user(ext_user_id=ext_user_id, no_delete=True)
-        except ex.UserNotExistingError as e:
-            logging.debug(e.text)
-            # If the exception ExUserNotExisting is being raised the user does not exist
-            return False
-
-        # If the exception ExUserNotExisting was NOT then the user does
-        # exist and could be deleted with delete_user( ...  no_delete = False)
-        return True
-
     def delete_user(self, user_id=None, ext_user_id=None, no_delete=False):
         """
         "Delete a user in the Tink platform.
@@ -518,6 +497,27 @@ class TinkModel:
                         result_list.append(e.result_list)
 
         return result_list
+
+    def user_exists(self, ext_user_id):
+        """
+        Checks if a user does already exist in the Tink platform.
+        :param user_id: the unique Tink user identifier
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+
+        :return: Boolean - True if the user exists, otherwise False
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+        try:
+            self.delete_user(ext_user_id=ext_user_id, no_delete=True)
+        except ex.UserNotExistingError as e:
+            logging.debug(e.text)
+            # If the exception ExUserNotExisting is being raised the user does not exist
+            return False
+
+        # If the exception ExUserNotExisting was NOT then the user does
+        # exist and could be deleted with delete_user( ...  no_delete = False)
+        return True
 
     def ingest_accounts(self):
         """
