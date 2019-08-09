@@ -250,7 +250,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
                                              p=payload_text)
         elif level == cfg.MessageDetailLevel.Medium:
             summary_text = '{s} {p}: {c}'.format(s=self.to_string(),
-                                                 p=self.payload_text,
+                                                 p=payload_text,
                                                  c=self.content)
         elif level == cfg.MessageDetailLevel.High:
             summary_text = '{s} {req}: {resp}'.format(s=self.to_string(),
@@ -638,14 +638,15 @@ class AccoungService(TinkAPI):
         # --- Body
         user_accounts = accounts.get_data(ext_user_id=ext_user_id)
         request.data.update({'accounts': user_accounts})
-
+        json_data = json.dumps(request.data)
         # --- Logging
-        logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
-        logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(b=request.data))
+        logging.debug(f'{request.method} {request.endpoint}')
+        logging.debug(f'Request Header: {request.headers}')
+        logging.debug(f'Request Body: {json_data}')
         # --- API call
-        # TODO: Check why a) 400 (Bad Request) but b) reported as "Successfully completed"
-        response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
+        response = requests.post(url=request.endpoint,
+                                 data=json_data,
+                                 headers=request.headers)
 
         return AccountIngestionResponse(request, response)
 
