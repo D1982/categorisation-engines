@@ -546,7 +546,7 @@ class UserService(TinkAPI):
         logging.info(msg)
 
         # --- Request
-        request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/user/delete')
+        request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/user')
         # --- Header
         request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
         request.headers.update({'Authorization': 'Bearer {t}'.format(t=access_token)})
