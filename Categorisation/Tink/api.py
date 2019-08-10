@@ -7,6 +7,8 @@ import Categorisation.Common.secret as secret
 import Categorisation.Tink.api as api
 import Categorisation.Tink.data as data
 
+from datetime import datetime
+
 
 import os
 import sys
@@ -223,7 +225,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
 
         try:
             payload = json.loads(self.text)
-            payload_text = payload
+            payload_text = str(payload)
         except JSONDecodeError as e:
             logging.warning(str(e))
             payload = dict()
@@ -253,15 +255,11 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             # TODO: Finalize TinkAPIResponse.summary() for "get user"
             # https://api.tink.se/api/v1/user/
             elif self.request.endpoint.find('/user') != -1:
-                if 'created' in payload and 'user_id' in payload:
+                if 'created' in payload and 'id' in payload:
                     created = payload['created']
-                else:
-                    created = 'n.a.'
-                if 'user_id' in payload:
-                    user_id = payload['user_id']
-                else:
-                    user_id = 'n.a.'
-                payload_text = f'created:{created},user_id:{user_id}'
+                    d = utl.strdate(datetime.fromtimestamp(created/1000))
+                    user_id = payload['id']
+                    payload_text = f'created:{d},user_id:{user_id}'
         else:
             payload_text = ''
 
@@ -676,7 +674,7 @@ class UserResponse(TinkAPIResponse):
         self.user_id = None
 
         # Define fields of interest referring to the official API documentation
-        self.names = {'created', 'user_id', 'errorMessage', 'errorCode'}
+        self.names = {'created', 'id', 'errorMessage', 'errorCode'}
 
         # Save fields of interest referring to the official API documentation
         if isinstance(response, requests.Response) and response.status_code == 204:
