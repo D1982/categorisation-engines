@@ -601,6 +601,13 @@ class TinkUI:
         time.sleep(cfg.API_CALL_DELAY_IN_SECS)
         self.put_result_log(text=os.linesep, time=False)
 
+        # List users
+        rl2: model.TinkModelResultList = self._model.get_users()
+        self.put_result_log(rl2.summary(filters={'endpoint': '/user'}))
+
+        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
+        self.put_result_log(text=os.linesep, time=False)
+
         # Ingest accounts
         rl3: model.TinkModelResultList = self._model.ingest_accounts()
         self.put_result_log(rl3.summary(filters={'endpoint': '/accounts'}))
