@@ -723,7 +723,7 @@ class AccountService(TinkAPI):
         """
         Call the Connector API endpoint users/{{external-user-id}}/accounts
 
-        Ingest a list of accunts into the space of an existing user in the Tink platform.
+        Ingest a list of accounts into the space of an existing user in the Tink platform.
 
         :param ext_user_id: external user reference (this is NOT the Tink internal id)
         :param accounts: A dictionary containing the account data to be ingested
@@ -756,6 +756,44 @@ class AccountService(TinkAPI):
 
         return AccountIngestionResponse(request, response)
 
+    def list_accounts(self, ext_user_id, access_token):
+        """
+        Call the API endpoint accounts/list
+
+        Get a list of accounts into the space of an existing user in the Tink platform.
+
+        Hint:
+        The access_token can be gathered using the following call sequence
+        within the module Categorisation.Tink.model:
+        1. client_access_token = model.authorize_client(scope='user:read')
+        2. code = grant_user_access(client_access_token, ext_user_id, scope)
+        => ext_user_id is the user for which the information is requested.
+        3. access_token = get_oauth_access_token(code, grant_type)
+
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+        :param access_token: The OAuth2 user access token gathered via the endpoint
+        /api/v1/oauth/token which can be called using OAuthService.grant_user_access(...)
+
+        :return: a response wrapper object (instance of api.AccountListResponse)
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        # --- Request
+        request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/accounts/list')
+        # --- Header
+        request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
+        request.headers.update({'Authorization': 'Bearer {t}'.format(t=access_token)})
+        request.headers.update({'Content-Type': 'application/json'})
+        # --- Logging
+        logging.debug(f'{request.method} {request.endpoint}')
+        logging.debug(f'Request Header: {request.headers}')
+        logging.debug(f'Request Body: {request.data}')
+        # --- API call
+        response = requests.get(url=request.endpoint, headers=request.headers)
+
+        return AccountListResponse(request, response)
+
 @TinkAPIResponse.register
 class AccountIngestionResponse(TinkAPIResponse):
 
@@ -773,13 +811,6 @@ class AccountIngestionResponse(TinkAPIResponse):
 
         # Define fields of interest referring to the official API documentation
         self.names = {'errorMessage', 'errorCode'}
-
-        # Save fields of interest referring to the official API documentation
-        if isinstance(response, requests.Response) and response.status_code == 200:
-            if isinstance(self.json, dict):
-                self.data = {key: value for key, value in self.json.items() if key in self.names}
-                if 'user_id' in self.data:
-                    self.user_id = self.data['user_id']
 
     def to_string_custom(self):
 
@@ -811,14 +842,14 @@ class AccountListResponse(TinkAPIResponse):
         self.user_id = None
 
         # Define fields of interest referring to the official API documentation
-        self.names = {'errorMessage', 'errorCode'}
+        self.names = {'accountNumber', 'errorMessage', 'errorCode'}
 
         # Save fields of interest referring to the official API documentation
         if isinstance(response, requests.Response) and response.status_code == 204:
             if isinstance(self.json, dict):
                 self.data = {key: value for key, value in self.json.items() if key in self.names}
-                if 'user_id' in self.data:
-                    self.user_id = self.data['user_id']
+                if 'accountNumber' in self.data:
+                    self.account_number = self.data['accountNumber']
 
     def to_string_custom(self):
 
