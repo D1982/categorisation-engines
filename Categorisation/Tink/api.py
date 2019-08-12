@@ -248,9 +248,6 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             elif self.request.endpoint.find('https://api.tink.se/user/create') != -1:
                 if 'user_id' in payload:
                     payload_text = 'user_id:{u}'.format(u=payload['user_id'])
-            # https://api.tink.com/connector/users/{{ext-user-id}}/accounts
-            elif self.request.endpoint.find('/accounts') != -1:
-                pass
             # https://api.tink.se/api/v1/user/
             elif self.request.endpoint.find('https://api.tink.se/api/v1/user') != -1:
                 if 'created' in payload and 'id' in payload:
@@ -263,7 +260,10 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
                 if isinstance(self.json, dict):
                     if 'accounts' in self.json:
                         cnt = len(self.json['accounts'])
-                        payload_text = f'{cnt} elements received'
+                        payload_text = f'{cnt} items received'
+            # https://api.tink.com/connector/users/{{ext-user-id}}/accounts
+            elif self.request.endpoint.find('/accounts') != -1:
+                pass
         else:
             payload_text = ''
 
