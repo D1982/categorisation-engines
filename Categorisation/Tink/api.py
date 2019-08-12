@@ -144,22 +144,26 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         """
         text = self.to_string() + os.linesep
 
-        if self.json and isinstance(self.json, dict):
-            for k, v in self.json.items():
-                text += 'JSON > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH] + os.linesep
+        try:
+            self.to_string_custom()
+        except NotImplementedError:
+            # If there is no custom implementation available use the standard formatting
+            if self.json and isinstance(self.json, dict):
+                for k, v in self.json.items():
+                    text += 'JSON > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH] + os.linesep
 
-        if self.json and isinstance(self.json, list):
-            for e in self.json:
-                if isinstance(e, dict):
-                    for k, v in e.items():
-                        text += str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH] + ', '
-                    text += os.linesep
-        if self.data:
-            for k, v in self.data.items():
-                if k not in self.json:
-                    text += 'Data > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
+            if self.json and isinstance(self.json, list):
+                for e in self.json:
+                    if isinstance(e, dict):
+                        for k, v in e.items():
+                            text += str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH] + ', '
+                        text += os.linesep
+            if self.data:
+                for k, v in self.data.items():
+                    if k not in self.json:
+                        text += 'Data > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
 
-        return str(text)
+            return str(text)
 
     @abc.abstractmethod
     def to_string_custom(self):  # Abstract method to be overridden in sub-classes
@@ -235,26 +239,31 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         # Payload per specific successful responses (2xx status code)
         elif self.http_status(cfg.HTTPStatusCode.Code2xx):
             # https://api.tink.se/api/v1/monitoring
-            if self.request.endpoint.find('/api/v1/monitoring/') != -1:
+            if self.request.endpoint.find('https://api.tink.se/api/v1/monitoring/') != -1:
                 payload_text = self.text
             # https://api.tink.se/api/v1/user/delete
-            elif self.request.endpoint.find('/api/v1/user/delete') != -1:
+            elif self.request.endpoint.find('https://api.tink.se/api/v1/user/delete') != -1:
                 pass
             # https://api.tink.se/api/v1/user/create
-            elif self.request.endpoint.find('/user/create') != -1:
+            elif self.request.endpoint.find('https://api.tink.se/user/create') != -1:
                 if 'user_id' in payload:
                     payload_text = 'user_id:{u}'.format(u=payload['user_id'])
             # https://api.tink.com/connector/users/{{ext-user-id}}/accounts
             elif self.request.endpoint.find('/accounts') != -1:
                 pass
-            # TODO: Finalize TinkAPIResponse.summary() for "get user"
             # https://api.tink.se/api/v1/user/
-            elif self.request.endpoint.find('/user') != -1:
+            elif self.request.endpoint.find('https://api.tink.se/api/v1/user') != -1:
                 if 'created' in payload and 'id' in payload:
                     created = payload['created']
                     d = utl.strdate(datetime.fromtimestamp(created/1000))
                     user_id = payload['id']
                     payload_text = f'created:{d}, user_id:{user_id}'
+            # https://api.tink.se/api/v1/accounts/list
+            elif self.request.endpoint.find('https://api.tink.se/api/v1/accounts/list') != -1:
+                if isinstance(self.json, dict):
+                    if 'accounts' in self.json:
+                        cnt = len(self.json['accounts'])
+                        payload_text = f'{cnt} elements received'
         else:
             payload_text = ''
 
@@ -856,8 +865,18 @@ class AccountListResponse(TinkAPIResponse):
         :return: a formatted, human readable string representation of the data
         within an instance of this class
         """
-        # No override required - use standard output
-        return self.to_string_formatted()
+        text = self.to_string() + os.linesep
+
+        if self.json and isinstance(self.json, list):
+            for e in self.json:
+                if isinstance(e, dict):
+                    for k, v in e.items():
+                        if k in self.names:
+                            text += str(k) + ':' + str(v)[0:cfg.UI_STRING_MAX_WITH] + ', '
+        else:
+            text += self.to_string_formatted()
+
+        return str(text)
 
 
 class OAuthService(TinkAPI):
