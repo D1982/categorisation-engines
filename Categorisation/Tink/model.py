@@ -44,6 +44,7 @@ class TinkModel:
         # Variables
         self.token_type = ''
         self.expires_in = ''
+        self.client_access_token = ''
         self.access_token = ''
         self.refresh_token = ''
         self.scope = ''
@@ -80,16 +81,24 @@ class TinkModel:
 
         return self.dao.read_transactions()
 
+    def _oauth2_client_credentials_flow(self, grant_type, client_scope, user_scope, ext_user_id=None):
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        result_list = TinkModelResultList(result=None,
+                                          action=msg,
+                                          msg='OAuth client credentials access flow')
+
         msg = 'Authorize client...'
-        try:
-            rl = self.authorize_client(scope='authorization:grant,user:read')
-            result_list.append(rl)
-        except ex.ParameterError as e:
-            raise e
+        rl = self.authorize_client(grant_type='client_credentials',
+                                   scope=client_scope,
+                                   ext_user_id=ext_user_id)
+        result_list.append(rl)
 
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthenticationTokenResponse = rl.last().response
             client_access_token = response.access_token
+            self.client_access_token = client_access_token
             logging.info(msg + f' => client_access_token:{client_access_token}')
             result_list.append(rl)
         else:
@@ -99,7 +108,7 @@ class TinkModel:
         try:
             rl = self.grant_user_access(client_access_token=client_access_token,
                                         ext_user_id=ext_user_id,
-                                        scope='user:read')
+                                        scope=user_scope)
             result_list.append(rl)
         except ex.UserNotExistingError as e:
             raise e
@@ -107,6 +116,7 @@ class TinkModel:
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthorizeResponse = rl.last().response
             code = response.code
+            self.code = code
             logging.debug(msg + f' => code:{code}')
         else:
             logging.error(response.summary())
@@ -118,9 +128,13 @@ class TinkModel:
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthenticationTokenResponse = rl.last().response
             access_token = response.access_token
+            self.access_token = access_token
             logging.info(msg + f' => access_token:{access_token}')
         else:
             logging.error(response.summary())
+
+        return result_list
+
 
     def test_connectivity(self):
         """
@@ -296,10 +310,10 @@ class TinkModel:
             rl = self.authorize_client(scope='authorization:grant,user:create')
             response: api.OAuth2AuthenticationTokenResponse = rl.first().response
 
-            # TODO: Refactor using TinkModelResultList pattern (see ingest_accounts)
-            if response.status_code == 200:
+            if response.http_status(cfg.HTTPStatusCode.Code2xx):
                 result_status = TinkModelResultStatus.Success
                 client_access_token = response.access_token
+                self.client_access_token = client_access_token
             else:
                 logging.error(response.summary())
                 result_status = TinkModelResultStatus.Error
@@ -372,7 +386,11 @@ class TinkModel:
                 locale = e['locale']
 
                 # Create the user
-                rl = self.activate_user(ext_user_id, label, market, locale, self.access_token)
+                rl = self.activate_user(ext_user_id=ext_user_id,
+                                        label=label,
+                                        market=market,
+                                        locale=locale,
+                                        client_access_token=None)
                 result_list.append(rl)
 
         return result_list
@@ -401,62 +419,23 @@ class TinkModel:
 
         # Wrapper for the results
         msg = f'Delete user with ext_user_id:{ext_user_id}'
-        result_list = TinkModelResultList(result=None, action=msg, msg=msg)
+        result_list = TinkModelResultList(result=None, action=msg, msg='')
 
-        msg = 'Authorize client...'
+        # Get the required OAuth2 access code
         try:
-            rl = self.authorize_client(scope='authorization:grant,user:delete',
-                                       ext_user_id=ext_user_id)
-            result_list.append(rl)
-        except ex.ParameterError as e:
-            raise e
-
-        if rl.last().status == TinkModelResultStatus.Success:
-            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
-            client_access_token = response.access_token
-            logging.info(msg + f' => client_access_token:{client_access_token}')
-            result_list.append(rl)
-        else:
-            logging.error(rl.last().response.summary())
-
-        msg = 'Grant access and get the access code...'
-        try:
-            rl = self.grant_user_access(client_access_token=client_access_token,
-                                        ext_user_id=ext_user_id,
-                                        scope='user:delete')
+            rl = self._oauth2_client_credentials_flow(grant_type='client_credentials',
+                                                      client_scope='authorization:grant,user:delete',
+                                                      user_scope='user:delete',
+                                                      ext_user_id=ext_user_id)
             result_list.append(rl)
         except ex.UserNotExistingError as e:
             raise e
 
-        if rl.last().status == TinkModelResultStatus.Success:
-            response: api.OAuth2AuthorizeResponse = rl.last().response
-            code = response.code
-            logging.debug(msg + f' => code:{code}')
-
-            if no_delete:
-                # Delete is suppressed and therefore we can also stop here
-                # even if the user exists and could in theory be deleted
-                return TinkModelResultList(result_list)
-        else:
-            logging.error(response.summary())
-
-        msg = 'Get the OAuth access token to delete a user...'
-        rl = self.get_oauth_access_token(code=code,
-                                         grant_type='authorization_code')
-        result_list.append(rl)
-
-        if rl.last().status == TinkModelResultStatus.Success:
-            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
-            access_token = response.access_token
-            logging.info(msg + f' => access_token:{access_token}')
-        else:
-            logging.error(response.summary())
-
         msg = f'Delete user ext_user_id:{ext_user_id}'
         service = api.UserService()
-        response: api.UserDeleteResponse = service.delete_user(access_token=access_token)
+        response: api.UserDeleteResponse = service.delete_user(access_token=self.access_token)
 
-        if response.status_code in (200, 204):
+        if response.http_status(cfg.HTTPStatusCode.Code2xx):
             result_status = TinkModelResultStatus.Success
             logging.info(msg + f' => ext_user_id:{ext_user_id} deleted')
         else:
@@ -516,55 +495,23 @@ class TinkModel:
 
         # Wrapper for the results
         msg = f'Get information about user with ext_user_id:{ext_user_id}'
-        result_list = TinkModelResultList(result=None, action=msg, msg=msg)
+        result_list = TinkModelResultList(result=None, action=msg, msg='')
 
-        msg = 'Authorize client...'
+        # Get the required OAuth2 access code
         try:
-            rl = self.authorize_client(scope='authorization:grant,user:read')
-            result_list.append(rl)
-        except ex.ParameterError as e:
-            raise e
-
-        if rl.last().status == TinkModelResultStatus.Success:
-            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
-            client_access_token = response.access_token
-            logging.info(msg + f' => client_access_token:{client_access_token}')
-            result_list.append(rl)
-        else:
-            logging.error(rl.last().response.summary())
-
-        msg = 'Grant access and get the access code...'
-        try:
-            rl = self.grant_user_access(client_access_token=client_access_token,
-                                        ext_user_id=ext_user_id,
-                                        scope='user:read')
+            rl = self._oauth2_client_credentials_flow(grant_type='client_credentials',
+                                                      client_scope='authorization:grant,user:read',
+                                                      user_scope='user:read',
+                                                      ext_user_id=ext_user_id)
             result_list.append(rl)
         except ex.UserNotExistingError as e:
             raise e
 
-        if rl.last().status == TinkModelResultStatus.Success:
-            response: api.OAuth2AuthorizeResponse = rl.last().response
-            code = response.code
-            logging.debug(msg + f' => code:{code}')
-        else:
-            logging.error(response.summary())
-
-        msg = 'Get the OAuth access token to delete a user...'
-        rl = self.get_oauth_access_token(code=code, grant_type='authorization_code')
-        result_list.append(rl)
-
-        if rl.last().status == TinkModelResultStatus.Success:
-            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
-            access_token = response.access_token
-            logging.info(msg + f' => access_token:{access_token}')
-        else:
-            logging.error(response.summary())
-
         msg = 'Get user ext_user_id:{e}'.format(e=ext_user_id)
         service = api.UserService()
-        response: api.UserResponse = service.get_user(access_token=access_token)
+        response: api.UserResponse = service.get_user(access_token=self.access_token)
 
-        if response.status_code in (200, 204):
+        if response.http_status(cfg.HTTPStatusCode.Code2xx):
             result_status = TinkModelResultStatus.Success
             logging.info(msg + f' => ext_user_id:{ext_user_id} queried')
         else:
@@ -713,7 +660,40 @@ class TinkModel:
 
         return result_list
 
-    def list_accounts(self, ext_user_id=None):
+    def get_all_accounts(self):
+        """
+        "Get users from the Tink platform.
+
+        :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
+        containing instances of api.UserResponse with a unique identifier of
+        the users {USER_ID}.
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        # Get user data
+        users = self.dao.read_users()
+
+        # Wrapper for the results
+        result_list = TinkModelResultList(result=None, action=msg, msg='Get all accounts')
+
+        # Delete existing users
+        key = 'userExternalId'
+        for e in users:
+            if isinstance(e, collections.OrderedDict):
+                if key in e:
+                    # Get user
+                    msg = f'Get accounts of user {key}:{e[key]}...'
+                    logging.info(msg)
+                    try:
+                        rl = self.get_user_accounts(ext_user_id=e[key])
+                        result_list.append(rl)
+                    except ex.UserNotExistingError as e:
+                        result_list.append(e.result_list)
+
+        return result_list
+
+    def get_user_accounts(self, ext_user_id=None):
         """
         Get list of all accounts of a user within the Tink platform.
 
@@ -725,10 +705,35 @@ class TinkModel:
         :raise: ExUserNotExisting in case the user to be deleted does not exist
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
+        logging.debug(msg)
 
         # Wrapper for the results
-        result_list = TinkModelResultList
+        msg = f'Get accounts of the user with ext_user_id:{ext_user_id}'
+        result_list = TinkModelResultList(result=None, action=msg, msg='')
+
+        # Get the required OAuth2 access code
+        try:
+            rl = self._oauth2_client_credentials_flow(grant_type='client_credentials',
+                                                      client_scope='authorization:grant,accounts:read',
+                                                      user_scope='accounts:read',
+                                                      ext_user_id=ext_user_id)
+            result_list.append(rl)
+        except ex.UserNotExistingError as e:
+            raise e
+
+        msg = 'Get accounts for user ext_user_id:{e}'.format(e=ext_user_id)
+        service = api.AccountService(url_root=cfg.API_URL_TINK)
+        response: api.AccountListResponse = service.list_accounts(ext_user_id=ext_user_id,
+                                                                  access_token=self.access_token)
+
+        if response.http_status(cfg.HTTPStatusCode.Code2xx):
+            result_status = TinkModelResultStatus.Success
+            logging.info(msg + f' => done')
+        else:
+            logging.error(response.summary())
+            result_status = TinkModelResultStatus.Error
+
+        result_list.append(TinkModelResult(result_status, response, msg))
 
         return result_list
 
