@@ -61,13 +61,13 @@ class TinkUI:
         self.label_config = tk.Label(self.config_frame, bg='lavender', text='Configuration:')
         self.chkbox_delete_val = tk.BooleanVar()
         self.chkbox_delete = tk.Checkbutton(self.config_frame, onvalue=True, offvalue=False,
-                                            text='Pre-delete existing data',
+                                            text='Delete existing data',
                                             variable=self.chkbox_delete_val,
                                             command=self.chkbox_delete_cb)
 
         self.chkbox_proxy_val = tk.BooleanVar()
         self.chkbox_proxy = tk.Checkbutton(self.config_frame, onvalue=True, offvalue=False,
-                                            text='Use a http proxy server',
+                                            text='Use HTTP proxy',
                                             variable=self.chkbox_proxy_val,
                                             command=self.chkbox_proxy_cb)
 
