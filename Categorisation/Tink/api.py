@@ -37,7 +37,6 @@ class TinkAPI:
         self.partner_info['client_id'] = secret.TINK_CLIENT_ID
         self.partner_info['client_secret'] = secret.TINK_CLIENT_SECRET
 
-
 class TinkAPIRequest(metaclass=abc.ABCMeta):
 
     """
@@ -56,8 +55,13 @@ class TinkAPIRequest(metaclass=abc.ABCMeta):
         self.headers: collections.OrderedDict = collections.OrderedDict()
         self.data: collections.OrderedDict = collections.OrderedDict()
 
+    def log(self):
+        logging.debug(f'{self.method} {self.endpoint}')
+        logging.debug(f'Request Header: {self.headers}')
+        logging.debug(f'Request Body: {self.data}')
+
     def to_string(self):
-        text = 'HTTP Request: {m} {t}'.format(m=self.method, t=self.endpoint)
+        text = f'HTTP Request: {self.method} {self.endpoint}'
 
         return str(text)
 
@@ -104,7 +108,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             if response:
                 self.json = response.json() or dict()
         except Exception as e:
-            logging.warning("Exception in Function call requests.response.json() -> {e}".format(e=e))
+            logging.warning(f'Exception in call requests.response.json() -> {e}')
             # This service does not return a JSON so just use the text instead
             self.json = {'text': response.text}
 
@@ -129,7 +133,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         if self.response_orig is not None:
             code = self.response_orig.status_code
             reason = self.response_orig.reason
-            text = 'HTTP Response: {c} ({r})'.format(c=code, r=reason)
+            text = f'HTTP Response: {code} ({reason})'
         else:
             text = os.linesep + 'HTTP Response: Unbound'
 
@@ -247,7 +251,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             # https://api.tink.se/api/v1/user/create
             elif self.request.endpoint.find('https://api.tink.se/user/create') != -1:
                 if 'user_id' in payload:
-                    payload_text = 'user_id:{u}'.format(u=payload['user_id'])
+                    payload_text = f'user_id:{payload["user_id"]}'
             # https://api.tink.se/api/v1/user/
             elif self.request.endpoint.find('https://api.tink.se/api/v1/user') != -1:
                 if 'created' in payload and 'id' in payload:
@@ -271,16 +275,14 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
                 payload_text = ''
 
         if level == cfg.MessageDetailLevel.Low:
-            summary_text = '{s}: {p}'.format(s=self.to_string(),
-                                             p=payload_text)
+            summary_text = f'{self.to_string()}: {payload_text}'
         elif level == cfg.MessageDetailLevel.Medium:
-            summary_text = '{s} {p}: {c}'.format(s=self.to_string(),
-                                                 p=payload_text,
-                                                 c=self.content)
+            summary_text = f'{self.to_string()} {payload_text}: {self.content}'
         elif level == cfg.MessageDetailLevel.High:
-            summary_text = '{s} {req}: {resp}'.format(s=self.to_string(),
-                                                      req=self.request.to_string_formatted(),
-                                                      resp=self.to_string_formatted())
+            summary_text = f'{self.to_string()} ' \
+                           f'{self.request.to_string_formatted()}: ' \
+                           f'{self.to_string_formatted()}'\
+
         return summary_text
 
 
@@ -494,20 +496,19 @@ class UserService(TinkAPI):
         # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root+'/api/v1/user/create')
         # --- Header
-        request.headers.update({'Authorization': 'Bearer ' + client_access_token})
+        request.headers.update({'Authorization': f'Bearer {client_access_token}'})
         request.headers.update({'Content-Type': 'application/json'})
         # --- Body
         request.data.update({'market': market})
         request.data.update({'locale': locale})
         request.data.update({'label': label})
         request.data.update({'external_user_id': ext_user_id})
-
         # --- Logging
-        logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
-        logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(b=request.data))
+        request.log()
         # --- API call
-        response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
+        response = requests.post(url=request.endpoint,
+                                 data=json.dumps(request.data),
+                                 headers=request.headers)
 
         return UserActivationResponse(request, response)
 
@@ -534,18 +535,17 @@ class UserService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/user/delete')
-        # --- Header
+
         request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
-        request.headers.update({'Authorization': 'Bearer {t}'.format(t=access_token)})
+        request.headers.update({'Authorization': f'Bearer {access_token}'})
         request.headers.update({'Content-Type': 'application/json'})
-        # --- Logging
-        logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
-        logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(b=request.data))
-        # --- API call
-        response = requests.post(url=request.endpoint, data=json.dumps(request.data), headers=request.headers)
+
+        request.log()
+
+        response = requests.post(url=request.endpoint,
+                                 data=json.dumps(request.data),
+                                 headers=request.headers)
 
         return UserDeleteResponse(request, response)
 
@@ -570,17 +570,14 @@ class UserService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # --- Request
         request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/user')
-        # --- Header
+
         request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
-        request.headers.update({'Authorization': 'Bearer {t}'.format(t=access_token)})
+        request.headers.update({'Authorization': f'Bearer {access_token}'})
         request.headers.update({'Content-Type': 'application/json'})
-        # --- Logging
-        logging.debug(f'{request.method} {request.endpoint}')
-        logging.debug(f'Request Header: {request.headers}')
-        logging.debug(f'Request Body: {request.data}')
-        # --- API call
+
+        request.log()
+
         response = requests.get(url=request.endpoint, headers=request.headers)
 
         return UserResponse(request, response)
@@ -742,21 +739,18 @@ class AccountService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # --- Request
-        endpoint = self.url_root+'/users/{u}/accounts'.format(u=ext_user_id)
+        endpoint = self.url_root+f'/users/{ext_user_id}/accounts'
         request = TinkAPIRequest(method='POST', endpoint=endpoint)
-        # --- Header
-        request.headers.update({'Authorization': 'Bearer ' + client_access_token})
+
+        request.headers.update({'Authorization': f'Bearer {client_access_token}'})
         request.headers.update({'Content-Type': 'application/json'})
-        # --- Body
+
         user_accounts = accounts.get_data(ext_user_id=ext_user_id)
         request.data.update({'accounts': user_accounts})
         json_data = json.dumps(request.data)
-        # --- Logging
-        logging.debug(f'{request.method} {request.endpoint}')
-        logging.debug(f'Request Header: {request.headers}')
-        logging.debug(f'Request Body: {json_data}')
-        # --- API call
+
+        request.log()
+
         response = requests.post(url=request.endpoint,
                                  data=json_data,
                                  headers=request.headers)
@@ -786,17 +780,14 @@ class AccountService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # --- Request
         request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/accounts/list')
-        # --- Header
+
         request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
-        request.headers.update({'Authorization': 'Bearer {t}'.format(t=access_token)})
+        request.headers.update({'Authorization': f'Bearer {access_token}'})
         request.headers.update({'Content-Type': 'application/json'})
-        # --- Logging
-        logging.debug(f'{request.method} {request.endpoint}')
-        logging.debug(f'Request Header: {request.headers}')
-        logging.debug(f'Request Body: {request.data}')
-        # --- API call
+
+        request.log()
+
         response = requests.get(url=request.endpoint, headers=request.headers)
 
         return AccountListResponse(request, response)
@@ -918,20 +909,17 @@ class OAuthService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/oauth/token')
-        # --- Body
+
         request.data.update({'scope': scope})
         if ext_user_id:
             request.data.update({'ext_user_id': ext_user_id})
         request.data.update({'client_id': secret.TINK_CLIENT_ID})
         request.data.update({'client_secret': secret.TINK_CLIENT_SECRET})
         request.data.update({'grant_type': grant_type})
-        # --- Logging
-        logging.debug(f'{request.method} {request.endpoint}')
-        logging.debug(f'Request Header: {request.headers}')
-        logging.debug(f'Request Body: {request.data}')
-        # --- API call
+
+        request.log()
+
         response = requests.post(url=request.endpoint, data=request.data)
 
         return OAuth2AuthenticationTokenResponse(request, response)
@@ -955,22 +943,20 @@ class OAuthService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # --- Request
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/oauth/authorization-grant')
-        # --- Headers
-        request.headers.update({'Authorization': 'Bearer {t}'.format(t=client_access_token)})
-        # --- Body
+        request.headers.update({'Authorization': f'Bearer {client_access_token}'})
+
         request.data.update({'scope': scope})
         if user_id:
             request.data.update({'user_id': user_id})
         elif ext_user_id:
             request.data.update({'external_user_id': ext_user_id})
-        # --- Logging
-        logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
-        logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(b=request.data))
-        # --- API call
-        response = requests.post(url=request.endpoint, data=request.data, headers=request.headers)
+
+        request.log()
+
+        response = requests.post(url=request.endpoint,
+                                 data=request.data,
+                                 headers=request.headers)
 
         return OAuth2AuthorizeResponse(request, response)
 
@@ -991,18 +977,16 @@ class OAuthService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # --- Request
+
         request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/oauth/token')
-        # --- Body
+
         request.data.update({'code': code})
         request.data.update({'client_id': secret.TINK_CLIENT_ID})
         request.data.update({'client_secret': secret.TINK_CLIENT_SECRET})
         request.data.update({'grant_type': grant_type})
-        # --- Logging
-        logging.debug('{m} {d}'.format(m=request.method, d=request.endpoint))
-        logging.debug('Request Header: {h}'.format(h=request.headers))
-        logging.debug('Request Body: {b}'.format(b=request.data))
-        # --- API call
+
+        request.log()
+
         response = requests.post(url=request.endpoint, data=request.data)
 
         return OAuth2AuthenticationTokenResponse(request, response)

@@ -15,6 +15,7 @@ import collections
 
 from enum import Enum
 
+
 # TODO: Put 3-Step authentication in delete_user() + get_user() into a method
 class TinkModel:
 
@@ -301,7 +302,7 @@ class TinkModel:
         logging.info(msg)
 
         # Wrapper for the results
-        msg = 'Create (activate) user ext_user_id:{e}'.format(e=ext_user_id)
+        msg = f'Create (activate) user ext_user_id:{ext_user_id}'
         result_list = TinkModelResultList(result=None, action=msg, msg=msg)
 
         # Make sure that there is a valid client_access_token available
@@ -333,12 +334,11 @@ class TinkModel:
         if response.status_code == 200:
             result_status = TinkModelResultStatus.Success
             user_id = response.user_id
-            msg = 'User with ext_user_id:{e} created as user_id:{u}'.format(e=ext_user_id,
-                                                                            u=user_id)
+            msg = f'User with ext_user_id:{ext_user_id} created as user_id:{user_id}'
             logging.info(msg)
         elif response.status_code == 409:
             result_status = TinkModelResultStatus.Warning
-            msg = 'User with ext_user_id:{e} does already exist'.format(e=ext_user_id)
+            msg = f'User with ext_user_id:{ext_user_id} does already exist'
             logging.info(msg)
         else:
             logging.error(response.summary())
@@ -347,7 +347,7 @@ class TinkModel:
         # Results
         result = TinkModelResult(status=result_status,
                                  response=response,
-                                 action='Create user ext_user_id:{e}'.format(e=ext_user_id),
+                                 action=f'Create user ext_user_id:{ext_user_id}',
                                  msg=result_status.value)
 
         result_list.append(result)
@@ -507,7 +507,7 @@ class TinkModel:
         except ex.UserNotExistingError as e:
             raise e
 
-        msg = 'Get user ext_user_id:{e}'.format(e=ext_user_id)
+        msg = f'Get user ext_user_id:{ext_user_id}'
         service = api.UserService()
         response: api.UserResponse = service.get_user(access_token=self.access_token)
 
@@ -721,7 +721,7 @@ class TinkModel:
         except ex.UserNotExistingError as e:
             raise e
 
-        msg = 'Get accounts for user ext_user_id:{e}'.format(e=ext_user_id)
+        msg = f'Get accounts for user ext_user_id:{ext_user_id}'
         service = api.AccountService(url_root=cfg.API_URL_TINK)
         response: api.AccountListResponse = service.list_accounts(ext_user_id=ext_user_id,
                                                                   access_token=self.access_token)
@@ -873,10 +873,9 @@ class TinkModelResult:
         self.status = status
         self.response = response
 
-
         self.action = action
         if self.action == '':
-            self.action = '{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name)
+            self.action = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
 
         self.msg = msg
 

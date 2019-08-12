@@ -83,7 +83,8 @@ class TinkDAO:
         :param force_read: force to read again even if there is already data
         :return: user data as an instance of <class 'list'>: [OrderedDict()]
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
 
         if not self.users or force_read is True:
             data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=TinkDAO.fields_user_input)
@@ -99,7 +100,8 @@ class TinkDAO:
         :param force_read: force to read again even if there is already data
         :return: account data as an instance of <class 'list'>: [OrderedDict()]
         """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
 
         if not self.accounts or force_read is True:
             data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=TinkDAO.fields_acc_input)

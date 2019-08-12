@@ -131,7 +131,7 @@ def list_to_string(lst):
     text = ''
     for e in enumerate(lst):
         for k, v in e[1].items():
-            text = text + '{k}:{v},'.format(k=k, v=v)
+            text = text + f'{k}:{v},'
         # Replace last ',' with a '\n' character using slicing.
         text = text[:-1] + os.linesep
 
