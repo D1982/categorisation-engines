@@ -621,7 +621,7 @@ class TinkUI:
 
         # List accounts
         rl4: model.TinkModelResultList = self._model.get_all_accounts()
-        self.put_result_log(rl3.summary(filters={'endpoint': '/accounts/list'}))
+        self.put_result_log(rl4.summary(filters={'endpoint': '/accounts/list'}))
 
     def clear_button_cb(self):
         """
