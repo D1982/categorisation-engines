@@ -50,29 +50,78 @@ class TinkModel:
         self.id_hint = ''
         self.code = ''
 
-    """Read user test data from files."""
     def read_user_data(self):
+        """
+        Read user test data from the DAO.
+        :return: user data as an instance of <class 'list'>: [OrderedDict()]
+        """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         return self.dao.read_users()
 
-
-    """Read account test data from files."""
     def read_account_data(self):
+        """
+        Read account test data from the DAO.
+        :return: account data as an instance of <class 'list'>: [OrderedDict()]
+        """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         return self.dao.read_accounts()
 
-    """Read transaction test data from files."""
     def read_transaction_data(self):
+        """
+        Read transaction test data from the DAO.
+        :return: transaction data as an instance of <class 'list'>: [OrderedDict()]
+        """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
         return self.dao.read_transactions()
 
-    """Test the API connectivity."""
+        msg = 'Authorize client...'
+        try:
+            rl = self.authorize_client(scope='authorization:grant,user:read')
+            result_list.append(rl)
+        except ex.ParameterError as e:
+            raise e
+
+        if rl.last().status == TinkModelResultStatus.Success:
+            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
+            client_access_token = response.access_token
+            logging.info(msg + f' => client_access_token:{client_access_token}')
+            result_list.append(rl)
+        else:
+            logging.error(rl.last().response.summary())
+
+        msg = 'Grant access and get the access code...'
+        try:
+            rl = self.grant_user_access(client_access_token=client_access_token,
+                                        ext_user_id=ext_user_id,
+                                        scope='user:read')
+            result_list.append(rl)
+        except ex.UserNotExistingError as e:
+            raise e
+
+        if rl.last().status == TinkModelResultStatus.Success:
+            response: api.OAuth2AuthorizeResponse = rl.last().response
+            code = response.code
+            logging.debug(msg + f' => code:{code}')
+        else:
+            logging.error(response.summary())
+
+        msg = 'Get the OAuth access token to delete a user...'
+        rl = self.get_oauth_access_token(code=code, grant_type='authorization_code')
+        result_list.append(rl)
+
+        if rl.last().status == TinkModelResultStatus.Success:
+            response: api.OAuth2AuthenticationTokenResponse = rl.last().response
+            access_token = response.access_token
+            logging.info(msg + f' => access_token:{access_token}')
+        else:
+            logging.error(response.summary())
+
     def test_connectivity(self):
         """
         Test the API connectivity.
