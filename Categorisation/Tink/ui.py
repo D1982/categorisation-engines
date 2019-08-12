@@ -524,7 +524,11 @@ class TinkUI:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
 
-        self.put_result_log('NOT YET IMPLEMENTED')
+        # Perform action
+        rl: model.TinkModelResultList = self._model.get_all_accounts()
+
+        # Print results
+        self.put_result_log(rl.summary(filters={'endpoint': 'accounts/list'}))
 
     def ingest_trx_button_cb(self):
         """
@@ -614,6 +618,10 @@ class TinkUI:
 
         time.sleep(cfg.API_CALL_DELAY_IN_SECS)
         self.put_result_log(text=os.linesep, time=False)
+
+        # List accounts
+        rl4: model.TinkModelResultList = self._model.get_all_accounts()
+        self.put_result_log(rl3.summary(filters={'endpoint': '/accounts/list'}))
 
     def clear_button_cb(self):
         """
