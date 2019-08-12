@@ -263,9 +263,12 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
                         payload_text = f'{cnt} items received'
             # https://api.tink.com/connector/users/{{ext-user-id}}/accounts
             elif self.request.endpoint.find('/accounts') != -1:
-                pass
-        else:
-            payload_text = ''
+                if isinstance(self.request.data, dict):
+                    if 'accounts' in self.request.data:
+                        cnt = len(self.request.data['accounts'])
+                        payload_text = f'{cnt} items ingested'
+            else:
+                payload_text = ''
 
         if level == cfg.MessageDetailLevel.Low:
             summary_text = '{s}: {p}'.format(s=self.to_string(),
