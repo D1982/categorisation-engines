@@ -259,7 +259,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
                     created = payload['created']
                     d = utl.strdate(datetime.fromtimestamp(created/1000))
                     user_id = payload['id']
-                    payload_text = f'created:{d},user_id:{user_id}'
+                    payload_text = f'created:{d}, user_id:{user_id}'
         else:
             payload_text = ''
 
