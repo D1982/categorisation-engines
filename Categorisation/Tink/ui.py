@@ -58,18 +58,25 @@ class TinkUI:
         # ---> SetupConfigFrame (See docstring)
 
         # Widgets
-        self.label_config = tk.Label(self.config_frame, bg='lavender', text='Configuration:')
+        self.label_config = tk.Label(self.config_frame,
+                                     bg='lavender',
+                                     text='Configuration:')
+
         self.chkbox_delete_val = tk.BooleanVar()
-        self.chkbox_delete = tk.Checkbutton(self.config_frame, onvalue=True, offvalue=False,
+        self.chkbox_delete = tk.Checkbutton(self.config_frame,
+                                            onvalue=True,
+                                            offvalue=False,
                                             text='Delete existing data',
                                             variable=self.chkbox_delete_val,
                                             command=self.chkbox_delete_cb)
 
         self.chkbox_proxy_val = tk.BooleanVar()
-        self.chkbox_proxy = tk.Checkbutton(self.config_frame, onvalue=True, offvalue=False,
-                                            text='Use HTTP proxy',
-                                            variable=self.chkbox_proxy_val,
-                                            command=self.chkbox_proxy_cb)
+        self.chkbox_proxy = tk.Checkbutton(master=self.config_frame,
+                                           onvalue=True,
+                                           offvalue=False,
+                                           text='Use HTTP proxy',
+                                           variable=self.chkbox_proxy_val,
+                                           command=self.chkbox_proxy_cb)
 
         self.entry_proxy = tk.Entry(self.config_frame, width=30)
 
@@ -138,9 +145,15 @@ class TinkUI:
         self.entry_acc_file = tk.Entry(self.file_frame, width=40)
         self.entry_trx_file = tk.Entry(self.file_frame, width=40)
 
-        self.show_userdata_button = tk.Button(self.file_frame, fg='violet', text='Show')
-        self.show_accdata_button = tk.Button(self.file_frame, fg='violet', text='Show')
-        self.show_trxdata_button = tk.Button(self.file_frame, fg='violet', text='Show')
+        self.show_userdata_button = tk.Button(master=self.file_frame,
+                                              fg='violet',
+                                              text='Show')
+        self.show_accdata_button = tk.Button(master=self.file_frame,
+                                             fg='violet',
+                                             text='Show')
+        self.show_trxdata_button = tk.Button(master=self.file_frame,
+                                             fg='violet',
+                                             text='Show')
 
         # Layout
         self.label_files.grid(row=0, column=1, padx=0, pady=5, sticky=tk.W)
@@ -177,23 +190,47 @@ class TinkUI:
         :return: void
         """
         # Widgets
-        self.label_commands = tk.Label(self.command_frame, bg='lavender', text='Commands:')
-        self.test_button = tk.Button(self.command_frame, fg='orange', text='API health checks')
-        self.list_categories_button = tk.Button(self.command_frame, fg='blue', text='List categories')
+        self.label_commands = tk.Label(master=self.command_frame,
+                                       bg='lavender',
+                                       text='Commands:')
+        self.test_button = tk.Button(master=self.command_frame,
+                                     fg='orange',
+                                     text='API health checks')
+        self.list_categories_button = tk.Button(master=self.command_frame,
+                                                fg='blue',
+                                                text='List categories')
 
-        self.activate_users_button = tk.Button(self.command_frame, fg='green', text='Create user(s)')
-        self.delete_users_button = tk.Button(self.command_frame, fg='red', text='Delete user(s)')
-        self.list_users_button = tk.Button(self.command_frame, fg='blue', text='List user(s)')
+        self.activate_users_button = tk.Button(master=self.command_frame,
+                                               fg='green',
+                                               text='Create user(s)')
+        self.delete_users_button = tk.Button(master=self.command_frame,
+                                             fg='red',
+                                             text='Delete user(s)')
+        self.list_users_button = tk.Button(master=self.command_frame, fg='blue', text='List user(s)')
 
-        self.ingest_accounts_button = tk.Button(self.command_frame, fg='green', text='Ingest account(s)')
-        self.delete_accounts_button = tk.Button(self.command_frame, fg='red', text='Delete account(s)')
-        self.list_accounts_button = tk.Button(self.command_frame, fg='blue', text='List account(s)')
+        self.ingest_accounts_button = tk.Button(master=self.command_frame,
+                                                fg='green',
+                                                text='Ingest account(s)')
+        self.delete_accounts_button = tk.Button(master=self.command_frame,
+                                                fg='red',
+                                                text='Delete account(s)')
+        self.list_accounts_button = tk.Button(master=self.command_frame,
+                                              fg='blue',
+                                              text='List account(s)')
 
-        self.ingest_trx_button = tk.Button(self.command_frame, fg='green', text='Ingest transaction(s)')
-        self.delete_trx_button = tk.Button(self.command_frame, fg='red', text='Delete transaction(s)')
-        self.list_trx_button = tk.Button(self.command_frame, fg='blue', text='List transaction(s)')
+        self.ingest_trx_button = tk.Button(master=self.command_frame,
+                                           fg='green',
+                                           text='Ingest transaction(s)')
+        self.delete_trx_button = tk.Button(master=self.command_frame,
+                                           fg='red',
+                                           text='Delete transaction(s)')
+        self.list_trx_button = tk.Button(master=self.command_frame,
+                                         fg='blue',
+                                         text='List transaction(s)')
 
-        self.process_button = tk.Button(self.command_frame, fg='brown', text='Process all steps')
+        self.process_button = tk.Button(master=self.command_frame,
+                                        fg='brown',
+                                        text='Process all steps')
 
         # Layout
         self.label_commands.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
@@ -221,7 +258,9 @@ class TinkUI:
         :return: void
         """
         # Widgets
-        self.label_results = tk.Label(self.result_frame, bg='lavender', text='Results:')
+        self.label_results = tk.Label(master=self.result_frame,
+                                      bg='lavender',
+                                      text='Results:')
         # self.result_log = tk.Label(master=self.result_frame, anchor=tk.NW, justify=tk.LEFT)
         self.result_log = tkst.ScrolledText(
             master=self.result_frame,
@@ -230,8 +269,10 @@ class TinkUI:
             height=15,
             bg='beige'
         )
-        self.save_button = tk.Button(self.result_frame, text='Save logs to file')
-        self.clear_button = tk.Button(self.result_frame, text='Clear logs')
+        self.save_button = tk.Button(master=self.result_frame,
+                                     text='Save logs to file')
+        self.clear_button = tk.Button(master=self.result_frame,
+                                      text='Clear logs')
 
         # Layout
         self.label_results.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
