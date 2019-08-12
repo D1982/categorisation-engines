@@ -453,7 +453,7 @@ class TinkModel:
 
     def get_user(self, ext_user_id=None):
         """
-        Get a user in the Tink platform.
+        Get the details of a user within the Tink platform.
 
         :param ext_user_id: external user reference (this is NOT the Tink internal id)
 
@@ -664,11 +664,16 @@ class TinkModel:
 
         return result_list
 
-    def list_accounts(self):
+    def list_accounts(self, ext_user_id=None):
         """
-        Initiates the retrieval of a list of all accounts in the Tink platform.
+        Get list of all accounts of a user within the Tink platform.
 
-        :return: TinkModelResult
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+
+        :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
+        containing an instance of api.AccountListResponse with a list of
+        the user's accounts.
+        :raise: ExUserNotExisting in case the user to be deleted does not exist
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
