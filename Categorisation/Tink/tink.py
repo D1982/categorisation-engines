@@ -23,10 +23,10 @@ def main():
     facade = model.TinkModel(dao=dao)
 
     # Create the user interface and connect it with the model facade
-    app = ui.TinkUI(facade=facade)
+    app = ui.TinkUI(model_facade=facade)
 
     # Start the user interface (Tkinter)
-    app.run()
+    app._run()
 
 
 """Tink client application Entry Point"""

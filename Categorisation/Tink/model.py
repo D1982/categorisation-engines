@@ -4,7 +4,6 @@ The model implementation represents a kind of MVP Tink client application.
 """
 import Categorisation.Common.exceptions as ex
 import Categorisation.Common.config as cfg
-import Categorisation.Common.util as utl
 import Categorisation.Tink.api as api
 import Categorisation.Tink.data as data
 
@@ -16,7 +15,6 @@ import collections
 from enum import Enum
 
 
-# TODO: Put 3-Step authentication in delete_user() + get_user() into a method
 class TinkModel:
 
     """
@@ -28,29 +26,80 @@ class TinkModel:
     print appropriately to the output.
     """
 
-    def __init__(self, dao):
+    def __init__(self, dao: data.TinkDAO):
         """
         Initialization.
 
         :param dao: Reference to an instance of the class data.TinkDAO.
         """
-        # Data Access Object
-        self.dao = dao
-        self.ui = None
+        self._dao = dao
 
-        # Settings (will be set by instances of class TinkUI)
-        self.delete_flag = False  # Flag whether to pre-delete existing data
-        self.proxy_usage_flag = False  # Flag whether to use a http proxy
+        self._token_type = ''
+        self._expires_in = ''
+        self._client_access_token = ''
+        self._access_token = ''
+        self._refresh_token = ''
+        self._scope = ''
+        self._id_hint = ''
+        self._code = ''
 
-        # Variables
-        self.token_type = ''
-        self.expires_in = ''
-        self.client_access_token = ''
-        self.access_token = ''
-        self.refresh_token = ''
-        self.scope = ''
-        self.id_hint = ''
-        self.code = ''
+        # Define the supported actions that can be queried using the
+        # corresponding property
+        self._supported_actions = self._define_supported_actions()
+        self._process_actions = self._define_process_actions()
+
+    def _define_supported_actions(self):
+        a = list()
+
+        # Define supported actions
+        a.append({'method': self.test_connectivity, 'filters': None})
+        a.append({'method': self.delete_users, 'filters': {'endpoint': '/user/delete'}})
+        a.append({'method': self.activate_users, 'filters': {'endpoint': '/user/create'}})
+        a.append({'method': self.get_users, 'filters': {'endpoint': '/user'}})
+        a.append({'method': self.ingest_accounts, 'filters': {'endpoint': '/accounts'}})
+        a.append({'method': self.get_all_accounts, 'filters': {'endpoint': '/accounts/list'}})
+        a.append({'method': self.list_categories, 'filters': {'endpoint': '/categories'}})
+
+        return a
+
+    def _define_process_actions(self):
+        actions = list()
+
+        excluded_actions = self.test_connectivity, self.list_categories
+
+        for action in self._supported_actions:
+            if action['method'] not in excluded_actions:
+                actions.append(action)
+
+        return actions
+
+    @property
+    def supported_actions(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._supported_actions
+
+    @property
+    def process_actions(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._process_actions
+
+    def supported_action_filters(self, method):
+        """
+        Get the current output filter for a supported action (method reference)
+        :return: The output filter for the supplied method reference.
+        """
+        for action in self._supported_actions:
+            if action['method'] == method:
+                filters = action['filters']
+                return filters
+
+        return None
 
     def read_user_data(self):
         """
@@ -60,7 +109,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        return self.dao.read_users()
+        return self._dao.read_users(locator=cfg.TinkConfig.get_instance().user_source)
 
     def read_account_data(self):
         """
@@ -70,7 +119,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        return self.dao.read_accounts()
+        return self._dao.read_accounts(locator=cfg.TinkConfig.get_instance().account_source)
 
     def read_transaction_data(self):
         """
@@ -80,7 +129,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        return self.dao.read_transactions()
+        return self._dao.read_transactions(locator=cfg.TinkConfig.get_instance().transaction_source)
 
     def _oauth2_client_credentials_flow(self, grant_type, client_scope, user_scope, ext_user_id=None):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
@@ -99,7 +148,7 @@ class TinkModel:
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthenticationTokenResponse = rl.last().response
             client_access_token = response.access_token
-            self.client_access_token = client_access_token
+            self._client_access_token = client_access_token
             logging.info(msg + f' => client_access_token:{client_access_token}')
             result_list.append(rl)
         else:
@@ -117,7 +166,7 @@ class TinkModel:
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthorizeResponse = rl.last().response
             code = response.code
-            self.code = code
+            self._code = code
             logging.debug(msg + f' => code:{code}')
         else:
             logging.error(response.summary())
@@ -129,7 +178,7 @@ class TinkModel:
         if rl.last().status == TinkModelResultStatus.Success:
             response: api.OAuth2AuthenticationTokenResponse = rl.last().response
             access_token = response.access_token
-            self.access_token = access_token
+            self._access_token = access_token
             logging.info(msg + f' => access_token:{access_token}')
         else:
             logging.error(response.summary())
@@ -314,7 +363,7 @@ class TinkModel:
             if response.http_status(cfg.HTTPStatusCode.Code2xx):
                 result_status = TinkModelResultStatus.Success
                 client_access_token = response.access_token
-                self.client_access_token = client_access_token
+                self._client_access_token = client_access_token
             else:
                 logging.error(response.summary())
                 result_status = TinkModelResultStatus.Error
@@ -372,7 +421,8 @@ class TinkModel:
         logging.info(msg)
 
         # Get user data
-        users = self.dao.read_users()
+        locator = cfg.TinkConfig.get_instance().user_source
+        users = self._dao.read_users(locator)
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Activate users')
@@ -433,7 +483,7 @@ class TinkModel:
 
         msg = f'Delete user ext_user_id:{ext_user_id}'
         service = api.UserService()
-        response: api.UserDeleteResponse = service.delete_user(access_token=self.access_token)
+        response: api.UserDeleteResponse = service.delete_user(access_token=self._access_token)
 
         if response.http_status(cfg.HTTPStatusCode.Code2xx):
             result_status = TinkModelResultStatus.Success
@@ -458,7 +508,8 @@ class TinkModel:
         logging.info(msg)
 
         # Get user data
-        users = self.dao.read_users()
+        locator = cfg.TinkConfig.get_instance().user_source
+        users = self._dao.read_users(locator)
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Delete users')
@@ -509,7 +560,7 @@ class TinkModel:
 
         msg = f'Get user ext_user_id:{ext_user_id}'
         service = api.UserService()
-        response: api.UserResponse = service.get_user(access_token=self.access_token)
+        response: api.UserResponse = service.get_user(access_token=self._access_token)
 
         if response.http_status(cfg.HTTPStatusCode.Code2xx):
             result_status = TinkModelResultStatus.Success
@@ -534,7 +585,8 @@ class TinkModel:
         logging.info(msg)
 
         # Get user data
-        users = self.dao.read_users()
+        locator = cfg.TinkConfig.get_instance().user_source
+        users = self._dao.read_users(locator)
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get users')
@@ -605,10 +657,12 @@ class TinkModel:
         result_list.append(rl)
 
         # --- Ingest accounts per user
-        users = self.dao.read_users()
+        locator = cfg.TinkConfig.get_instance().user_source
+        users = self._dao.read_users(locator=locator)
 
         # Get account data for ALL users from data source
-        acc_data = self.dao.read_accounts()
+        locator = cfg.TinkConfig.get_instance().account_source
+        acc_data = self._dao.read_accounts(locator=locator)
         try:
             acc_entities = data.TinkAccountList(acc_data)
         except NotImplementedError as e1:
@@ -652,13 +706,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        # Wrapper for the results
-        result_list = TinkModelResultList(msg='')
-
-        return result_list
+        pass
 
     def get_all_accounts(self):
         """
@@ -672,7 +720,8 @@ class TinkModel:
         logging.info(msg)
 
         # Get user data
-        users = self.dao.read_users()
+        locator = cfg.TinkConfig.get_instance().user_source
+        users = self._dao.read_users(locator=locator)
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get all accounts')
@@ -724,7 +773,7 @@ class TinkModel:
         msg = f'Get accounts for user ext_user_id:{ext_user_id}'
         service = api.AccountService(url_root=cfg.API_URL_TINK)
         response: api.AccountListResponse = service.list_accounts(ext_user_id=ext_user_id,
-                                                                  access_token=self.access_token)
+                                                                  access_token=self._access_token)
 
         if response.http_status(cfg.HTTPStatusCode.Code2xx):
             result_status = TinkModelResultStatus.Success
@@ -743,13 +792,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        # Wrapper for the results
-        result_list = TinkModelResultList(msg='')
-
-        return result_list
+        pass
 
     def delete_trx(self):
         """
@@ -757,13 +800,7 @@ class TinkModel:
 
         :return: TinkModelResult
         """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        # Wrapper for the results
-        result_list = TinkModelResultList(msg='')
-
-        return result_list
+        pass
 
     def list_trx(self):
         """
@@ -776,45 +813,6 @@ class TinkModel:
 
         # Wrapper for the results
         result_list = TinkModelResultList(msg='')
-
-        return result_list
-
-    def process(self):
-        """
-        Process the full PoC pipeline.
-
-        Delete users (if the corresponding checkbutton is set)
-        Create users
-        Delete accounts (if the corresponding checkbutton is set)
-        Ingest accounts
-        Ingest transactions
-
-        :return: TinkModelResult
-        """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        # Wrapper for the results
-        result_list = TinkModelResultList(msg='')
-
-        # Check if pre-delete is allowed)
-        if self.delete_flag is True:
-            msg = 'Pre-Delete enabled: Existing objects in the Tink platform will be deleted.'
-            logging.info(msg)
-            # If yes: Delete the users
-            rl = self.delete_users()
-            result_list.append(rl)
-        else:
-            msg = 'Pre-Delete skipped: Deletion of existing objects in the Tink platform is disabled.'
-            logging.info(msg)
-
-        # Create users
-        rl = self.activate_users()
-        result_list.append(rl)
-
-        # Ingest accounts
-        rl = self.ingest_accounts()
-        result_list.append(rl)
 
         return result_list
 
@@ -1050,7 +1048,6 @@ class TinkModelResultList:
         to print the results in a human-readable way on the user interface.
 
         :param filters: dictionary with filters to be applied to the results
-
         :return: Union of all responses wrapped into the result items as formatted text.
         """
         # Check Parameters
@@ -1061,13 +1058,13 @@ class TinkModelResultList:
         else:
             endpoint_filter = ''
 
-        # Get level of detail currently set for ui logs
-        level = utl.message_detail_level()
-
         # Overall status over all results wrapped within this result list
         text = f'{self.action} ... {self.status().value} [{self.msg}]'
 
         # Overall statistics
+
+        level = cfg.TinkConfig.get_instance().message_detail_level
+
         if level == cfg.MessageDetailLevel.High:
             text += os.linesep + self.statistics()
         else:

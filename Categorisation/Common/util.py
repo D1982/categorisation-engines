@@ -6,9 +6,10 @@ Working With JSON Data in Python: https://realpython.com/python-json/
 """
 import Categorisation.Common.config as cfg
 
+import tkinter.filedialog as filedialog
 import csv
 import json
-import os.path
+import os
 import logging
 import sys
 
@@ -63,8 +64,7 @@ class FileHandler:
 
         return success
 
-
-    def read_csv_file(self, filename, fieldnames, skip_header=True):
+    def read_csv_file(self, filename, fieldnames=None, skip_header=True):
         """
         Read a CSV file from the local file system.
 
@@ -79,9 +79,14 @@ class FileHandler:
         extension = os.path.splitext(filename)[1]
         if extension in ('.data', '.txt', '.csv'):
             csv_file = open(filename, 'r')
-            csv_reader = csv.DictReader(f=csv_file,
-                                        delimiter=cfg.CSV_DELIMITER,
-                                        fieldnames=fieldnames)
+
+            if fieldnames:
+                csv_reader = csv.DictReader(f=csv_file,
+                                            delimiter=cfg.CSV_DELIMITER,
+                                            fieldnames=fieldnames)
+            else:
+                csv_reader = csv.DictReader(f=csv_file,
+                                            delimiter=cfg.CSV_DELIMITER)
             csv_data = list()
             if skip_header:
                 next(csv_reader)  # This skips the first row of the data file
@@ -121,6 +126,7 @@ class FileHandler:
 
         return success
 
+
 def list_to_string(lst):
     """
     Function to print a list as a better readable formatted string.
@@ -146,12 +152,15 @@ def strdate(date):
     return date.strftime('%d.%m.%Y %H:%M:%S')
 
 
-def message_detail_level():
+def save_to_file(data):
     """
-    Returns the value of the MessageDetailLevel currently set
-    :return: cfg.MessageDetailLevel (Currently hard coded to cfg.UI_RESULT_LOG_MSG_DETAIL)
+    Save data into a file using a file dialog in order to select the target file.
+    :param data: The data to be written to file.
+    :return:
     """
-    # TODO: Ideally the message detail level is to be gathered from a new field in the ui
-    level = cfg.UI_RESULT_LOG_MSG_DETAIL
-
-    return level
+    file_name = filedialog.asksaveasfilename(filetypes=cfg.SUPPORTED_FILE_TYPES,
+                                             defaultextension='*.txt')
+    # Save file if user entered a file name
+    if file_name != '':
+        with open(file_name, 'w') as output_file:
+            output_file.writelines(data)

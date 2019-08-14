@@ -47,11 +47,6 @@ class TinkDAO:
 
     def __init__(self):
         """ Initialization. """
-        # Data sources
-        self.user_src = 'unbound'
-        self.acc_src = 'unbound'
-        self.trx_src = 'unbound'
-
         # Data collections
         self.users = collections.OrderedDict()
         self.accounts = collections.OrderedDict()
@@ -60,68 +55,64 @@ class TinkDAO:
         # File handler utility
         self.file_handler = util.FileHandler()
 
-
-    def bind_data_source(self, src_type, locator):
-        """
-        Binding between a data source and a locator.
-
-        :param src_type: Instance of class config.TinkEntityType.UserEntity
-        :param locator: A locator to the required data like e.g. a filename or a filepath
-        :return: void
-        """
-        if src_type == cfg.TinkEntityType.UserEntity:
-            self.user_src = locator
-        elif src_type == cfg.TinkEntityType.AccountEntity:
-            self.acc_src = locator
-        elif src_type == cfg.TinkEntityType.TransactionEntity:
-            self.trx_src = locator
-
-    def read_users(self, force_read=True):
+    def read_users(self, locator, force_read=False):
         """
         Read user data from a data access object (DAO).
-
-        :param force_read: force to read again even if there is already data
-        :return: user data as an instance of <class 'list'>: [OrderedDict()]
+        :param locator: The locator of the source from which the data is being read.
+        :param force_read: Force to read again even if there is already data.
+        :return: The user data as an instance of <class 'list'>: [OrderedDict()]
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
+        logging.info(f'locator: {locator}')
 
         if not self.users or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.user_src, fieldnames=TinkDAO.fields_user_input)
-
+            try:
+                data = self.file_handler.read_csv_file(filename=locator,
+                                                       fieldnames=TinkDAO.fields_user_input)
+            except Exception as e:
+                raise e
             self.users = data  # Returns a List<OrderedDict>
 
         return self.users
 
-    def read_accounts(self, force_read=True):
+    def read_accounts(self, locator, force_read=False):
         """
         Read account data from a data access object (DAO).
-
-        :param force_read: force to read again even if there is already data
+        :param locator: The locator of the source from which the data is being read.
+        :param force_read: Force to read again even if there is already data.
         :return: account data as an instance of <class 'list'>: [OrderedDict()]
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
+        logging.info(f'locator: {locator}')
 
         if not self.accounts or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.acc_src, fieldnames=TinkDAO.fields_acc_input)
-
+            try:
+                data = self.file_handler.read_csv_file(filename=locator,
+                                                       fieldnames=TinkDAO.fields_acc_input)
+            except Exception as e:
+                raise e
             self.accounts = data  # Returns a List<OrderedDict>
 
         return self.accounts
 
-    def read_transactions(self, force_read=True):
+    def read_transactions(self, locator, force_read=False):
         """
         Read transaction data from a data access object (DAO).
-
-        :param force_read: force to read again even if there is already data
+        :param locator: The locator of the source from which the data is being read.
+        :param force_read: Force to read again even if there is already data.
         :return: transaction data as an instance of <class 'list'>: [OrderedDict()]
         """
         logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
+        logging.info(f'locator: {locator}')
 
         if not self.transactions or force_read is True:
-            data = self.file_handler.read_csv_file(filename=self.trx_src, fieldnames=TinkDAO.fields_trx_input)
-
+            try:
+                data = self.file_handler.read_csv_file(filename=locator,
+                                                       fieldnames=TinkDAO.fields_trx_input)
+            except Exception as e:
+                raise e
             self.transactions = data  # Returns a List<OrderedDict>
 
         return self.transactions

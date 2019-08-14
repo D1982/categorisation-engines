@@ -31,6 +31,8 @@ class TinkAPI:
         Initialization.
 
         :param url_root: URL root string of the API
+        :param level of detail currently chosen for ui logs
+
         """
         self.url_root: str = url_root
         self.partner_info: dict = dict()
@@ -224,8 +226,6 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         summary_text = ''
         payload_text = ''
 
-        level = utl.message_detail_level()
-
         try:
             payload = json.loads(self.text)
             payload_text = str(payload)
@@ -273,6 +273,8 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
                         payload_text = f'{cnt} items ingested'
             else:
                 payload_text = ''
+
+        level = cfg.TinkConfig.get_instance().message_detail_level
 
         if level == cfg.MessageDetailLevel.Low:
             summary_text = f'{self.to_string()}: {payload_text}'

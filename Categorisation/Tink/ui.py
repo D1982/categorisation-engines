@@ -28,9 +28,10 @@ class TinkUI:
     - model.TinkModel uses api.* in order to communicate with Tink's API endpoints
     """
 
+    TITLE = 'Tink Client Application for API Testing'
     WELCOME_TEXT = 'Tink Client Application started: Please choose an option ...'
 
-    def __init__(self, facade):
+    def __init__(self, model_facade):
         """
         Initialization.
 
@@ -38,597 +39,332 @@ class TinkUI:
         ---> SetupConfigFrame: Checkbuttons must be setup within the __init__ method
         # Wrapped in a separate method call-backs would not work.
 
-        :param facade: Linked model containing the business logic (instance of class model.TinkModel)
+        :param model_facade: Linked model containing the business logic (instance of class model.TinkModel)
         """
+        # --- Model and DAO
+
         # Set linked model class instance: Enables the ui callbacks to call the functionality
         # which is encapsulated in the module Categorisation.Common.model
-        self._model = facade
-        if not isinstance(facade, model.TinkModel):
-            self._model = model.TinkModel(data.TinkDAO)
+        self._model = model_facade
+        if not isinstance(model_facade, model.TinkModel):
+            self._model = model_facade.TinkModel(data.TinkDAO)
 
-        # Set linked ui class instance: Enables the model class instance to print output on the
-        # ui result log using the methods put_result_log(...) and clear_result_log(...)
-        self._model.ui = self
-
-        # Create ui elements
-        self.create_windows()
-        self.create_frames()
-        self.setup_file_frame()
-
-        # ---> SetupConfigFrame (See docstring)
-
-        # Widgets
-        self.label_config = tk.Label(self.config_frame,
-                                     bg='lavender',
-                                     text='Configuration:')
-
-        self.chkbox_delete_val = tk.BooleanVar()
-        self.chkbox_delete = tk.Checkbutton(self.config_frame,
-                                            onvalue=True,
-                                            offvalue=False,
-                                            text='Delete existing data',
-                                            variable=self.chkbox_delete_val,
-                                            command=self.chkbox_delete_cb)
-
-        self.chkbox_proxy_val = tk.BooleanVar()
-        self.chkbox_proxy = tk.Checkbutton(master=self.config_frame,
-                                           onvalue=True,
-                                           offvalue=False,
-                                           text='Use HTTP proxy',
-                                           variable=self.chkbox_proxy_val,
-                                           command=self.chkbox_proxy_cb)
-
-        self.entry_proxy = tk.Entry(self.config_frame, width=30)
-
-        # Layout
-        self.label_config.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
-        self.chkbox_delete.grid(row=1, column=1, sticky=tk.W)
-        self.chkbox_proxy.grid(row=2, column=1, sticky=tk.W)
-        self.entry_proxy.grid(row=2, column=2, sticky=tk.W)
-
-        self.setup_command_frame()
-        self.setup_result_frame()
-        self.button_command_binding()
-        self.ui_data()  # Default values
-
-        # Bind data in the model
-        self.data_bindings()
-
-    def create_windows(self):
-        """
-        Setup the main window.
-
-        :return: void
-        """
-
-        # Widgets
+        # --- Windows
         self.window = tk.Tk()
-        self.window.title('Tink Client Application for API Testing')
-
-        # Layout
+        self.window.title(TinkUI.TITLE)
         self.window.grid_rowconfigure(1, weight=1)
         self.window.grid_columnconfigure(0, weight=1)
 
-    def create_frames(self):
+        # --- Frames: Widgets
+        self.frm_header = tk.Frame(master=self.window, padx=5, pady=5)
+        self.frm_file = tk.Frame(master=self.window, padx=5, pady=5)
+        self.frm_config = tk.Frame(master=self.window, padx=5, pady=5)
+        self.frm_command = tk.Frame(master=self.window, padx=5, pady=5)
+        self.frm_result = tk.Frame(master=self.window, padx=5, pady=5)
+
+        # --- Frames: Layout
+        self.frm_file.grid(row=1, sticky=tk.NW)
+        self.frm_config.grid(row=2, sticky=tk.NW)
+        self.frm_command.grid(row=3, sticky=tk.NW)
+        self.frm_result.grid(row=4, sticky=tk.NW)
+
+        # --- Variables to hold widget data
+        self.cbtn_result_file_val = tk.BooleanVar()
+        self.cbtn_proxy_val = tk.BooleanVar()
+        self.cbtn_delete_val = tk.BooleanVar()
+        self.opt_msg_level_det_val = tk.StringVar()
+
+        # --- UI widgets and Layout
+        self._widgets()
+        self._layout()
+
+        # --- UI Data Initialization and Synchronization
+        self._data_init()
+        self._data_sync()
+
+    def _widgets(self):
         """
-        Setup the frames.
-
-        :return: void
+        Setup the ui widgets.
+        :return: Void
         """
-        # Widgets
-        self.header_frame = tk.Frame(master=self.window, padx=5, pady=5)
-        self.file_frame = tk.Frame(master=self.window, padx=5, pady=5)
-        self.config_frame = tk.Frame(master=self.window, padx=5, pady=5)
-        self.command_frame = tk.Frame(master=self.window, padx=5, pady=5)
-        self.result_frame = tk.Frame(master=self.window, padx=5, pady=5)
+        # --- File Frame: Input Files - Text Fields
+        self.txt_usr_file_in = tk.Entry(master=self.frm_file,
+                                        width=40,
+                                        state='normal')
 
-        # Layout
-        self.file_frame.grid(row=1, sticky=tk.NW)
-        self.config_frame.grid(row=2, sticky=tk.NW)
-        self.command_frame.grid(row=3, sticky=tk.NW)
-        self.result_frame.grid(row=4, sticky=tk.NW)
+        self.txt_acc_file_in = tk.Entry(master=self.frm_file,
+                                        width=40,
+                                        state='normal')
 
-    def setup_file_frame(self):
-        """
-        Setup the elements within the file frame.
+        self.txt_trx_file_in = tk.Entry(master=self.frm_file,
+                                        width=40,
+                                        state='normal')
 
-        :return: void
-        """
-        # Widgets
-        self.label_files = tk.Label(self.file_frame, bg='lavender', text='Files:')
+        # --- File Frame: Input Files - Action Buttons
+        self.btn_usr_file_in = tk.Button(master=self.frm_file,
+                                         fg='violet',
+                                         text='Show',
+                                         command=lambda: self._callback('btn_usr_file_in'))
 
-        self.label_file_users = tk.Label(self.file_frame, text='User data:')
-        self.label_file_accounts = tk.Label(self.file_frame, text='Account data:')
-        self.label_file_trx = tk.Label(self.file_frame, text='Transaction data:')
+        self.btn_acc_file_in = tk.Button(master=self.frm_file,
+                                         fg='violet',
+                                         text='Show',
+                                         command=lambda: self._callback('btn_acc_file_in'))
 
-        self.entry_user_file = tk.Entry(self.file_frame, width=40)
-        self.entry_acc_file = tk.Entry(self.file_frame, width=40)
-        self.entry_trx_file = tk.Entry(self.file_frame, width=40)
+        self.btn_trx_file_in = tk.Button(master=self.frm_file,
+                                         fg='violet',
+                                         text='Show',
+                                         command=lambda: self._callback('btn_trx_file_in'))
 
-        self.show_userdata_button = tk.Button(master=self.file_frame,
-                                              fg='violet',
-                                              text='Show')
-        self.show_accdata_button = tk.Button(master=self.file_frame,
-                                             fg='violet',
-                                             text='Show')
-        self.show_trxdata_button = tk.Button(master=self.file_frame,
-                                             fg='violet',
-                                             text='Show')
+        # --- File Frame: Output Files - Text Fields
+        self.txt_usr_file_out = tk.Entry(master=self.frm_file,
+                                         width=40,
+                                         state='normal')
 
-        # Layout
-        self.label_files.grid(row=0, column=1, padx=0, pady=5, sticky=tk.W)
+        self.txt_acc_file_out = tk.Entry(master=self.frm_file,
+                                         width=40,
+                                         state='normal')
 
-        self.label_file_users.grid(row=1, column=1, sticky=tk.E)
-        self.label_file_accounts.grid(row=2, column=1, sticky=tk.E)
-        self.label_file_trx.grid(row=3, column=1, sticky=tk.E)
+        self.txt_trx_file_out = tk.Entry(master=self.frm_file,
+                                         width=40,
+                                         state='normal')
 
-        self.entry_user_file.grid(row=1, column=2, sticky=tk.W)
-        self.entry_acc_file.grid(row=2, column=2, sticky=tk.W)
-        self.entry_trx_file.grid(row=3, column=2, sticky=tk.W)
+        # --- File Frame: Output Files - Action Buttons
+        self.btn_usr_file_out = tk.Button(master=self.frm_file,
+                                          fg='violet',
+                                          text='Show',
+                                          command=lambda: self._callback('btn_usr_file_out'))
 
-        self.show_userdata_button.grid(row=1, column=5, sticky=tk.W)
-        self.show_accdata_button.grid(row=2, column=5, sticky=tk.W)
-        self.show_trxdata_button.grid(row=3, column=5, sticky=tk.W)
+        self.btn_acc_file_out = tk.Button(master=self.frm_file,
+                                          fg='violet',
+                                          text='Show',
+                                          command=lambda: self._callback('btn_acc_file_out'))
 
-    def setup_config_frame(self):
-        """
-        Setup the elements within the file frame.
+        self.btn_trx_file_out = tk.Button(master=self.frm_file,
+                                          fg='violet',
+                                          text='Show',
+                                          command=lambda: self._callback('btn_trx_file_out'))
 
-        This frame mainly consists of Checkbuttons that need to be bound to variables
-        and callback methods. This does only work correctly if these elements are being
-        setup directly within the method __init__(), otherwise callbacks will not work.
+        # --- Config Frame: Checkboxes
+        self.cbtn_result_file = tk.Checkbutton(self.frm_config,
+                                               onvalue=True,
+                                               offvalue=False,
+                                               text='Write results into files',
+                                               variable=self.cbtn_result_file_val,
+                                               command=lambda: self._callback('cbtn_result_file'))
 
-        #:return: void
-        """
-        pass
-        # This code  be found in __init__()
+        self.cbtn_delete = tk.Checkbutton(self.frm_config,
+                                          onvalue=True,
+                                          offvalue=False,
+                                          text='Delete existing data',
+                                          variable=self.cbtn_delete_val,
+                                          command=lambda: self._callback('cbtn_delete'))
 
-    def setup_command_frame(self):
-        """
-        Setup the elements within the command frame.
+        self.cbtn_proxy = tk.Checkbutton(master=self.frm_config,
+                                         onvalue=True,
+                                         offvalue=False,
+                                         text='Use HTTP proxy',
+                                         variable=self.cbtn_proxy_val,
+                                         command=lambda: self._callback('cbtn_proxy'))
+        self.cbtn_delete.grid(row=1, column=1, sticky=tk.W)
 
-        :return: void
-        """
-        # Widgets
-        self.label_commands = tk.Label(master=self.command_frame,
-                                       bg='lavender',
-                                       text='Commands:')
-        self.test_button = tk.Button(master=self.command_frame,
-                                     fg='orange',
-                                     text='API health checks')
-        self.list_categories_button = tk.Button(master=self.command_frame,
-                                                fg='blue',
-                                                text='List categories')
+        # --- Config Frame: Text Widgets
 
-        self.activate_users_button = tk.Button(master=self.command_frame,
-                                               fg='green',
-                                               text='Create user(s)')
-        self.delete_users_button = tk.Button(master=self.command_frame,
+        self.txt_proxy = tk.Entry(self.frm_config, width=30)
+
+        # --- Command Frame: Button Widgets
+
+        self.btn_test = tk.Button(master=self.frm_command,
+                                  fg='orange',
+                                  text='API health checks',
+                                  command=lambda: self._callback('btn_test'))
+
+        self.btn_list_categories = tk.Button(master=self.frm_command,
+                                             fg='blue',
+                                             text='List categories',
+                                             command=lambda: self._callback('btn_list_categories'))
+
+        self.btn_activate_users = tk.Button(master=self.frm_command,
+                                            fg='green',
+                                            text='Create user(s)',
+                                            command=lambda: self._callback('btn_activate_users'))
+
+        self.btn_delete_users = tk.Button(master=self.frm_command,
+                                          fg='red',
+                                          text='Delete user(s)',
+                                          command=lambda: self._callback('btn_delete_users'))
+
+        self.btn_list_users = tk.Button(master=self.frm_command,
+                                        fg='blue',
+                                        text='List user(s)',
+                                        command=lambda: self._callback('btn_list_users'))
+
+        self.btn_ingest_accounts = tk.Button(master=self.frm_command,
+                                             fg='green',
+                                             text='Ingest account(s)',
+                                             command=lambda: self._callback('btn_ingest_accounts'))
+
+        self.btn_delete_accounts = tk.Button(master=self.frm_command,
                                              fg='red',
-                                             text='Delete user(s)')
-        self.list_users_button = tk.Button(master=self.command_frame, fg='blue', text='List user(s)')
+                                             text='Delete account(s)',
+                                             command=lambda: self._callback('btn_delete_accounts'))
 
-        self.ingest_accounts_button = tk.Button(master=self.command_frame,
-                                                fg='green',
-                                                text='Ingest account(s)')
-        self.delete_accounts_button = tk.Button(master=self.command_frame,
-                                                fg='red',
-                                                text='Delete account(s)')
-        self.list_accounts_button = tk.Button(master=self.command_frame,
-                                              fg='blue',
-                                              text='List account(s)')
+        self.btn_list_accounts = tk.Button(master=self.frm_command,
+                                           fg='blue',
+                                           text='List account(s)',
+                                           command=lambda: self._callback('btn_list_accounts'))
 
-        self.ingest_trx_button = tk.Button(master=self.command_frame,
-                                           fg='green',
-                                           text='Ingest transaction(s)')
-        self.delete_trx_button = tk.Button(master=self.command_frame,
-                                           fg='red',
-                                           text='Delete transaction(s)')
-        self.list_trx_button = tk.Button(master=self.command_frame,
-                                         fg='blue',
-                                         text='List transaction(s)')
+        self.btn_ingest_trx = tk.Button(master=self.frm_command,
+                                        fg='green',
+                                        text='Ingest transaction(s)',
+                                        command=lambda: self._callback('btn_ingest_trx'))
 
-        self.process_button = tk.Button(master=self.command_frame,
-                                        fg='brown',
-                                        text='Process all steps')
+        self.btn_delete_trx = tk.Button(master=self.frm_command,
+                                        fg='red',
+                                        text='Delete transaction(s)',
+                                        command=lambda: self._callback('btn_delete_trx'))
 
-        # Layout
-        self.label_commands.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
+        self.btn_list_trx = tk.Button(master=self.frm_command,
+                                      fg='blue',
+                                      text='List transaction(s)',
+                                      command=lambda: self._callback('btn_list_trx'))
 
-        self.test_button.grid(row=1, column=1, sticky=tk.W)
-        self.process_button.grid(row=1, column=2, columnspan=3, sticky=tk.SW)
+        self.btn_process_all = tk.Button(master=self.frm_command,
+                                         fg='brown',
+                                         text='Process all steps',
+                                         command=lambda: self._callback('btn_process_all'))
 
-        self.delete_users_button.grid(row=2, column=1, sticky=tk.W)
-        self.delete_accounts_button.grid(row=2, column=2, sticky=tk.W)
-        self.delete_trx_button.grid(row=2, column=3, sticky=tk.W)
+        self.btn_save_logs = tk.Button(master=self.frm_command,
+                                       text='Save logs',
+                                       command=lambda: self._callback('btn_save_logs'))
 
-        self.activate_users_button.grid(row=3, column=1, sticky=tk.W)
-        self.ingest_accounts_button.grid(row=3, column=2, sticky=tk.W)
-        self.ingest_trx_button.grid(row=3, column=3, sticky=tk.W)
+        self.btn_clear_logs = tk.Button(master=self.frm_command,
+                                        text='Clear logs',
+                                        command=lambda: self._callback('btn_clear_logs'))
 
-        self.list_users_button.grid(row=4, column=1, sticky=tk.W)
-        self.list_accounts_button.grid(row=4, column=2, sticky=tk.W)
-        self.list_trx_button.grid(row=4, column=3, sticky=tk.W)
-        self.list_categories_button.grid(row=4, column=4, sticky=tk.W)
+        # --- Result Frame: Button Widgets
 
-    def setup_result_frame(self):
-        """
-        Setup the elements within the result frame.
+        dropdown_choices = list()
+        for e in cfg.MessageDetailLevel:
+            dropdown_choices.append(e.value)
+        self.opt_msg_level_det_val.set(dropdown_choices[0])
+        self.opt_msg_level_det = tk.OptionMenu(self.frm_result,
+                                               self.opt_msg_level_det_val,
+                                               *dropdown_choices,
+                                               command=self._callback_option_button)
 
-        :return: void
-        """
-        # Widgets
-        self.label_results = tk.Label(master=self.result_frame,
-                                      bg='lavender',
-                                      text='Results:')
-        # self.result_log = tk.Label(master=self.result_frame, anchor=tk.NW, justify=tk.LEFT)
+        # --- Result Frame: Text Widgets
+
         self.result_log = tkst.ScrolledText(
-            master=self.result_frame,
+            master=self.frm_result,
             wrap=tk.WORD,
             width=cfg.UI_STRING_MAX_WITH,
             height=15,
-            bg='beige'
-        )
-        self.save_button = tk.Button(master=self.result_frame,
-                                     text='Save logs to file')
-        self.clear_button = tk.Button(master=self.result_frame,
-                                      text='Clear logs')
+            bg='beige')
 
-        # Layout
-        self.label_results.grid(row=0, column=1, padx=0, pady=10, sticky=tk.W)
-        self.clear_button.grid(row=1, column=1, sticky=tk.W)
-        self.save_button.grid(row=2, column=1, sticky=tk.W)
-        self.result_log.grid(row=3, column=1, sticky=tk.W)
-
-    def ui_data(self):
+    def _layout(self):
         """
-        Initialization of the UI components e.g. with default data.
+        Setup the layout of the ui widgets using a grid layout.
+        :return: Void.
+        """
+        # --- File Frame: Layout
+        self.txt_usr_file_in.grid(row=1, column=2, sticky=tk.W)
+        self.txt_acc_file_in.grid(row=2, column=2, sticky=tk.W)
+        self.txt_trx_file_in.grid(row=3, column=2, sticky=tk.W)
+        self.btn_usr_file_in.grid(row=1, column=3, sticky=tk.W)
+        self.btn_acc_file_in.grid(row=2, column=3, sticky=tk.W)
+        self.btn_trx_file_in.grid(row=3, column=3, sticky=tk.W)
+
+        self.txt_usr_file_out.grid(row=1, column=4, sticky=tk.W)
+        self.txt_acc_file_out.grid(row=2, column=4, sticky=tk.W)
+        self.txt_trx_file_out.grid(row=3, column=4, sticky=tk.W)
+        self.btn_usr_file_out.grid(row=1, column=5, sticky=tk.W)
+        self.btn_acc_file_out.grid(row=2, column=5, sticky=tk.W)
+        self.btn_trx_file_out.grid(row=3, column=5, sticky=tk.W)
+
+        # --- Config Frame: Layout
+        self.cbtn_delete.grid(row=1, column=1, sticky=tk.W)
+        self.cbtn_result_file.grid(row=2, column=1, sticky=tk.W)
+
+        self.cbtn_proxy.grid(row=1, column=2, sticky=tk.W)
+        self.txt_proxy.grid(row=1, column=3, sticky=tk.W)
+
+        # --- Command Frame Layout
+        self.btn_test.grid(row=1, column=1, sticky=tk.W)
+        self.btn_process_all.grid(row=1, column=2, columnspan=3, sticky=tk.SW)
+        self.btn_delete_users.grid(row=2, column=1, sticky=tk.W)
+        self.btn_delete_accounts.grid(row=2, column=2, sticky=tk.W)
+        self.btn_delete_trx.grid(row=2, column=3, sticky=tk.W)
+        self.btn_activate_users.grid(row=3, column=1, sticky=tk.W)
+        self.btn_ingest_accounts.grid(row=3, column=2, sticky=tk.W)
+        self.btn_ingest_trx.grid(row=3, column=3, sticky=tk.W)
+        self.btn_list_users.grid(row=4, column=1, sticky=tk.W)
+        self.btn_list_accounts.grid(row=4, column=2, sticky=tk.W)
+        self.btn_list_trx.grid(row=4, column=3, sticky=tk.W)
+        self.btn_list_categories.grid(row=4, column=4, sticky=tk.W)
+        self.btn_clear_logs.grid(row=5, column=1, sticky=tk.W)
+        self.btn_save_logs.grid(row=5, column=2, sticky=tk.W)
+
+        # --- Result Frame Layout
+        self.result_log.grid(row=1, column=1, sticky=tk.W)
+        self.opt_msg_level_det.grid(row=2, column=1, sticky=tk.W)
+    def _data_sync(self):
+        """
+        Synchronization of the data held in the ui components e.g. with the global
+        configuration Singleton instance within config.TinkConfig.
 
         :return: void
         """
-        # Set User file string
-        text = self.entry_user_file
-        text.config(state='normal')
-        text.insert(0, cfg.IN_FILE_PATTERN_TINK.replace('*', 'Users'))
-        text.config(state='readonly')
+        cfg.TinkConfig.get_instance().user_source = self.txt_usr_file_in.get()
+        cfg.TinkConfig.get_instance().account_source = self.txt_acc_file_in.get()
+        cfg.TinkConfig.get_instance().transaction_source = self.txt_trx_file_in.get()
 
-        # Set Accounts file string
-        text = self.entry_acc_file
-        text.config(state='normal')
-        text.insert(0, cfg.IN_FILE_PATTERN_TINK.replace('*', 'Accounts'))
-        text.config(state='readonly')
+        cfg.TinkConfig.get_instance().user_target = self.txt_usr_file_out
+        cfg.TinkConfig.get_instance().account_target = self.txt_acc_file_out
+        cfg.TinkConfig.get_instance().transaction_target = self.txt_trx_file_out
 
-        # Set Transactions file string
-        self.entry_trx_file.config(state='normal')
-        self.entry_trx_file.insert(0, cfg.IN_FILE_PATTERN_TINK.replace('*', 'Transactions'))
-        self.entry_trx_file.config(state='readonly')
-
-        # Checkbuttons
-        self.chkbox_delete.select() # Pre-delete is enabled by default
-        self.chkbox_delete_cb()
-        self.chkbox_proxy.deselect() # Proxy usage is disabled by default
-        self.entry_proxy.config(state='normal')
-        self.entry_proxy.insert(0, cfg.PROXY_URL + ':' + cfg.PROXY_PORT)
-        self.entry_proxy.config(state='readonly')
-        self.put_result_log(text=TinkUI.WELCOME_TEXT, nl=2, time=False)
-
-    def button_command_binding(self):
+    def _data_init(self):
         """
-        Setup event handlers assigning actions to buttons.
+        Initialization of the UI components e.g. with default values.
 
-        :return: void
+        :return: Void.
         """
-        self.show_userdata_button['command'] = self.show_userdata_button_cb
-        self.show_accdata_button['command'] = self.show_accdata_button_cb
-        self.show_trxdata_button['command'] = self.show_trxdata_button_cb
+        file = cfg.IN_FILE_PATTERN_TINK.replace('*', 'Users')
+        self.txt_usr_file_in.insert(0, file)
+        self.txt_usr_file_out.insert(0, file.replace('In', 'Out'))
 
-        self.test_button['command'] = self.test_button_cb
-        self.list_categories_button['command'] = self.list_categories_button_cb
+        file = cfg.IN_FILE_PATTERN_TINK.replace('*', 'Accounts')
+        self.txt_acc_file_in.insert(0, file)
+        self.txt_acc_file_out.insert(0, file.replace('In', 'Out'))
 
-        self.activate_users_button['command'] = self.activate_users_button_cb
-        self.delete_users_button['command'] = self.delete_users_button_cb
-        self.list_users_button['command'] = self.list_users_button_cb
+        file = cfg.IN_FILE_PATTERN_TINK.replace('*', 'Transactions')
+        self.txt_trx_file_in.insert(0, file)
+        self.txt_trx_file_out.insert(0, file.replace('In', 'Out'))
 
-        self.ingest_accounts_button['command'] = self.ingest_accounts_button_cb
-        self.delete_accounts_button['command'] = self.delete_accounts_button_cb
-        self.list_accounts_button['command'] = self.list_accounts_button_cb
-        self.ingest_trx_button['command'] = self.ingest_trx_button_cb
-        self.delete_trx_button['command'] = self.delete_trx_button_cb
-        self.list_trx_button['command'] = self.list_trx_button_cb
-        self.process_button['command'] = self.process_button_cb
-        self.clear_button['command'] = self.clear_button_cb
-        self.save_button['command'] = self.save_button_cb
+        # CheckButtons
+        self.cbtn_delete.select()  # Pre-delete is enabled by default
+        self.cbtn_result_file.deselect()  # Don't write results into a file by default
+        self.cbtn_proxy.deselect() # Proxy usage is disabled by default
 
-    def run(self):
-        """
-        Main thread running the ui application in the main window.
+        self.txt_proxy.config(state='normal')
+        self.txt_proxy.insert(0, cfg.PROXY_URL + ':' + cfg.PROXY_PORT)
+        self.txt_proxy.config(state='readonly')
+        self._put_result_log(text=TinkUI.WELCOME_TEXT, nl=2, time=False)
 
-        :return: void
-        """
-        self.window.mainloop()
-
-    # --- Event Handlers
-
-    def show_userdata_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name).
-
-        :return: void
-        """
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.put_result_log(text='*** User data ***', clear=True, time=False)
-        lst_data = self._model.read_user_data()
-        if data:
-            text = utl.list_to_string(lst_data)
-        else:
-            text = 'No data available'
-        self.put_result_log(text=text, time=False)
-
-    def show_accdata_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name).
-
-        :return: void
-        """
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.put_result_log(text='*** Account data ***', clear=True, time=False)
-        lst_data = self._model.read_account_data()
-        if data:
-            text = utl.list_to_string(lst_data)
-        else:
-            text = 'No data available'
-        self.put_result_log(text=text, time=False)
-
-    def show_trxdata_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.put_result_log(text='*** Transaction data ***', clear=True, time=False)
-        lst_data = self._model.read_transaction_data()
-        if data:
-            text = utl.list_to_string(lst_data)
-        else:
-            text = 'No data available'
-        self.put_result_log(text=text, time=False)
-
-    def chkbox_delete_cb(self, event=None):
-        """
-        Event Handler for the corresponding checkbutton (equal name)
-
-        :param event: reference to the triggering event (not used here)
-        :return:
-        """
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        val = self.chkbox_delete_val.get()
-        self._model.delete_flag = val
-
-    def chkbox_proxy_cb(self, event=None):
-        """
-        Event Handler for the corresponding checkbutton (equal name)
-
-        :param event: reference to the triggering event (not used here)
-        :return:
-        """
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-
-        val = self.chkbox_proxy_val.get()
-        self._model.proxy_flag = val
-
-    def test_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** API Health Checks ***', clear=True, time=False)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        rl: model.TinkModelResultList = self._model.test_connectivity()
-        self.put_result_log(rl.summary())
-
-    def list_categories_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** List categories ***', clear=True, time=False)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        rl: model.TinkModelResultList = self._model.list_categories()
-        r = rl.first()
-        self.put_result_log(r.response.to_string_custom())
-
-    def activate_users_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** Activate (create) users ***', clear=True, time=False)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        rl: model.TinkModelResultList = self._model.activate_users()
-        self.put_result_log(rl.summary(filters={'endpoint': 'categories'}))
-
-    def delete_users_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** Delete users ***', clear=True, time=False)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        rl: model.TinkModelResultList = self._model.delete_users()
-        self.put_result_log(rl.summary(filters={'endpoint': 'user/delete'}))
-
-    def list_users_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** List users ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        rl: model.TinkModelResultList = self._model.get_users()
-        self.put_result_log(rl.summary(filters={'endpoint': '/user'}))
-
-    def ingest_accounts_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** Ingest accounts ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        rl: model.TinkModelResultList = self._model.ingest_accounts()
-        self.put_result_log(rl.summary(filters={'endpoint': '/accounts'}))
-
-    def delete_accounts_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** Delete accounts ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.put_result_log('NOT YET IMPLEMENTED')
-
-    def list_accounts_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** List accounts ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        rl: model.TinkModelResultList = self._model.get_all_accounts()
-        self.put_result_log(rl.summary(filters={'endpoint': 'accounts/list'}))
-
-    def ingest_trx_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** Ingest transactions ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.put_result_log('NOT YET IMPLEMENTED')
-
-    def delete_trx_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        self.put_result_log(text='*** Delete transactions ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.put_result_log('NOT YET IMPLEMENTED')
-
-    def list_trx_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        # Title
-        self.put_result_log(text='*** List transactions ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.put_result_log('NOT YET IMPLEMENTED')
-
-    def process_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        # TODO: The code in ui.process_button_cb() should be moved to model.process()
-        self.put_result_log(text='*** Process full workflow ***', clear=True, time=True)
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-
-        # Delete users
-        rl1: model.TinkModelResultList = self._model.delete_users()
-        self.put_result_log(rl1.summary(filters={'endpoint': 'user/delete'}))
-
-        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
-        self.put_result_log(text=os.linesep, time=False)
-
-        # Activate users
-        rl2: model.TinkModelResultList = self._model.activate_users()
-        self.put_result_log(rl2.summary(filters={'endpoint': 'user/create'}))
-
-        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
-        self.put_result_log(text=os.linesep, time=False)
-
-        # List users
-        rl2: model.TinkModelResultList = self._model.get_users()
-        self.put_result_log(rl2.summary(filters={'endpoint': '/user'}))
-
-        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
-        self.put_result_log(text=os.linesep, time=False)
-
-        # Ingest accounts
-        rl3: model.TinkModelResultList = self._model.ingest_accounts()
-        self.put_result_log(rl3.summary(filters={'endpoint': '/accounts'}))
-
-        time.sleep(cfg.API_CALL_DELAY_IN_SECS)
-        self.put_result_log(text=os.linesep, time=False)
-
-        # List accounts
-        rl4: model.TinkModelResultList = self._model.get_all_accounts()
-        self.put_result_log(rl4.summary(filters={'endpoint': '/accounts/list'}))
-
-    def clear_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        self.clear_result_log()
-
-    def save_button_cb(self):
-        """
-        Event Handler for the corresponding button (equal name)
-
-        :return: void
-        """
-        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
-        type_list = [('Text files', '*.txt')]
-        file_name = filedialog.asksaveasfilename(filetypes=type_list,
-                                                 defaultextension='*.txt')
-        # Save file if user entered a file name
-        if file_name != '':
-            with open(file_name, 'w') as output_file:
-                output_file.writelines(self.result_log.get(1.0, tk.END))
-
-    def data_bindings(self):
-        """
-        Data bindings to provide required input data to the data access object.
-        Currently the source data locations are solely files).
-
-        :return: void
-        """
-        # Provide required input data to the data access object (source data locations, here files)
-        self._model.dao.bind_data_source(cfg.TinkEntityType.UserEntity, self.entry_user_file.get())
-        self._model.dao.bind_data_source(cfg.TinkEntityType.AccountEntity, self.entry_acc_file.get())
-        self._model.dao.bind_data_source(cfg.TinkEntityType.TransactionEntity, self.entry_trx_file.get())
-
-    # --- Helpers
-    def put_result_log(self, text: str, clear=False, nl: int = 1, time=True, scroll=False):
+    def _put_result_log(self, text: str, clear=False, nl: int = 1, time=True, scroll=False):
         """
         Write to the output (in the ui log area).
 
-        :param text: the text to be displayed in the ui log area.
-        :param clear: flag indicating whether to clear the log before printing.
-        :param nl: number of newlines between the current text and the new text
-        :param time: flag indicating whether to show the time at the beginning of the line
-        :param scroll: flag indicating whether to scroll automatically with the text
+        :param text: The text to be displayed in the ui log area.
+        :param clear: Flag indicating whether to clear the log before printing.
+        :param nl: Number of newlines between the current text and the new text
+        :param time: Flag indicating whether to show the time at the beginning of the line
+        :param scroll: Flag indicating whether to scroll automatically with the text
 
-        :return: void
+        :return: Void
         """
         if clear:
-            self.clear_result_log()
+            self._clear_result_log()
 
         if time:
             date_time = utl.strdate(datetime.datetime.now()) + ': '
@@ -640,10 +376,186 @@ class TinkUI:
         if scroll:
             self.result_log.see(tk.END)
 
-    def clear_result_log(self):
+        self.result_log.update()
+
+    def _clear_result_log(self):
         """
         Clear the output (in the ui log area).
+        :return: Void
+        """
+        self.result_log.delete(1.0, tk.END)
+
+    def _run(self):
+        """
+        Main thread running the ui application in the main window.
 
         :return: void
         """
-        self.result_log.delete(1.0, tk.END)
+        self.window.mainloop()
+
+    # --- Event Handler
+
+    def _callback(self, code: str, event=None):
+        """
+        Generic action dispatcher that can be used for any kind of ui events.
+        :param code: Unique action code which should be the name of the button.
+        :return: Void.
+        """
+        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
+        logging.info(code)
+
+        config = cfg.TinkConfig.get_instance()
+
+        if not code:
+            return
+        # Checkbox Actions
+        elif code == 'cbtn_result_file':
+            config.result_file_flag = self.cbtn_result_file_val.get()
+        elif code == 'cbtn_delete':
+            config.delete_flag_flag = self.cbtn_delete_val.get()
+        elif code == 'cbtn_proxy':
+            config.proxy_flag = self.cbtn_proxy_val.get()
+        # Button Actions
+        elif code == 'btn_usr_file_in':
+            self.show_file_content(self.txt_usr_file_in.get())
+        elif code == 'btn_usr_file_out':
+            self.show_file_content(self.txt_usr_file_out.get())
+        elif code == 'btn_acc_file_in':
+            self.show_file_content(self.txt_acc_file_in.get())
+        elif code == 'btn_acc_file_out':
+            self.show_file_content(self.txt_acc_file_out.get())
+        elif code == 'btn_trx_file_in':
+            self.show_file_content(self.txt_trx_file_in.get())
+        elif code == 'btn_trx_file_out':
+            self.show_file_content(self.txt_trx_file_out.get())
+        elif code == 'btn_test':
+            self.call_model(action='API Health Checks',
+                            method=self._model.test_connectivity)
+        elif code == 'btn_activate_users':
+            self.call_model(action='Create/Activate Users',
+                            method=self._model.activate_users)
+        elif code == 'btn_delete_users':
+            self.call_model(action='Delete Users',
+                            method=self._model.delete_users)
+        elif code == 'btn_list_users':
+            self.call_model(action='Get/List Users',
+                            method=self._model.get_users)
+        elif code == 'btn_ingest_accounts':
+            self.call_model(action='Ingest Accounts',
+                            method=self._model.ingest_accounts)
+        elif code == 'btn_delete_accounts':
+            self.call_model(action='Delete Accounts',
+                            method=None)
+        elif code == 'btn_list_accounts':
+            self.call_model(action='Get/List Accounts',
+                            method=self._model.get_all_accounts)
+        elif code == 'btn_ingest_trx':
+            self.call_model(action='Ingest Transactions',
+                            method=None)
+        elif code == 'btn_delete_trx':
+            self.call_model(action='Delete Transactions',
+                            method=None)
+        elif code == 'btn_list_trx':
+            self.call_model(action='Get/List Transactions',
+                            method=None)
+        elif code == 'btn_process_all':
+            self.call_model_process_actions()
+        elif code == 'btn_list_categories':
+            # self.call_model(action='Get/List Categories',
+            #                 method=self._model.list_categories)
+            self._put_result_log(text='*** List categories ***',
+                                 clear=True,
+                                 time=False,
+                                 nl=2)
+            rl: model.TinkModelResultList = self._model.list_categories()
+            r = rl.first()
+            self._put_result_log(r.response.to_string_custom())
+
+        elif code == 'btn_save_logs':
+            utl.save_to_file(self.result_log.get(1.0, tk.END))
+        elif code == 'btn_clear_logs':
+            self._clear_result_log()
+
+    def _callback_option_button(self, event=None):
+        """
+        Event Handler for events raised by an OptionButton.
+        Hint: OptionButtons do slightly behave different to Buttons
+        and CheckButtons. This is why the above generic event handler
+        _callback cannot be used for these.
+
+        :param event: Will contain the value of the OptionButton.
+        :return: Void.
+        """
+        logging.debug(f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}')
+
+        for enum_val in cfg.MessageDetailLevel:
+            if enum_val.value == event:
+                cfg.TinkConfig.get_instance().message_detail_level = enum_val
+
+    def call_model(self, action: str, method, filters=None):
+        """
+        Generic method to call a method in the facade module model.
+        :param action: A text describing the action performed. The chosen
+        text will also be displayed on top of the ui result log.
+        :param method: Reference to the method model.* that should be invoked.
+        :param filters: dictionary with filters to be applied to the results
+        :return: Void.
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        if not method:
+            self._put_result_log(text=f'Action {action} is not yet implemented!',
+                                 clear=True,
+                                 time=False)
+            return
+
+        self._put_result_log(text=f'*** {action} ***',
+                             clear=True,
+                             time=False,
+                             nl=2)
+        logging.info(f'Action: {action} => Trying to dynamically invoke method {method}')
+        rl: model.TinkModelResultList = method()
+        filters = self._model.supported_action_filters(method)
+        self._put_result_log(rl.summary(filters=filters))
+
+    def call_model_process_actions(self):
+        """
+        Call all supported actions within the model facade.
+        :return: Void.
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        action = 'Process all actions in one pipeline'
+        self._put_result_log(text=f'*** {action} ***',
+                             clear=True,
+                             time=False,
+                             nl=2)
+
+        for action in self._model.process_actions:
+            method = action['method']
+            logging.info(f'Action: {action} => Trying to dynamically invoke method {method}')
+            rl: model.TinkModelResultList = method()
+            filters = self._model.supported_action_filters(method)
+            self._put_result_log(rl.summary(filters=filters), nl=2)
+
+    def show_file_content(self, filename):
+        """
+        Event Handler for the corresponding button cb_<method_name>
+
+        :return: void
+        """
+        self._put_result_log(text=f'*** File content {filename} ***', clear=True, time=False)
+
+        fh = utl.FileHandler()
+        try:
+            lst_data = fh.read_csv_file(filename=filename,
+                                        skip_header=False)
+            if data:
+                text = utl.list_to_string(lst_data)
+            else:
+                text = 'No data available'
+            self._put_result_log(text=text, time=False)
+        except Exception as e:
+            self._put_result_log(str(e))
