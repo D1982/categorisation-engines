@@ -117,6 +117,53 @@ class TinkDAO:
 
         return self.transactions
 
+    @property
+    def users(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        pass
+
+    @users.setter
+    def users(self):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        pass
+
+    @property
+    def accounts(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        pass
+
+    @accounts.setter
+    def accounts(self):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        pass
+
+    @property
+    def transactions(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        pass
+
+    @transactions.setter
+    def transactions(self):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        pass
 
 class TinkEntity(metaclass=abc.ABCMeta):
 
