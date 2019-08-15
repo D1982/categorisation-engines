@@ -185,41 +185,6 @@ class TinkModel:
 
         return result_list
 
-
-    def test_connectivity(self):
-        """
-        Test the API connectivity.
-
-        :return: TinkModelResultList wrapping TinkModelResult objects of all AP calls performed
-        """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        service = api.MonitoringService()
-
-        # Wrapper for the results
-        result_list = TinkModelResultList(result=None, action=msg, msg='Test API connectivity')
-
-        # 1. Call the ping service
-        response = service.ping()
-        if response.status_code == 200:
-            status = TinkModelResultStatus.Success
-        else:
-            logging.error(response.summary())
-            status = TinkModelResultStatus.Error
-        result_list.append(TinkModelResult(status, response, 'Ping'))
-
-        # 2. Call the health check service
-        response = service.health_check()
-        if response.status_code == 200:
-            status = TinkModelResultStatus.Success
-        else:
-            logging.error(response.summary())
-            status = TinkModelResultStatus.Error
-        result_list.append(TinkModelResult(status, response, 'Health check'))
-
-        return result_list
-
     def authorize_client(self, grant_type='client_credentials', scope='authorization:grant', ext_user_id=None):
         """
         Authorize the client (Tink customer account).
@@ -331,6 +296,40 @@ class TinkModel:
             result_status = TinkModelResultStatus.Error
 
         return TinkModelResultList(TinkModelResult(result_status, response, ''))
+
+    def test_connectivity(self):
+        """
+        Test the API connectivity.
+
+        :return: TinkModelResultList wrapping TinkModelResult objects of all AP calls performed
+        """
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        service = api.MonitoringService()
+
+        # Wrapper for the results
+        result_list = TinkModelResultList(result=None, action=msg, msg='Test API connectivity')
+
+        # 1. Call the ping service
+        response = service.ping()
+        if response.status_code == 200:
+            status = TinkModelResultStatus.Success
+        else:
+            logging.error(response.summary())
+            status = TinkModelResultStatus.Error
+        result_list.append(TinkModelResult(status, response, 'Ping'))
+
+        # 2. Call the health check service
+        response = service.health_check()
+        if response.status_code == 200:
+            status = TinkModelResultStatus.Success
+        else:
+            logging.error(response.summary())
+            status = TinkModelResultStatus.Error
+        result_list.append(TinkModelResult(status, response, 'Health check'))
+
+        return result_list
 
     def activate_user(self, ext_user_id, label, market, locale, client_access_token):
         """
