@@ -1112,7 +1112,7 @@ class TinkModelResultList:
             for result in self.results:
                 # TODO: Add flag has_payload to TinkAPIResponse indicating whether
                 #  it is relevant with regards to result data
-                if result.response.request.endpoint == cfg.API_URL_TINK + '/api/v1/user/':
+                if result.response.request.endpoint == cfg.API_URL_TINK + '/api/v1/user':
                     response: api.UserResponse = result.response
                     result_data.append(response.data)
 
