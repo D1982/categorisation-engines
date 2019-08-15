@@ -130,6 +130,8 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         self.content: bytes = b''
         self.text: str = ''
 
+        self._has_payload = False
+
         # Response JSON
         try:
             if response:
@@ -149,6 +151,22 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
         # Store the corresponding TinkAPIRequest and the requests.Response
         self.request: api.TinkAPIRequest = request
         self.response_orig: requests.Response = response
+
+    @property
+    def has_payload(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._has_payload
+
+    @has_payload.setter
+    def has_payload(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._has_payload = value
 
     def to_string(self):
         """
@@ -598,7 +616,7 @@ class UserService(TinkAPI):
         logging.info(msg)
 
         request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/user')
-        request._ext_user_id = ext_user_id
+        request.ext_user_id = ext_user_id
 
         request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
         request.headers.update({'Authorization': f'Bearer {access_token}'})
@@ -708,9 +726,8 @@ class UserResponse(TinkAPIResponse):
         except AttributeError as e:
             raise e
 
-        # Properties
-        self.ext_user_id = None
-        self.user_id = None
+        self.has_payload = True
+        self.data.update({'userExternalId': str(self.request.ext_user_id)})
 
         # Save fields of interest referring to the official API documentation
         if self.http_status(cfg.HTTPStatusCode.Code2xx) and isinstance(self.json, dict):
