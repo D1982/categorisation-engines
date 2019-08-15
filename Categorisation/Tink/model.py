@@ -101,15 +101,17 @@ class TinkModel:
 
         return None
 
-    def read_user_data(self):
+    def get_input_data(self, entity_type: cfg.EntityType):
         """
-        Read user test data from the DAO.
-        :return: user data as an instance of <class 'list'>: [OrderedDict()]
+        Retrieves data for a valid entity from the DAO.
+        :return: The requested data e.g. as an instance of <class 'list'>: [OrderedDict()]
+        in case of a file input source type selected.
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        return self._dao.read_users(locator=cfg.TinkConfig.get_instance().user_source)
+        d = self._dao.get_input_data(entity_type, cfg.InputSourceType.File)
+        return d
 
     def read_account_data(self):
         """
@@ -119,7 +121,8 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        return self._dao.read_accounts(locator=cfg.TinkConfig.get_instance().account_source)
+        d = self._dao.get_input_data(cfg.EntityType.Account, cfg.InputSourceType.File)
+        return d
 
     def read_transaction_data(self):
         """
@@ -129,7 +132,8 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        return self._dao.read_transactions(locator=cfg.TinkConfig.get_instance().transaction_source)
+        d = self._dao.get_input_data(cfg.EntityType.Transaction, cfg.InputSourceType.File)
+        return d
 
     def _oauth2_client_credentials_flow(self, grant_type, client_scope, user_scope, ext_user_id=None):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
@@ -419,9 +423,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # Get user data
-        locator = cfg.TinkConfig.get_instance().user_source
-        users = self._dao.read_users(locator)
+        users = self.get_input_data(cfg.EntityType.User)
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Activate users')
@@ -514,12 +516,10 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # Get user data
-        locator = cfg.TinkConfig.get_instance().user_source
-        users = self._dao.read_users(locator)
-
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Delete users')
+
+        users = self.get_input_data(cfg.EntityType.User)
 
         # Delete existing users
         key = 'userExternalId'
@@ -591,12 +591,10 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # Get user data
-        locator = cfg.TinkConfig.get_instance().user_source
-        users = self._dao.read_users(locator)
-
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get users')
+
+        users = self.get_input_data(cfg.EntityType.User)
 
         # Delete existing users
         key = 'userExternalId'
@@ -636,7 +634,7 @@ class TinkModel:
 
     def ingest_accounts(self):
         """
-        Initiates the ingestion of accounts in the Tink platform.
+        Initiates the ingestion of accounts per user into the Tink platform.
 
         :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
         containing instances of api.AccountIngestionResponse with a status code:
@@ -664,14 +662,11 @@ class TinkModel:
         result_list.append(rl)
 
         # --- Ingest accounts per user
-        locator = cfg.TinkConfig.get_instance().user_source
-        users = self._dao.read_users(locator=locator)
+        users = self.get_input_data(cfg.EntityType.User)
+        accounts = self.get_input_data(cfg.EntityType.Account)
 
-        # Get account data for ALL users from data source
-        locator = cfg.TinkConfig.get_instance().account_source
-        acc_data = self._dao.read_accounts(locator=locator)
         try:
-            acc_entities = data.TinkAccountList(acc_data)
+            acc_entities = data.TinkAccountList(accounts)
         except NotImplementedError as e1:
             logging.debug(e1)
             raise e1
@@ -726,12 +721,10 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        # Get user data
-        locator = cfg.TinkConfig.get_instance().user_source
-        users = self._dao.read_users(locator=locator)
-
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get all accounts')
+
+        users = self.get_input_data(cfg.EntityType.User)
 
         # Delete existing users
         key = 'userExternalId'
