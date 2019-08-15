@@ -52,6 +52,11 @@ class TinkDAO:
         self._accounts_input = collections.OrderedDict()
         self._transactions_input = collections.OrderedDict()
 
+        # Data collections
+        self._users: TinkEntityList = None
+        self._accounts: TinkEntityList = None
+        self._transactions: TinkEntityList = None
+
         # Instance of a file handler utility
         self.file_handler = util.FileHandler()
 
@@ -105,7 +110,7 @@ class TinkDAO:
         pass
 
     @users.setter
-    def users(self):
+    def users(self, value):
         """
         Set the current value of the corresponding property _<method_name>.
         :param value: The new value of the corresponding property _<method_name>.
@@ -121,7 +126,7 @@ class TinkDAO:
         pass
 
     @accounts.setter
-    def accounts(self):
+    def accounts(self, value):
         """
         Set the current value of the corresponding property _<method_name>.
         :param value: The new value of the corresponding property _<method_name>.
@@ -137,110 +142,171 @@ class TinkDAO:
         pass
 
     @transactions.setter
-    def transactions(self):
+    def transactions(self, value):
         """
         Set the current value of the corresponding property _<method_name>.
         :param value: The new value of the corresponding property _<method_name>.
         """
         pass
 
-class TinkEntity(metaclass=abc.ABCMeta):
+
+class TinkEntity:
 
     """
-    Generic object representation of a Tink data structure.
-
-    This class can be used to inherit from in sub-classes.
+    Object representation of a Tink entity data structure.
     """
 
-    def __init__(self, fields: tuple, data: collections.OrderedDict = None):
+    def __init__(self, entity_type: cfg.EntityType, data: collections.OrderedDict = None):
         """
         Initialization.
-        :param fields: The expected fields provided as keys in data.
-        :param data: the raw data as an OrderedDict.
+        :param entity_type: The entity type - a value of the Enum config.EntityType.
+        :param data: The raw data as an OrderedDict.
         """
         if not isinstance(data, collections.OrderedDict):
-            raise ex.ParameterError(f'Expected a parameter of type OrderedDict')
-        else:
-            self.fields = fields
-            self.data = data
+            raise ex.ParameterError(f'Expected a parameter "data" of type OrderedDict')
+
+        if entity_type == cfg.EntityType.Log:
+            fields = ''
+        elif entity_type == cfg.EntityType.User:
+            fields = TinkDAO.fields_user_input
+        elif entity_type == cfg.EntityType.Account:
+            fields = TinkDAO.fields_acc_input
+        elif entity_type == cfg.EntityType.Transaction:
+            fields = TinkDAO.fields_trx_input
+
+        self._entity_type: cfg.EntityType = entity_type
+        self._data: collections.OrderedDict = data
+        self._fields: tuple = fields
 
         # Make sure that all expected fields are provided within data
-        for f in fields:
+        for f in self._fields:
             if f not in data:
                 msg = 'Field {f} expected but not found in data {d}'.format(f=f, d=data)
                 raise AttributeError(msg)
 
-    @abc.abstractmethod
+    @property
+    def type(self):
+        """
+        Get the current value of the corresponding property _entity_type.
+        :return: The current value of the corresponding property _entity_type.
+        """
+        return self._entity_type
+
+    @property
+    def data(self):
+        """
+        Get the current value of the corresponding property _data.
+        :return: The current value of the corresponding property _data.
+        """
+        return self._data
+
     def get_data(self):
         """
         This method returns the data belonging to a single TinkEntity instance.
-
-        :return: the data of a single entity wrapped within an instance of this class.
+        :return: The data of a single entity wrapped within an instance of this class.
         """
-        raise NotImplementedError()
+        data = collections.OrderedDict()
+        fields_unmapped_str = ''
+
+        if self._entity_type == cfg.EntityType.User:
+            pass
+        elif self._entity_type == cfg.EntityType.Account:
+            for field in TinkDAO.fields_acc_input:
+                if field in TinkDAO.fields_acc_map:
+                    # Field to be mapped against the API
+                    if field == 'flags':
+                        # field "flags" is specified as an array
+                        data[field] = list()
+                        data[field].append(self.data[field])
+                    elif field == 'closed':
+                        data[field] = ''
+                    elif field == 'payload':
+                        data[field] = ''
+                    else:
+                        if fields_unmapped_str == '':
+                            fields_unmapped_str += f'{field}'
+                        else:
+                            fields_unmapped_str += f', {field}'
+                elif field in TinkDAO.fields_acc_api:
+                    # Field to be provided to the API as is
+                    data[field] = self.data[field]
+        elif self._entity_type == cfg.EntityType.Account:
+            pass
+
+        if fields_unmapped_str != '':
+            raise RuntimeError(f'Unmapped fields in: {str(type(self))} {fields_unmapped_str}')
+
+        return data
 
 
-class TinkEntityList(metaclass=abc.ABCMeta):
+class TinkEntityList:
 
     """
-    Generic object representation of a Tink data structure list.
-
-    This class can be used to inherit from in sub-classes.
+    Object representation of a Tink entity data structure list.
     """
 
-    def __init__(self, lst: list = list()):
+    def __init__(self, entity_type: cfg.EntityType, data_list: list = list()):
         """
         Converts a standard list into a list of TinkEntity object references that
         can be used as an input for the constructor of the class TinkEntityList.
-
-        :param lst:  A list of TinkEntity object references or any other typing.
-        :return: a list of TinkEntity object references wrapping the input data.
-        :raise: AttributeError if one of the elements in parameter lst does not conform
+        :param entity_type: The entity type - a value of the Enum config.EntityType.
+        :param data_list:  A list of TinkEntity object references or any other typing.
+        :return: A list of TinkEntity object references wrapping the input data.
+        :raise: AttributeError if 1) data_list is not provideed as the expected type or
+        2) one of the elements in parameter lst does not conform
         with the the field requirements when trying to create an entity object from it.
-        :raise: NotImplementedError if the type of this instance does not support the
-        creation of an entity object from it - see TinkEntity.__init__()
-        """
-        self.entities = list()
 
-        if len(lst) == 0:
+        """
+        self._entities: TinkEntityList = list()
+        self._entity_type: cfg.EntityType = entity_type
+
+        if len(data_list) == 0:
             raise AttributeError(f'Expected a list containing elements in parameter lst')
 
-        for e in lst:
-            if isinstance(self, TinkAccountList):
-                if isinstance(e, TinkAccount):
-                    self.entities.append(e)
-                else:
-                    try:
-                        entity = TinkAccount(fields=TinkDAO.fields_acc_input,
-                                             data=e)
-                        self.entities.append(entity)
-                    except AttributeError as ex_att:
-                        raise ex_att
-                # TODO: Add transaction scope here
-            else:
-                raise NotImplementedError(f"Type of {str(type(self))} not supported")
+        for data_item in data_list:
+            try:
+                entity = TinkEntity(entity_type=self._entity_type, data=data_item)
+                self._entities.append(entity)
+            except AttributeError as ex_att:
+                raise ex_att
 
-    @abc.abstractmethod
+    @property
+    def type(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._entity_type
+
     def get_data(self, ext_user_id: str):
         """
         This method returns the contained TinkEntity data.
-
-        :param ext_user_id: external user reference (this is NOT the Tink internal id).
+        :param ext_user_id: The external user reference (this is NOT the Tink internal id).
         If provided then the data returned will be restricted to the records that belong
         to the user ext_user_id.
 
-        :return: the wrapped data as a standard list[OrderedDict]
+        :return: The wrapped data as a standard list[OrderedDict]
         this class.
-
-        :raise NotImplementedError if this method was not implemented in a sub-class.
         """
-        raise NotImplementedError()
+        lst = list()
+
+        # Add all the data to the result list
+        if not ext_user_id:
+            return self.entities
+
+        # Add only data to the result list if it belongs to the user ext_user_id
+        if self._entity_type in (cfg.EntityType.User, cfg.EntityType.Account):
+            for entity in self._entities:
+                if entity.data['userExternalId'] == ext_user_id:
+                    lst.append(entity.get_data())
+
+        return lst
 
     def contains_data(self, ext_user_id: str):
         """
         This method checks if there is data available for a certain user.
 
-        :param ext_user_id: external user reference (this is NOT the Tink internal id).
+        :param ext_user_id: The external user reference (this is NOT the Tink internal id).
         If provided then the data returned will be restricted to the records that belong
         to the user ext_user_id.
 
@@ -250,98 +316,3 @@ class TinkEntityList(metaclass=abc.ABCMeta):
             return True
         else:
             return False
-
-@TinkEntity.register
-class TinkAccount(TinkEntity):
-
-    """
-    An object representation of a Tink account data structure.
-    This object can be used in order to create lists of accounts.
-    """
-
-    def __init__(self, fields: tuple, data: collections.OrderedDict = None):
-        """
-        Initialization
-        :param fields: The expected fields provided as keys in data.
-        :param data: the raw data as an OrderedDict.
-        """
-
-        super().__init__(fields, data)
-
-    def get_data(self):
-        """
-        This method returns the data belonging to a single TinkEntity instance.
-
-        :return: the data of a single entity wrapped within an instance of this class.
-        """
-        rdata = collections.OrderedDict()
-
-        fields_unmapped_str = ''
-
-        for field in TinkDAO.fields_acc_input:
-
-            if field in TinkDAO.fields_acc_map:
-                # Field to be mapped against the API
-                if field == 'flags':
-                    # field "flags" is specified as an array
-                    rdata[field] = list()
-                    rdata[field].append(self.data[field])
-                elif field == 'closed':
-                    rdata[field] = ''
-                elif field == 'payload':
-                    rdata[field] = ''
-                else:
-                    if fields_unmapped_str == '':
-                        fields_unmapped_str += f'{field}'
-                    else:
-                        fields_unmapped_str += f', {field}'
-            elif field in TinkDAO.fields_acc_api:
-                # Field to be provided to the API as is
-                rdata[field] = self.data[field]
-
-        if fields_unmapped_str != '':
-            raise RuntimeError(f'Unmapped fields in: {str(type(self))} {fields_unmapped_str}')
-
-        return rdata
-
-
-@TinkEntityList.register
-class TinkAccountList(TinkEntityList):
-    """
-    Object representation of a Tink account data structure.
-
-    This object can be used in order to create lists of accounts.
-    """
-
-    def __init__(self, lst: list = None):
-        """
-        Initialization.
-
-        :param lst: a list of TinkEntity object references.
-        """
-        super().__init__(lst)
-
-    def get_data(self, ext_user_id: str = None):
-        """
-        This method returns the contained TinkEntity data.
-
-        :param ext_user_id: external user reference (this is NOT the Tink internal id).
-        If provided then the data returned will be restricted to the records that belong
-        to the user ext_user_id.
-
-        :return: the wrapped data as a standard list[OrderedDict]
-        this class.
-        """
-        lst = list()
-
-        if ext_user_id:
-            # Add only data to the result list if it belongs to the user ext_user_id
-            for entity in self.entities:
-                if entity.data['userExternalId'] == ext_user_id:
-                    lst.append(entity.get_data())
-        else:
-            # Add all the data to the result list
-            lst = self.entities
-
-        return lst
-

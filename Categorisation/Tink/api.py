@@ -725,7 +725,7 @@ class AccountService(TinkAPI):
         """
         super().__init__(url_root)
 
-    def ingest_accounts(self, ext_user_id, accounts: data.TinkAccountList, client_access_token):
+    def ingest_accounts(self, ext_user_id, accounts: data.TinkEntityList, client_access_token):
         """
         Call the Connector API endpoint users/{{external-user-id}}/accounts
 
