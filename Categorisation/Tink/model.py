@@ -666,7 +666,8 @@ class TinkModel:
         accounts = self.get_input_data(cfg.EntityType.Account)
 
         try:
-            acc_entities = data.TinkAccountList(accounts)
+            acc_entities = data.TinkEntityList(entity_type=cfg.EntityType.Account,
+                                               data_list=accounts)
         except NotImplementedError as e1:
             logging.debug(e1)
             raise e1
