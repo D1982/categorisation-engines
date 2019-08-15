@@ -47,75 +47,54 @@ class TinkDAO:
 
     def __init__(self):
         """ Initialization. """
-        # Data collections
-        self.users = collections.OrderedDict()
-        self.accounts = collections.OrderedDict()
-        self.transactions = collections.OrderedDict()
+        # Input data collections
+        self._users_input = collections.OrderedDict()
+        self._accounts_input = collections.OrderedDict()
+        self._transactions_input = collections.OrderedDict()
 
-        # File handler utility
+        # Instance of a file handler utility
         self.file_handler = util.FileHandler()
 
-    def read_users(self, locator, force_read=False):
+    def get_input_data(self, entity_type: cfg.EntityType,
+                       source_type: cfg.InputSourceType,
+                       force_read=False):
         """
         Read user data from a data access object (DAO).
-        :param locator: The locator of the source from which the data is being read.
+        :param entity_type: The entity type of interest.
+        :param source_type: Input source type (kind of input data for the DAO).
         :param force_read: Force to read again even if there is already data.
         :return: The user data as an instance of <class 'list'>: [OrderedDict()]
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
-        logging.info(f'locator: {locator}')
+        logging.info(f'source_type: {source_type.value}')
 
-        if not self.users or force_read is True:
+        if source_type != cfg.InputSourceType.File:
+            msg = f'Input source types other than {cfg.InputSourceType.File} are not yet supported'
+            raise NotImplementedError(msg)
+
+        if entity_type == cfg.EntityType.Log:
+            locator = cfg.TINK_LOGFILE
+        elif entity_type == cfg.EntityType.User:
+            data = self._users_input
+            locator = cfg.TinkConfig.get_instance().user_source
+            fields = TinkDAO.fields_user_input
+        elif entity_type == cfg.EntityType.Account:
+            data = self._accounts_input
+            locator = cfg.TinkConfig.get_instance().account_source
+            fields = TinkDAO.fields_acc_input
+        elif entity_type == cfg.EntityType.Transaction:
+            data = self._transactions_input
+            locator = cfg.TinkConfig.get_instance().transaction_source
+            fields = TinkDAO.fields_trx_input
+
+        if not data or force_read is True:
             try:
-                data = self.file_handler.read_csv_file(filename=locator,
-                                                       fieldnames=TinkDAO.fields_user_input)
+                data = self.file_handler.read_csv_file(filename=locator, fieldnames=fields)
             except Exception as e:
                 raise e
-            self.users = data  # Returns a List<OrderedDict>
 
-        return self.users
-
-    def read_accounts(self, locator, force_read=False):
-        """
-        Read account data from a data access object (DAO).
-        :param locator: The locator of the source from which the data is being read.
-        :param force_read: Force to read again even if there is already data.
-        :return: account data as an instance of <class 'list'>: [OrderedDict()]
-        """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-        logging.info(f'locator: {locator}')
-
-        if not self.accounts or force_read is True:
-            try:
-                data = self.file_handler.read_csv_file(filename=locator,
-                                                       fieldnames=TinkDAO.fields_acc_input)
-            except Exception as e:
-                raise e
-            self.accounts = data  # Returns a List<OrderedDict>
-
-        return self.accounts
-
-    def read_transactions(self, locator, force_read=False):
-        """
-        Read transaction data from a data access object (DAO).
-        :param locator: The locator of the source from which the data is being read.
-        :param force_read: Force to read again even if there is already data.
-        :return: transaction data as an instance of <class 'list'>: [OrderedDict()]
-        """
-        logging.debug('{c}.{m}'.format(c=self.__class__.__name__, m=sys._getframe().f_code.co_name))
-        logging.info(f'locator: {locator}')
-
-        if not self.transactions or force_read is True:
-            try:
-                data = self.file_handler.read_csv_file(filename=locator,
-                                                       fieldnames=TinkDAO.fields_trx_input)
-            except Exception as e:
-                raise e
-            self.transactions = data  # Returns a List<OrderedDict>
-
-        return self.transactions
+        return data
 
     @property
     def users(self):
