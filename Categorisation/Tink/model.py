@@ -54,7 +54,7 @@ class TinkModel:
         # Define supported actions
         a.append({'method': self.test_connectivity, 'filters': None})
         a.append({'method': self.delete_users, 'filters': {'endpoint': '/user/delete'}})
-        a.append({'method': self.activate_users, 'filters': {'endpoint': '/user/create'}})
+        a.append({'method': self.activate_users, 'filters': {'endpoint': '/user/'}})
         a.append({'method': self.get_users, 'filters': {'endpoint': '/user'}})
         a.append({'method': self.ingest_accounts, 'filters': {'endpoint': '/accounts'}})
         a.append({'method': self.get_all_accounts, 'filters': {'endpoint': '/accounts/list'}})
@@ -435,6 +435,14 @@ class TinkModel:
                 locale = e['locale']
 
                 # Create the user
+                try:
+                    # Delete user if exists
+                    if cfg.TinkConfig.get_instance().delete_flag:
+                        rl = self.delete_user(ext_user_id=ext_user_id)
+                        result_list.append(rl)
+                except ex.UserNotExistingError as e:
+                    result_list.append(e.result_list)
+
                 rl = self.activate_user(ext_user_id=ext_user_id,
                                         label=label,
                                         market=market,
