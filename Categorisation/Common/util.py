@@ -26,7 +26,7 @@ class FileHandler:
 
         :param filename: the full qualified filename (path + file).
         :return: a python ``Object`` (``dict``) representing the json read from the file.
-        :raises: Any exception that could potentially occur will be raised.
+        :raise Exception: Any exception that could potentially occur will be raised.
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
