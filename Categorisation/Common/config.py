@@ -28,6 +28,28 @@ class HTTPStatusCode(Enum):
     Code5xx = '5xx = Codes between >= 500 and <= 599'
 
 
+class EntityType(Enum):
+    """
+    Enumeration of valid entity types relevant for the application.
+    These can be used to transfer the appropriate data over the DAO.
+
+    """
+    User = 'Tink User Entity'
+    Account = 'Tink Account Entity'
+    Transaction = 'Tink Transaction Entity'
+    Log = 'The applciation logs'
+
+
+class InputSourceType(Enum):
+    """
+    Enumeration of valid input source types.
+    These can be used to define kind of input data for the DAO.
+    """
+    File = 'Flat File Input (CSV)'
+    Database = 'Database Input'
+    JSON = 'JSON File Input'
+
+
 # Constants
 SUPPORTED_FILE_TYPES =  [('Text files', '*.txt'), ('CSV files', '*.csv')]
 
