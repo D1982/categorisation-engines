@@ -140,9 +140,9 @@ class TinkModel:
                                           msg='OAuth client credentials access flow')
 
         msg = 'Authorize client...'
-        rl = self.authorize_client(grant_type='client_credentials',
-                                   scope=client_scope,
-                                   ext_user_id=ext_user_id)
+        rl = self._authorize_client(grant_type='client_credentials',
+                                    scope=client_scope,
+                                    ext_user_id=ext_user_id)
         result_list.append(rl)
 
         if rl.last().status == TinkModelResultStatus.Success:
@@ -156,9 +156,9 @@ class TinkModel:
 
         msg = 'Grant access and get the access code...'
         try:
-            rl = self.grant_user_access(client_access_token=client_access_token,
-                                        ext_user_id=ext_user_id,
-                                        scope=user_scope)
+            rl = self._grant_user_access(client_access_token=client_access_token,
+                                         ext_user_id=ext_user_id,
+                                         scope=user_scope)
             result_list.append(rl)
         except ex.UserNotExistingError as e:
             raise e
@@ -172,7 +172,7 @@ class TinkModel:
             logging.error(response.summary())
 
         msg = 'Get the OAuth access token to delete a user...'
-        rl = self.get_oauth_access_token(code=code, grant_type='authorization_code')
+        rl = self._get_oauth2_access_token(code=code, grant_type='authorization_code')
         result_list.append(rl)
 
         if rl.last().status == TinkModelResultStatus.Success:
@@ -185,7 +185,7 @@ class TinkModel:
 
         return result_list
 
-    def authorize_client(self, grant_type='client_credentials', scope='authorization:grant', ext_user_id=None):
+    def _authorize_client(self, grant_type='client_credentials', scope='authorization:grant', ext_user_id=None):
         """
         Authorize the client (Tink customer account).
 
@@ -223,7 +223,7 @@ class TinkModel:
 
         return TinkModelResultList(TinkModelResult(result_status, response, ''))
 
-    def grant_user_access(self, client_access_token, ext_user_id, scope):
+    def _grant_user_access(self, client_access_token, ext_user_id, scope):
         """
         Grant an access code to perform an action that was previously authorized.
 
@@ -267,7 +267,7 @@ class TinkModel:
 
         return TinkModelResultList(TinkModelResult(result_status, response, ''))
 
-    def get_oauth_access_token(self, code, grant_type):
+    def _get_oauth2_access_token(self, code, grant_type):
         """
         Get the OAuth access token for the user to perform an action that was previously authorized.
 
@@ -356,7 +356,7 @@ class TinkModel:
         # Make sure that there is a valid client_access_token available
         if not client_access_token:
             # --- Authorize client
-            rl = self.authorize_client(scope='authorization:grant,user:create')
+            rl = self._authorize_client(scope='authorization:grant,user:create')
             response: api.OAuth2AuthenticationTokenResponse = rl.first().response
 
             if response.http_status(cfg.HTTPStatusCode.Code2xx):
@@ -645,7 +645,7 @@ class TinkModel:
         result_list = TinkModelResultList(result=None, action=msg, msg='Ingest accounts')
 
         # --- Authorize client
-        rl = self.authorize_client(scope='authorization:grant,accounts:write')
+        rl = self._authorize_client(scope='authorization:grant,accounts:write')
         response: api.OAuth2AuthenticationTokenResponse = rl.last().response
 
         if rl.status() == TinkModelResultStatus.Success:
