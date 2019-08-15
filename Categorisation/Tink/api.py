@@ -4,6 +4,7 @@ from json import JSONDecodeError
 import Categorisation.Common.config as cfg
 import Categorisation.Common.util as utl
 import Categorisation.Common.secret as secret
+
 import Categorisation.Tink.api as api
 import Categorisation.Tink.data as data
 
@@ -56,6 +57,23 @@ class TinkAPIRequest(metaclass=abc.ABCMeta):
         self.endpoint: str = endpoint
         self.headers: collections.OrderedDict = collections.OrderedDict()
         self.data: collections.OrderedDict = collections.OrderedDict()
+        self._ext_user_id = None
+
+    @property
+    def ext_user_id(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._ext_user_id
+
+    @ext_user_id.setter
+    def ext_user_id(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._ext_user_id = value
 
     def log(self):
         logging.debug(f'{self.method} {self.endpoint}')
@@ -94,7 +112,14 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
 
         :param request: corresponding TinkAPIRequest for that TinkAPIResponse
         :param response: an instance of the class requests.Response
+
+        :raise AttributeError: If one of the parameters is not of the expected type.
         """
+
+        if not isinstance(request, TinkAPIRequest):
+            msg = f'Expected type of parameter "request" is {type(api.TinkAPIRequest)} not {type(request)}'
+            raise AttributeError(msg)
+
         # Data to be populated by sub-classes
         self.names: tuple
         self.data: collections.OrderedDict = collections.OrderedDict()
@@ -156,7 +181,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             # If there is no custom implementation available use the standard formatting
             if self.json and isinstance(self.json, dict):
                 for k, v in self.json.items():
-                    text += 'JSON > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH] + os.linesep
+                    text += 'JSON -> ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH] + os.linesep
 
             if self.json and isinstance(self.json, list):
                 for e in self.json:
@@ -167,7 +192,7 @@ class TinkAPIResponse(metaclass=abc.ABCMeta):
             if self.data:
                 for k, v in self.data.items():
                     if k not in self.json:
-                        text += 'Data > ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
+                        text += 'DATA -> ' + str(k) + ': ' + str(v)[0:cfg.UI_STRING_MAX_WITH]
 
             return str(text)
 
@@ -309,7 +334,7 @@ class MonitoringService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/monitoring/ping')
+        request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/monitoring/ping')
         response = requests.get(url=request.endpoint)
 
         return MonitoringResponse(request, response)
@@ -323,7 +348,7 @@ class MonitoringService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/monitoring/healthy')
+        request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/monitoring/healthy')
         response = requests.get(url=request.endpoint)
 
         return MonitoringResponse(request, response)
@@ -415,7 +440,7 @@ class CategoryService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        request = TinkAPIRequest(method='GET', endpoint=self.url_root+'/api/v1/categories')
+        request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/categories')
         response = requests.get(url=request.endpoint)
 
         return CategoryResponse(request, response)
@@ -496,7 +521,7 @@ class UserService(TinkAPI):
         logging.info(msg)
 
         # --- Request
-        request = TinkAPIRequest(method='POST', endpoint=self.url_root+'/api/v1/user/create')
+        request = TinkAPIRequest(method='POST', endpoint=self.url_root + '/api/v1/user/create')
         # --- Header
         request.headers.update({'Authorization': f'Bearer {client_access_token}'})
         request.headers.update({'Content-Type': 'application/json'})
@@ -551,7 +576,7 @@ class UserService(TinkAPI):
 
         return UserDeleteResponse(request, response)
 
-    def get_user(self, access_token):
+    def get_user(self, ext_user_id, access_token):
         """
         Call the API endpoint /api/v1/user
 
@@ -564,7 +589,7 @@ class UserService(TinkAPI):
         2. code = grant_user_access(client_access_token, ext_user_id, scope)
         => ext_user_id is the user for which the information is requested.
         3. access_token = get_oauth_access_token(code, grant_type)
-
+        :param ext_user_id: External user reference (this is NOT the Tink internal id).
         :param access_token: The OAuth2 user access token gathered via the endpoint
         /api/v1/oauth/token which can be called using OAuthService.grant_user_access(...)
         :return: A response wrapper object (instance of api.UserResponse)
@@ -573,6 +598,7 @@ class UserService(TinkAPI):
         logging.info(msg)
 
         request = TinkAPIRequest(method='GET', endpoint=self.url_root + '/api/v1/user')
+        request._ext_user_id = ext_user_id
 
         request.headers.update({'X-Tink-OAuth-Client-ID': secret.TINK_CLIENT_ID})
         request.headers.update({'Authorization': f'Bearer {access_token}'})
@@ -673,44 +699,54 @@ class UserResponse(TinkAPIResponse):
     def __init__(self, request, response):
         """
         Initialization.
-        """
-        super().__init__(request, response)
 
-        # Custom attributes relevant for this response
+        :param request: Request to the API endpoint - an instance of TinkAPIRequest.
+        :param request: Request to the API endpoint - an instance of requests.Response
+        """
+        try:
+            super().__init__(request, response)
+        except AttributeError as e:
+            raise e
+
+        # Properties
+        self.ext_user_id = None
         self.user_id = None
 
-        # Define fields of interest referring to the official API documentation
-        self.names = {'created', 'id', 'errorMessage', 'errorCode'}
-
         # Save fields of interest referring to the official API documentation
-        if isinstance(response, requests.Response) and response.status_code == 204:
-            if isinstance(self.json, dict):
-                self.data = {key: value for key, value in self.json.items() if key in self.names}
-                if 'user_id' in self.data:
-                    self.user_id = self.data['user_id']
+        if self.http_status(cfg.HTTPStatusCode.Code2xx) and isinstance(self.json, dict):
+            for k, v in self.json.items():
+                if k == 'errorMessage' or k == 'errorCode':
+                    self.data.update({k: v})
+                elif k == 'created':
+                    d = utl.strdate(datetime.fromtimestamp(v/1000))
+                    self.data.update({k: d})
+                elif k == 'id':
+                    self.user_id = v
+                    self.data.update({k: v})
+                elif k == 'profile':
+                    profile = v
+                    if isinstance(profile, dict):
+                        field = 'currency'
+                        if field in profile:
+                            self.data.update({f'{k}:{field}': v[field]})
+                        field = 'locale'
+                        if field in profile:
+                            self.data.update({f'{k}:{field}': v[field]})
+                        field = 'market'
+                        if field in profile:
+                            self.data.update({f'{k}:{field}': v[field]})
+                        field = 'timeZone'
+                        if field in profile:
+                            self.data.update({f'{k}:{field}': v[field]})
 
     def to_string_custom(self):
-
         """
-        Implementation of the abstract method of the class api.TinkAPIResponse
-
+        Implementation of the abstract method of the class api.TinkAPIResponse.
         Generic extended string representation of a TinkAPIResponse instance.
-
-        :return: a formatted, human readable string representation of the data
-        within an instance of this class
+        :return: A formatted, human readable string representation of the data
+        within an instance of this class.
         """
-        text = self.to_string() + os.linesep
-
-        if self.json and isinstance(self.json, list):
-            for e in self.json:
-                if isinstance(e, dict):
-                    for k, v in e.items():
-                        if k in self.names:
-                            text += str(k) + ':' + str(v)[0:cfg.UI_STRING_MAX_WITH] + ', '
-        else:
-            text += self.to_string_formatted()
-
-        return str(text)
+        raise NotImplementedError
 
 
 class AccountService(TinkAPI):
@@ -741,7 +777,7 @@ class AccountService(TinkAPI):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        endpoint = self.url_root+f'/users/{ext_user_id}/accounts'
+        endpoint = self.url_root + f'/users/{ext_user_id}/accounts'
         request = TinkAPIRequest(method='POST', endpoint=endpoint)
 
         request.headers.update({'Authorization': f'Bearer {client_access_token}'})
@@ -852,14 +888,11 @@ class AccountListResponse(TinkAPIResponse):
                     self.account_number = self.data['accountNumber']
 
     def to_string_custom(self):
-
         """
-        Implementation of the abstract method of the class api.TinkAPIResponse
-
+        Implementation of the abstract method of the class api.TinkAPIResponse.
         Generic extended string representation of a TinkAPIResponse instance.
-
-        :return: a formatted, human readable string representation of the data
-        within an instance of this class
+        :return: A formatted, human readable string representation of the data
+        within an instance of this class.
         """
         text = self.to_string() + os.linesep
 

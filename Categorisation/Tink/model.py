@@ -471,7 +471,7 @@ class TinkModel:
         containing an instance of api.UserDeleteResponse with a unique identifier of
         the user deleted {USER_ID}.
 
-        :raise: ExUserNotExisting in case the user to be deleted does not exist
+        :raise ExUserNotExisting: in case the user to be deleted does not exist
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
@@ -546,7 +546,7 @@ class TinkModel:
         :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
         containing an instance of api.UserDeleteResponse with a unique identifier of
         the user deleted {USER_ID}.
-        :raise: ExUserNotExisting in case the user to be deleted does not exist
+        :raise ExUserNotExisting: in case the user to be deleted does not exist
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
@@ -567,7 +567,8 @@ class TinkModel:
 
         msg = f'Get user ext_user_id:{ext_user_id}'
         service = api.UserService()
-        response: api.UserResponse = service.get_user(access_token=self._access_token)
+        response: api.UserResponse = service.get_user(ext_user_id = ext_user_id,
+                                                      access_token=self._access_token)
 
         if response.http_status(cfg.HTTPStatusCode.Code2xx):
             result_status = TinkModelResultStatus.Success
@@ -610,14 +611,18 @@ class TinkModel:
                     except ex.UserNotExistingError as e:
                         result_list.append(e.result_list)
 
+        # Write results into a file
+        if cfg.TinkConfig.get_instance().result_file_flag:
+            payload = result_list.payload(cfg.EntityType.User)
+            # self._dao.write_result_data(payload)
+
         return result_list
 
     def user_exists(self, ext_user_id):
         """
         Checks if a user does already exist in the Tink platform.
-        :param ext_user_id: external user reference (this is NOT the Tink internal id)
-
-        :return: Boolean - True if the user exists, otherwise False
+        :param ext_user_id: External user reference (this is NOT the Tink internal id).
+        :return: Boolean - True if the user exists, otherwise False.
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
@@ -752,7 +757,7 @@ class TinkModel:
         :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
         containing an instance of api.AccountListResponse with a list of
         the user's accounts.
-        :raise: ExUserNotExisting in case the user to be deleted does not exist
+        :raise ExUserNotExisting: in case the user to be deleted does not exist
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.debug(msg)
@@ -1092,6 +1097,26 @@ class TinkModelResultList:
 
         return text
 
+    def payload(self, entity_type: cfg.EntityType = None):
+        """
+        Get the payload (data) out of all contained result items.
+        The main purpose of this method is to provide an easy to use interface in order
+        to retrieve the data received from an API endpoint in order to further process
+        the data.
+        :param entity_type: The entity type of interest.
+        :param filters: dictionary with filters to be applied to the results
+        :return: Union of all responses wrapped into the result items as formatted text.
+        """
+        result_data = list()
+        if entity_type == cfg.EntityType.User:
+            for result in self.results:
+                # TODO: Add flag has_payload to TinkAPIResponse indicating whether
+                #  it is relevant with regards to result data
+                if result.response.request.endpoint == cfg.API_URL_TINK + '/api/v1/user/':
+                    response: api.UserResponse = result.response
+                    result_data.append(response.data)
+
+        return result_data
 
 """
 Selection of Tink scopes.

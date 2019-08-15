@@ -4,6 +4,9 @@ import Categorisation.Common.util as util
 import Categorisation.Common.config as cfg
 import Categorisation.Common.exceptions as ex
 
+import Categorisation.Tink.api as api
+
+
 import sys
 import collections
 import logging
@@ -156,7 +159,18 @@ class TinkEntity:
     Object representation of a Tink entity data structure.
     """
 
-    def __init__(self, entity_type: cfg.EntityType, data: collections.OrderedDict = None):
+    @staticmethod
+    def create_from_http_response(entity_type: cfg.EntityType, response):
+        """
+        :param entity_type: The entity type - a value of the Enum config.EntityType.
+        :param response: A response of a supported sub-type of TinkAPIResponse containing the data.
+        :return: An instance of the class TinkEntity.
+        """
+        if entity_type == cfg.EntityType.User:
+            return TinkEntity(cfg.EntityType.User, response)
+
+    def __init__(self, entity_type: cfg.EntityType,
+                       data: collections.OrderedDict = None):
         """
         Initialization.
         :param entity_type: The entity type - a value of the Enum config.EntityType.
@@ -181,7 +195,7 @@ class TinkEntity:
         # Make sure that all expected fields are provided within data
         for f in self._fields:
             if f not in data:
-                msg = 'Field {f} expected but not found in data {d}'.format(f=f, d=data)
+                msg = f'Field {f} expected but not found in data {data}'
                 raise AttributeError(msg)
 
     @property
@@ -240,7 +254,6 @@ class TinkEntity:
 
 
 class TinkEntityList:
-
     """
     Object representation of a Tink entity data structure list.
     """
@@ -252,7 +265,7 @@ class TinkEntityList:
         :param entity_type: The entity type - a value of the Enum config.EntityType.
         :param data_list:  A list of TinkEntity object references or any other typing.
         :return: A list of TinkEntity object references wrapping the input data.
-        :raise: AttributeError if 1) data_list is not provideed as the expected type or
+        :raise AttributeError: If 1) data_list is not provided as the expected type or
         2) one of the elements in parameter lst does not conform
         with the the field requirements when trying to create an entity object from it.
 
@@ -316,3 +329,26 @@ class TinkEntityList:
             return True
         else:
             return False
+
+
+class TinkUser(TinkEntity):
+    """
+    Object representation of a Tink entity data structure list.
+    """
+
+    def __init__(self, response=None):
+        """
+        Initialization
+        :param data: The raw user data e.g. received via API
+        """
+        if not isinstance(response, api.UserResponse):
+            msg = f'Expected type of parameter "response" is {type(api.UserResponse)} not {type(response)}'
+            raise AttributeError(msg)
+
+        super().__init__(cfg.EntityType.User, response)
+
+        self._attributes = response.data
+
+        self._attributes.update({'userExternalId': response.ex})
+
+
