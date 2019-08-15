@@ -319,9 +319,14 @@ class TinkUI:
         cfg.TinkConfig.get_instance().account_source = self.txt_acc_file_in.get()
         cfg.TinkConfig.get_instance().transaction_source = self.txt_trx_file_in.get()
 
-        cfg.TinkConfig.get_instance().user_target = self.txt_usr_file_out
-        cfg.TinkConfig.get_instance().account_target = self.txt_acc_file_out
-        cfg.TinkConfig.get_instance().transaction_target = self.txt_trx_file_out
+        cfg.TinkConfig.get_instance().user_target = self.txt_usr_file_out.get()
+        cfg.TinkConfig.get_instance().account_target = self.txt_acc_file_out.get()
+        cfg.TinkConfig.get_instance().transaction_target = self.txt_trx_file_out.get()
+
+        cfg.TinkConfig.get_instance().delete_flag = self.cbtn_delete_val.get()
+        cfg.TinkConfig.get_instance().proxy_flag = self.cbtn_proxy_val.get()
+        cfg.TinkConfig.get_instance().result_file_flag = self.cbtn_result_file_val.get()
+        cfg.TinkConfig.get_instance().message_detail_level = self.opt_msg_level_det_val.get()
 
     def _data_init(self):
         """
@@ -412,7 +417,7 @@ class TinkUI:
         elif code == 'cbtn_result_file':
             config.result_file_flag = self.cbtn_result_file_val.get()
         elif code == 'cbtn_delete':
-            config.delete_flag_flag = self.cbtn_delete_val.get()
+            config.delete_flag = self.cbtn_delete_val.get()
         elif code == 'cbtn_proxy':
             config.proxy_flag = self.cbtn_proxy_val.get()
         # Button Actions
