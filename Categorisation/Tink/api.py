@@ -948,13 +948,13 @@ class OAuthService(TinkAPI):
         The access token usually expires after 30 mins and can be renewed with an
         appropriate refresh token that should also be kept as a secret (like the client secret)
 
-        :param grant_type: the grant type. values: authorization_code, refresh_token, client_credentials
-        :param scope: the requested scope when using client credentials.
-        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+        :param grant_type: The grant type.
+        Values: authorization_code, refresh_token, client_credentials
+        :param scope: The requested scope when using client credentials.
+        :param ext_user_id: The external user reference (this is NOT the Tink internal id)
         If provided then the service has to be used to authorize deletion of a user.
         This is a workaround (provided by Tink) that can be used in order
         to delete existing users
-        # TODO: Check if the user deletion workaround does also apply to accounts.
 
         :return: OAuth2AuthenticationTokenResponse
         """
