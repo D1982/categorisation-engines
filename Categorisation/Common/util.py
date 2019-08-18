@@ -119,13 +119,9 @@ class FileHandler:
             csv_writer.writeheader()
             for rec in data:
                 csv_writer.writerow(rec)
-            success = True
-        except Exception as ex:
-            logging.error(ex)
-            success = False
-
-        return success
-
+        except Exception as e:
+            logging.error(e)
+            raise e
 
 def list_to_string(lst):
     """

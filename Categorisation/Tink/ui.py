@@ -11,6 +11,7 @@ import os
 import logging
 import datetime
 import time
+import traceback
 import tkinter as tk
 import tkinter.scrolledtext as tkst
 
@@ -348,8 +349,8 @@ class TinkUI:
 
         # CheckButtons
         self.cbtn_delete.select()  # Pre-delete is enabled by default
-        self.cbtn_result_file.deselect()  # Don't write results into a file by default
-        self.cbtn_proxy.deselect() # Proxy usage is disabled by default
+        self.cbtn_result_file.select()  # Write results into a file by default
+        self.cbtn_proxy.deselect()  # Proxy usage is disabled by default
 
         self.txt_proxy.config(state='normal')
         self.txt_proxy.insert(0, cfg.PROXY_URL + ':' + cfg.PROXY_PORT)
@@ -520,9 +521,18 @@ class TinkUI:
                              time=False,
                              nl=2)
         logging.info(f'Action: {action} => Trying to dynamically invoke method {method}')
-        rl: model.TinkModelResultList = method()
-        filters = self._model.supported_action_filters(method)
-        self._put_result_log(rl.summary(filters=filters))
+
+        rl: model.TinkModelResultList = None
+        try:
+            rl: model.TinkModelResultList = method()
+        except Exception as e:
+            error_text = f'Exception {type(e)}:\n{str(e)}'
+            self._put_result_log(error_text)
+            traceback.print_exc()
+
+        if rl:
+            filters = self._model.supported_action_filters(method)
+            self._put_result_log(rl.summary(filters=filters))
 
     def call_model_process_actions(self):
         """

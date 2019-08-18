@@ -110,7 +110,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        d = self._dao.get_input_data(entity_type, cfg.InputSourceType.File)
+        d = self._dao.load_input(entity_type, cfg.DataProviderType.File)
         return d
 
     def read_account_data(self):
@@ -121,7 +121,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        d = self._dao.get_input_data(cfg.EntityType.Account, cfg.InputSourceType.File)
+        d = self._dao.load_input(cfg.EntityType.Account, cfg.DataProviderType.File)
         return d
 
     def read_transaction_data(self):
@@ -132,7 +132,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        d = self._dao.get_input_data(cfg.EntityType.Transaction, cfg.InputSourceType.File)
+        d = self._dao.load_input(cfg.EntityType.Transaction, cfg.DataProviderType.File)
         return d
 
     def _oauth2_client_credentials_flow(self, grant_type, client_scope, user_scope, ext_user_id=None):
@@ -250,12 +250,12 @@ class TinkModel:
                                              scope=scope)
 
         response: api.OAuth2AuthorizeResponse = response
-        if response.status_code == 200:
+        if response._status_code == 200:
             code = response.data['code']
             msg = f'Received access code "{code}"'
             logging.info(msg)
             result_status = TinkModelResultStatus.Success
-        elif response.status_code == 404:
+        elif response._status_code == 404:
             # User does not exist
             text = f'User ext_user_id:{ext_user_id} does not exist'
             logging.warning(text)
@@ -383,12 +383,12 @@ class TinkModel:
         service = api.UserService()
         response = service.activate_user(ext_user_id, label, market, locale, client_access_token)
 
-        if response.status_code == 200:
+        if response._status_code == 200:
             result_status = TinkModelResultStatus.Success
             user_id = response.user_id
             msg = f'User with ext_user_id:{ext_user_id} created as user_id:{user_id}'
             logging.info(msg)
-        elif response.status_code == 409:
+        elif response._status_code == 409:
             result_status = TinkModelResultStatus.Warning
             msg = f'User with ext_user_id:{ext_user_id} does already exist'
             logging.info(msg)
@@ -614,7 +614,16 @@ class TinkModel:
         # Write results into a file
         if cfg.TinkConfig.get_instance().result_file_flag:
             payload = result_list.payload(cfg.EntityType.User)
-            # self._dao.write_result_data(payload)
+            users = data.TinkEntityList(entity_type=cfg.EntityType.User,
+                                        entity_data=payload,
+                                        fields=data.TinkDAO.fields_user_api_out)
+            self._dao.users = users
+            try:
+                self._dao.dump_output(entity_type=cfg.EntityType.User,
+                                      source_type=cfg.DataProviderType.File)
+            except Exception as e:
+                # TODO: Bring this error to the UI
+                print(e)
 
         return result_list
 
@@ -672,7 +681,8 @@ class TinkModel:
 
         try:
             acc_entities = data.TinkEntityList(entity_type=cfg.EntityType.Account,
-                                               data_list=accounts)
+                                               entity_data=accounts,
+                                               fields=data.TinkDAO.fields_acc_api_in)
         except NotImplementedError as e1:
             logging.debug(e1)
             raise e1
@@ -890,8 +900,8 @@ class TinkModelResult:
         :param key: key for the dictionary lookup
         :return: the value if there could one be found in the dictionary
         """
-        if key in self.response.data:
-            return self.response.data[key]
+        if key in self.response._data:
+            return self.response._data[key]
         else:
             return ''
 
@@ -988,7 +998,7 @@ class TinkModelResultList:
         """
         lst = list()
         for e in self.results:
-            if e.response.request.endpoint.find(endpoint_filter) != -1:  # Found
+            if e.response.request._endpoint.find(endpoint_filter) != -1:  # Found
                 lst.append(e)
             # Exceptions should 1) have this status set and 2) always be shown
             elif e.status == TinkModelResultStatus.Exception:
@@ -1009,7 +1019,7 @@ class TinkModelResultList:
             return self.results[index]
         else:
             for e in self.results:
-                if e.response.request.endpoint.find(endpoint_filter):
+                if e.response.request._endpoint.find(endpoint_filter):
                     result = e
             return result  # Which is automatically the latest element
 
@@ -1104,21 +1114,18 @@ class TinkModelResultList:
         to retrieve the data received from an API endpoint in order to further process
         the data.
         :param entity_type: The entity type of interest.
-        :param filters: dictionary with filters to be applied to the results
-        :return: Union of all responses wrapped into the result items as formatted text.
+        :return: The relevant payload over all responses wrapped into the result list
+        elements contained.
         """
         result_data = list()
-        if entity_type == cfg.EntityType.User:
-            for result in self.results:
-                # TODO: Add flag has_payload to TinkAPIResponse indicating whether
-                #  it is relevant with regards to result data
-                if result.response.request.endpoint == cfg.API_URL_TINK + '/api/v1/user':
-                    response: api.UserResponse = result.response
-                    result_data.append(response.data)
+        for result in self.results:
+            if result.response.has_payload:
+                result_data.append(result.response.payload)
 
         return result_data
 
-"""
+
+""" 
 Selection of Tink scopes.
 
 categories:read

@@ -40,10 +40,10 @@ class EntityType(Enum):
     Log = 'The applciation logs'
 
 
-class InputSourceType(Enum):
+class DataProviderType(Enum):
     """
-    Enumeration of valid input source types.
-    These can be used to define kind of input data for the DAO.
+    Enumeration of valid data provider types.
+    These can be used to define kind of input/output data for the DAO.
     """
     File = 'Flat File Input (CSV)'
     Database = 'Database Input'
