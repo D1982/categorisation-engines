@@ -348,7 +348,6 @@ class TinkEntityList:
                     entity = TinkUser(user_data=item, fields=fields)
                 elif self._entity_type == cfg.EntityType.Account:
                     entity = TinkAccount(acc_data=item, fields=fields)
-                    self._entities.append(entity)
                 else:
                     pass
                     # TODO: Add transaction case here once class TinkTransaction is available
