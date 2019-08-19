@@ -101,7 +101,7 @@ class TinkModel:
 
         return None
 
-    def get_input_data(self, entity_type: cfg.EntityType):
+    def get_input_data_from_file(self, entity_type: cfg.EntityType):
         """
         Retrieves data for a valid entity from the DAO.
         :return: The requested data e.g. as an instance of <class 'list'>: [OrderedDict()]
@@ -423,7 +423,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        users = self.get_input_data(cfg.EntityType.User)
+        users = self.get_input_data_from_file(cfg.EntityType.User)
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Activate users')
@@ -519,7 +519,7 @@ class TinkModel:
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Delete users')
 
-        users = self.get_input_data(cfg.EntityType.User)
+        users = self.get_input_data_from_file(cfg.EntityType.User)
 
         # Delete existing users
         key = 'userExternalId'
@@ -595,7 +595,7 @@ class TinkModel:
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get users')
 
-        users = self.get_input_data(cfg.EntityType.User)
+        users = self.get_input_data_from_file(cfg.EntityType.User)
 
         # Delete existing users
         key = 'userExternalId'
@@ -612,7 +612,7 @@ class TinkModel:
                         result_list.append(e.result_list)
 
         # Write results into a file
-        if cfg.TinkConfig.get_instance().result_file_flag:
+        if cfg.TinkConfig.get_instance().result_file_flag
             payload = result_list.payload(cfg.EntityType.User)
             users = data.TinkEntityList(entity_type=cfg.EntityType.User,
                                         entity_data=payload,
@@ -676,8 +676,8 @@ class TinkModel:
         result_list.append(rl)
 
         # --- Ingest accounts per user
-        users = self.get_input_data(cfg.EntityType.User)
-        accounts = self.get_input_data(cfg.EntityType.Account)
+        users = self.get_input_data_from_file(cfg.EntityType.User)
+        accounts = self.get_input_data_from_file(cfg.EntityType.Account)
 
         try:
             acc_entities = data.TinkEntityList(entity_type=cfg.EntityType.Account,
@@ -740,7 +740,7 @@ class TinkModel:
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get all accounts')
 
-        users = self.get_input_data(cfg.EntityType.User)
+        users = self.get_input_data_from_file(cfg.EntityType.User)
 
         # Delete existing users
         key = 'userExternalId'
