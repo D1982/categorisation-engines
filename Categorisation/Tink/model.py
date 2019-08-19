@@ -103,7 +103,7 @@ class TinkModel:
 
     def get_input_data_from_file(self, entity_type: cfg.EntityType):
         """
-        Retrieves data for a valid entity from the DAO.
+        Retrieves data for a valid entity from the file system over the DAO.
         :return: The requested data e.g. as an instance of <class 'list'>: [OrderedDict()]
         in case of a file input source type selected.
         """
