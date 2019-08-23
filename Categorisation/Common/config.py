@@ -34,10 +34,13 @@ class EntityType(Enum):
     These can be used to transfer the appropriate data over the DAO.
 
     """
+    NotApplicable = 'No Entity'
     User = 'Tink User Entity'
     Account = 'Tink Account Entity'
     Transaction = 'Tink Transaction Entity'
-    Log = 'The applciation logs'
+    Category = 'Tink Category Entity'
+    Log = 'The appliciation logs'
+
 
 
 class DataProviderType(Enum):
@@ -77,7 +80,7 @@ OUT_FILE_PATTERN_TINK = 'data/Tink*_Out.csv'  # Default file pattern for output 
 
 TINK_LOGFILE = 'logs/tink.log'  # Default name of the Tink processing log file
 
-UI_STRING_MAX_WITH = 150  # Default value for the with of the output text in the ui
+UI_STRING_MAX_WITH = 200  # Default value for the with of the output text in the ui
 
 LOG_LEVEL = logging.DEBUG  # Default log level for logging
 
@@ -129,8 +132,8 @@ class TinkConfig:
             self._proxy_flag: bool = USE_PROXY
             self._log_level: int = LOG_LEVEL
             self._user_source = 'unbound'
-            self._acc_source = 'unbound'
-            self._trx_source = 'unbound'
+            self._account_source = 'unbound'
+            self._transaction_source = 'unbound'
 
     @property
     def delete_flag(self):

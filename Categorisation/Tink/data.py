@@ -3,6 +3,8 @@
 import Categorisation.Common.util as util
 import Categorisation.Common.config as cfg
 import Categorisation.Tink.data as data
+import Categorisation.Tink.model as model
+
 import Categorisation.Common.exceptions as ex
 import Categorisation.Tink.api as api
 import sys
@@ -20,6 +22,11 @@ class TinkDAO:
     like files, databases or similar.
 
     """
+    # Constants for Data Access R/W
+
+    READ = 'READ'
+
+    WRITE = 'WRITE'
 
     # Standard fields for entity User
 
@@ -30,7 +37,7 @@ class TinkDAO:
     fields_user_api_in = ('userExternalId', 'label', 'market', 'locale')
 
     fields_user_api_out = ('userExternalId', 'label', 'market', 'locale',
-                           'id', 'timeZone', 'currency', 'created')
+                           'id', 'timeZone', 'currency', 'created', 'errorMessage', 'errorCode')
 
     # Standard fields for entity Account
 
@@ -42,8 +49,9 @@ class TinkDAO:
     fields_acc_api_in = ('externalId', 'availableCredit', 'balance',
                          'name', 'type', 'flags', 'number', 'reservedAmount')
 
-    fields_acc_api_out = ('externalId', 'availableCredit', 'balance', 'closed',
-                          'name', 'type', 'flags', 'number', 'reservedAmount', 'payload')
+    fields_acc_api_out = ('accountNumber', 'availableCredit', 'balance', 'bankId',
+                          'credentialsId', 'id', 'name', 'type', 'userId', 'payload',
+                          'currencyCode', 'errorMessage', 'errorCode')
 
     # Standard fields for entity Transaction
 
@@ -57,109 +65,116 @@ class TinkDAO:
 
     fields_trx_api_out = tuple
 
-    def __init__(self):
-        """ Initialization. """
-        # Input data collections
-        self._users_input = collections.OrderedDict()
-        self._accounts_input = collections.OrderedDict()
-        self._transactions_input = collections.OrderedDict()
+    def __init__(self, data_provider: cfg.DataProviderType = cfg.DataProviderType.File):
+        """
+        Creates a new data access object connected to the given data provider.
+        :param data_provider: Data provider type - a value of the Enum config.DataProviderType.
+        """
+        if data_provider != cfg.DataProviderType.File:
+            msg = f' Data providers other than {cfg.DataProviderType.File}" are not (yet) supported'
+            raise NotImplementedError(msg)
+
+        self._data_provider = data_provider
+        self._config = cfg.TinkConfig.get_instance()
 
         # Data collections
+
+        self._logs: list = list()
         self._users: TinkEntityList = None
         self._accounts: TinkEntityList = None
         self._transactions: TinkEntityList = None
 
+        self._tink_users: TinkEntityList = None
+        self._tink_accounts: TinkEntityList = None
+        self._tink_transactions: TinkEntityList = None
+
         # Instance of a file handler utility
+
         self.file_handler = util.FileHandler()
 
-    def load_input(self, entity_type: cfg.EntityType,
-                   source_type: cfg.DataProviderType,
-                   force_read=False):
+    def data_access(self,
+                    access_type: str = READ,
+                    entity_type: cfg.EntityType = None,
+                    locator: str = None,
+                    fields: tuple = None,
+                    payload=None):
         """
-        Read user data from a data access object (DAO).
-        :param entity_type: The entity type of interest.
-        :param source_type: Input source type (kind of input data for the DAO).
-        :param force_read: Force to read again even if there is already data.
-        :return: The user data as an instance of <class 'list'>: [OrderedDict()]
-        """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-        logging.info(f'source_type: {source_type.value}')
-
-        if source_type != cfg.DataProviderType.File:
-            msg = f'Input source types other than {cfg.DataProviderType.File} are not yet supported'
-            raise NotImplementedError(msg)
-
-        if entity_type == cfg.EntityType.Log:
-            locator = cfg.TINK_LOGFILE
-        elif entity_type == cfg.EntityType.User:
-            input_data = self._users_input
-            locator = cfg.TinkConfig.get_instance().user_source
-            fields = TinkDAO.fields_user_src_in
-        elif entity_type == cfg.EntityType.Account:
-            input_data = self._accounts_input
-            locator = cfg.TinkConfig.get_instance().account_source
-            fields = TinkDAO.fields_acc_src_in
-        elif entity_type == cfg.EntityType.Transaction:
-            input_data = self._transactions_input
-            locator = cfg.TinkConfig.get_instance().transaction_source
-            fields = TinkDAO.fields_trx_input
-
-        if not input_data or force_read is True:
-            try:
-                input_data = self.file_handler.read_csv_file(filename=locator,
-                                                             fieldnames=fields)
-            except Exception as e:
-                raise e
-
-        if entity_type == cfg.EntityType.User:
-            self._users_input = input_data
-        elif entity_type == cfg.EntityType.Account:
-            self._accounts_input = input_data
-        elif entity_type == cfg.EntityType.Transaction:
-            self._transactions_input = input_data
-
-        return input_data
-
-    def dump_output(self, entity_type: cfg.EntityType, source_type: cfg.DataProviderType):
-        """
-        Read user data from a data access object (DAO).
-        :param entity_type: The entity type of interest.
-        :param source_type: Input source type (kind of input data for the DAO).
-        :param force_read: Force to read again even if there is already data.
-        :return: The user data as an instance of <class 'list'>: [OrderedDict()]
+        :param access_type: The data access type (TinkDAO.READ or TinkDAO.WRITE).
+        :param entity_type: The entity type of interest - a value of the Enum config.EntityType.
+        :param locator: Locator of the data provider (e.g. a file path).
+        :param fields: A list (tuple) of relevant fields within the data to be read or written (payload).
+        :param payload: The (raw) data to be stored.
+        :return: The data that was read/written.
+        :raise NotImplementedError: If a function has not been implemented so far or
+        :raise AttributeError: If at least one of the expected fields was not
+        provided i.e. could not be found in the given data.
+        :raise Exception: Any other error that might occur in a method invoced within this
+        method will be caught and raised.
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
-        logging.info(f'source_type: {source_type.value}')
+        logging.info(f'access_type: {access_type}')
+        logging.info(f'entity_type: {entity_type.value}')
+        logging.info(f'locator: {locator}')
+        logging.info(f'fields: {fields}')
 
-        if source_type != cfg.DataProviderType.File:
-            msg = f'Input source types other than {cfg.DataProviderType.File} are not yet supported'
+        if access_type not in (TinkDAO.READ, TinkDAO.WRITE):
+            msg = f'Unexpected access type "{access_type}"'
+            raise AttributeError(msg)
+
+        if entity_type not in cfg.EntityType:
+            msg = f' Entity type {entity_type}" not (yet) supported'
             raise NotImplementedError(msg)
 
-        if entity_type == cfg.EntityType.Log:
-            locator = cfg.TINK_LOGFILE
-        elif entity_type == cfg.EntityType.User:
-            output_data = self._users
-            locator = cfg.TinkConfig.get_instance().user_target
-            fields = TinkDAO.fields_user_api_out
-        elif entity_type == cfg.EntityType.Account:
-            output_data = self._accounts
-            locator = cfg.TinkConfig.get_instance().account_target
-            fields = TinkDAO.fields_acc_api_out
-        elif entity_type == cfg.EntityType.Transaction:
-            output_data = self._transactions
-            locator = cfg.TinkConfig.get_instance().transaction_target
-            fields = TinkDAO.fields_trx_api_out
+        if not locator:
+            msg = f'Missing locator for data access.'
+            raise NotImplementedError(msg)
 
-        try:
-            self.file_handler.write_csv_file(data=output_data.data,
-                                             fieldnames=fields,
-                                             filename=locator)
-        except Exception as e:
-            raise e
+        if not fields:
+            msg = f'Please specify the fields of interest.'
+            raise NotImplementedError(msg)
 
-        return data
+        # File access
+        if self._data_provider == cfg.DataProviderType.File:
+            if access_type == TinkDAO.READ:
+                try:
+                    data_raw = self.file_handler.read_csv_file(filename=locator,
+                                                               fieldnames=fields,
+                                                               skip_header=True)
+                except Exception as e:
+                    raise e
+
+                return data_raw
+
+            elif access_type == TinkDAO.WRITE:
+                if not payload:
+                    msg = f'Missing parameter payload for access_type "{access_type}"'
+                    raise Exception(msg)
+
+                try:
+                    self.file_handler.write_csv_file(filename=locator,
+                                                     fieldnames=fields,
+                                                     data=payload)
+                except Exception as e:
+                    raise e
+
+                return payload
+
+    @property
+    def data_provider(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._data_provider
+
+    @property
+    def logs(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._logs
 
     @property
     def users(self):
@@ -167,6 +182,17 @@ class TinkDAO:
         Get the current value of the corresponding property _<method_name>.
         :return: The current value of the corresponding property _<method_name>.
         """
+        if not self._users or not self._users.contains_entities():
+            try:
+                raw_data = self.data_access(entity_type=cfg.EntityType.User,
+                                            access_type=data.TinkDAO.READ,
+                                            locator=self._config.user_source,
+                                            fields=TinkDAO.fields_user_src_in)
+
+                self.users = raw_data
+            except Exception as e:
+                raise e
+
         return self._users
 
     @users.setter
@@ -174,8 +200,18 @@ class TinkDAO:
         """
         Set the current value of the corresponding property _<method_name>.
         :param value: The new value of the corresponding property _<method_name>.
+        :raise Exception: If there occurred an error when trying to set the value.
         """
-        self._users = value
+        if isinstance(value, TinkEntityList):
+            self._users = value
+        else:
+            try:
+                entities = TinkEntityList(entity_type=cfg.EntityType.User,
+                                          entity_data=value,
+                                          fields=data.TinkDAO.fields_user_src_in)
+                self._users = entities
+            except Exception as e:
+                raise e
 
     @property
     def accounts(self):
@@ -183,6 +219,17 @@ class TinkDAO:
         Get the current value of the corresponding property _<method_name>.
         :return: The current value of the corresponding property _<method_name>.
         """
+        if not self._accounts or not self._accounts.contains_entities():
+            try:
+                raw_data = self.data_access(entity_type=cfg.EntityType.Account,
+                                            access_type=data.TinkDAO.READ,
+                                            locator=self._config.account_source,
+                                            fields=TinkDAO.fields_acc_src_in)
+
+                self.accounts = raw_data
+            except Exception as e:
+                raise e
+
         return self._accounts
 
     @accounts.setter
@@ -191,7 +238,16 @@ class TinkDAO:
         Set the current value of the corresponding property _<method_name>.
         :param value: The new value of the corresponding property _<method_name>.
         """
-        self._accounts = value
+        if isinstance(value, TinkEntityList):
+            self._accounts = value
+        else:
+            try:
+                entities = TinkEntityList(entity_type=cfg.EntityType.Account,
+                                          entity_data=value,
+                                          fields=data.TinkDAO.fields_acc_src_in)
+                self._accounts = entities
+            except Exception as e:
+                raise e
 
     @property
     def transactions(self):
@@ -199,7 +255,18 @@ class TinkDAO:
         Get the current value of the corresponding property _<method_name>.
         :return: The current value of the corresponding property _<method_name>.
         """
-        self._transactions
+        if not self._transactions or not self._transactions.contains_entities():
+            try:
+                raw_data = self.data_access(entity_type=cfg.EntityType.Transaction,
+                                            access_type=data.TinkDAO.READ,
+                                            locator=self._config.trx_source,
+                                            fields=TinkDAO.fields_trx_src_in)
+
+                self.transactions = raw_data
+            except Exception as e:
+                raise e
+
+        return self._transactions
 
     @transactions.setter
     def transactions(self, value):
@@ -207,7 +274,92 @@ class TinkDAO:
         Set the current value of the corresponding property _<method_name>.
         :param value: The new value of the corresponding property _<method_name>.
         """
-        self._transactions = value
+        if isinstance(value, TinkEntityList):
+            self._transactions = value
+        else:
+            try:
+                entities = TinkEntityList(entity_type=cfg.EntityType.Transaction,
+                                          entity_data=value,
+                                          fields=data.TinkDAO.fields_transaction_src_in)
+                self._transactions = entities
+            except Exception as e:
+                raise e
+
+    @property
+    def tink_users(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._tink_users
+
+    @tink_users.setter
+    def tink_users(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        if isinstance(value, TinkEntityList):
+            self._tink_users = value
+        else:
+            try:
+                entities = TinkEntityList(entity_type=cfg.EntityType.User,
+                                          entity_data=value,
+                                          fields=data.TinkDAO.fields_user_src_in)
+                self._tink_users = entities
+            except Exception as e:
+                raise e
+
+    @property
+    def tink_accounts(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._tink_accounts
+
+    @tink_accounts.setter
+    def tink_accounts(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        if isinstance(value, TinkEntityList):
+            self._tink_accounts = value
+        else:
+            try:
+                # TODO: Here I am #1
+                entities = TinkEntityList(entity_type=cfg.EntityType.Account,
+                                          entity_data=value,
+                                          fields=data.TinkDAO.fields_acc_api_out)
+                self._tink_accounts = entities
+            except Exception as e:
+                raise e
+
+    @property
+    def tink_transactions(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._tink_transactions
+
+    @tink_transactions.setter
+    def tink_transactions(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        if isinstance(value, TinkEntityList):
+            self._tink_transactions = value
+        else:
+            try:
+                entities = TinkEntityList(entity_type=cfg.EntityType.Transaction,
+                                          entity_data=value,
+                                          fields=data.TinkDAO.fields_trx_src_in)
+                self._tink_transactions = entities
+            except Exception as e:
+                raise e
 
 
 class TinkEntity(metaclass=abc.ABCMeta):
@@ -220,7 +372,7 @@ class TinkEntity(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def create_from_http_response(response):
         """
-        This is a static factory mehotd that creates a TinkEntity object from
+        This is a static factory method that creates a TinkEntity object from
         a http response originated from an appropriate Tink API endpoint.
         :param response: A response of a supported sub-type of TinkAPIResponse
         containing the data.
@@ -244,10 +396,10 @@ class TinkEntity(metaclass=abc.ABCMeta):
         """
 
         if not isinstance(entity_data, dict):
-            raise ex.ParameterError(param_name='data',
-                                    expected_type=type(dict()),
-                                    found_type=type(entity_data),
-                                    result_list=None)
+            raise ex.ParameterTypeError(param_name='entity_data',
+                                        expected_type=type(dict()),
+                                        found_type=type(entity_data),
+                                        result_list=None)
 
         self._entity_type: cfg.EntityType = entity_type
         self._data: dict = entity_data
@@ -311,7 +463,43 @@ class TinkEntityList:
     Object representation of a Tink entity data structure list.
     """
 
-    def __init__(self, entity_type: cfg.EntityType, entity_data: list = None, fields: tuple = None):
+    @staticmethod
+    @abc.abstractmethod
+    def create_from_http_response(response):
+        """
+        This is a static factory method that creates a TinkEntityList object from
+        a http response originated from an appropriate Tink API endpoint.
+        :param response: A response of a supported sub-type of TinkAPIResponse
+        containing the data.
+        :raise NotImplementedError: If the function has not been implemented within
+        a derived class.
+        """
+        supported_responses = api.AccountListResponse
+
+        if isinstance(response, api.AccountListResponse):
+            fields = api.AccountListResponse.fieldnames
+        else:
+            raise ex.ParameterTypeError(param_name='response',
+                                        expected_type=supported_responses,
+                                        found_type=type(response),
+                                        result_list=None)
+
+        if isinstance(response.payload, list):
+            entity_lst = list()
+            for item in response.payload:
+                item.update({'userExternalId': str(response.request.ext_user_id)})
+                for field in fields:
+                    if field in response.payload:
+                        item.update({field: response.payload[field]})
+                entity_lst.append(item)
+        else:
+            raise RuntimeError(f'Was expecting a payload of type {type(list)} for {type(response)}')
+
+        return TinkEntityList(entity_type=cfg.EntityType.Account,
+                              entity_data=entity_lst,
+                              fields=fields)
+
+    def __init__(self, entity_type: cfg.EntityType, entity_data: list = list(), fields: tuple = tuple()):
         """
         Converts a standard list into a list of TinkEntity object references that
         can be used as an input for the constructor of the class TinkEntityList.
@@ -327,20 +515,23 @@ class TinkEntityList:
         within the provided data.
 
         """
-        self._entities: TinkEntityList = list()
+        self._entities: TinkEntity = list()
         self._entity_type: cfg.EntityType = entity_type
 
         if not isinstance(entity_data, list):
-            raise ex.ParameterError(param_name='entity_data',
-                                    expected_type=type(list()),
-                                    found_type=type(entity_data),
-                                    result_list=None)
+            raise ex.ParameterTypeError(param_name='entity_data',
+                                        expected_type=type(list()),
+                                        found_type=type(entity_data),
+                                        result_list=None)
 
         if not isinstance(fields, tuple):
-            raise ex.ParameterError(param_name='data',
-                                    expected_type=type(list()),
-                                    found_type=type(fields),
-                                    result_list=None)
+            raise ex.ParameterTypeError(param_name='fields',
+                                        expected_type=type(list()),
+                                        found_type=type(fields),
+                                        result_list=None)
+
+        if not entity_data or len(entity_data) == 0:
+            return
 
         for item in entity_data:
             try:
@@ -375,7 +566,30 @@ class TinkEntityList:
 
         return result_data
 
-    def get_data(self, ext_user_id: str = None):
+    @property
+    def entities(self):
+        """
+        Get a list containing all the entities stored within this TinkEntityList object.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._entities
+
+    def append(self, entity_list):
+        """
+        Appends the contents of a given TinkEntityList to the current instance.
+        :param entity_list: Another instance of TinkEntityList holding entities
+        that should be appended to the list of entities held in this TinkEntityList.
+        """
+        if not isinstance(entity_list, TinkEntityList):
+            raise ex.ParameterTypeError(param_name='entity_list',
+                                        expected_type=type(TinkEntityList),
+                                        found_type=type(entity_list),
+                                        result_list=None)
+
+        if len(entity_list.entities) > 0:
+            self._entities.extend(entity_list.entities)
+
+    def get_entities(self, ext_user_id: str = None):
         """
         This method returns the contained TinkEntity data.
         :param ext_user_id: The external user reference (this is NOT the Tink internal id).
@@ -399,13 +613,15 @@ class TinkEntityList:
 
         return lst
 
-    def contains_data(self, ext_user_id: str):
+    def contains_entities(self, ext_user_id: str = None):
         """
-        This method checks if there is data available for a certain user.
+        This method checks if there is any data available.
         :param ext_user_id: The external user reference (this is NOT the Tink internal id).
-        :return: True if there exists data for ext_user_id, otherwise False
+        The result of the method will depend from whether there exists data for a given
+        user.
+        :return: True if there exists data, otherwise False
         """
-        if len(self.get_data(ext_user_id)) > 0:
+        if len(self.get_entities(ext_user_id)) > 0:
             return True
         else:
             return False
@@ -431,14 +647,14 @@ class TinkUser(TinkEntity):
         supported_responses = api.UserResponse + api.UserActivationResponse
 
         if isinstance(response, api.UserResponse):
-            fields = api.UserResponse.fields
+            fields = api.UserResponse.fieldnames
         elif isinstance(response, api.UserActivationResponse):
-            fields = api.UserActivationResponse.fields
+            fields = api.UserActivationResponse.fieldnames
         else:
-            raise ex.ParameterError(param_name='response',
-                                    expected_type=supported_responses,
-                                    found_type=type(response),
-                                    result_list=None)
+            raise ex.ParameterTypeError(param_name='response',
+                                        expected_type=supported_responses,
+                                        found_type=type(response),
+                                        result_list=None)
 
         return TinkUser(user_data=response.data, fields=fields)
 
@@ -477,19 +693,10 @@ class TinkAccount(TinkEntity):
         supported response. This does basically mean that the response cannot
         become a valid TinkUser object.
         """
-        supported_responses = api.AccountIngestionResponse + api.AccountListResponse
-
-        if isinstance(response, api.AccountIngestionResponse):
-            fields = api.AccountIngestionResponse.fields
-        elif isinstance(response, api.AccountListResponse):
-            fields = api.AccountListResponse.fields
-        else:
-            raise ex.ParameterError(param_name='response',
-                                    expected_type=supported_responses,
+        raise ex.ParameterTypeError(param_name='response',
+                                    expected_type=None,
                                     found_type=type(response),
                                     result_list=None)
-
-        return TinkAccount(acc_data=response._data, fields=fields)
 
     def __init__(self, acc_data: dict, fields: tuple):
         """
@@ -523,10 +730,6 @@ class TinkAccount(TinkEntity):
                 if field == 'flags':  # Specified as an array
                     self._data[field] = list()
                     self._data[field].append(value)
-                elif field == 'closed':
-                    self._data[field] = ''
-                elif field == 'payload':
-                    self._data[field] = ''
                 else:
                     if fields_unmapped_str == '':
                         fields_unmapped_str += f'{field}'

@@ -76,7 +76,9 @@ class FileHandler:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
+        csv_data = list()
         extension = os.path.splitext(filename)[1]
+
         if extension in ('.data', '.txt', '.csv'):
             csv_file = open(filename, 'r')
 
@@ -88,6 +90,7 @@ class FileHandler:
                 csv_reader = csv.DictReader(f=csv_file,
                                             delimiter=cfg.CSV_DELIMITER)
             csv_data = list()
+
             if skip_header:
                 next(csv_reader)  # This skips the first row of the data file
             try:

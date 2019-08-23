@@ -17,7 +17,7 @@ def main():
     logging.basicConfig(filename=cfg.TINK_LOGFILE, level=cfg.LOG_LEVEL)
 
     # Create data access object
-    dao = data.TinkDAO()
+    dao = data.TinkDAO(data_provider=cfg.DataProviderType.File)
 
     # Create model facade and connect it with the data access object
     facade = model.TinkModel(dao=dao)

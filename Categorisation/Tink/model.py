@@ -49,23 +49,57 @@ class TinkModel:
         self._process_actions = self._define_process_actions()
 
     def _define_supported_actions(self):
-        a = list()
+        """
+        TODO: Docstring
 
-        # Define supported actions
-        a.append({'method': self.test_connectivity, 'filters': None})
-        a.append({'method': self.delete_users, 'filters': {'endpoint': '/user/delete'}})
-        a.append({'method': self.activate_users, 'filters': {'endpoint': '/user/'}})
-        a.append({'method': self.get_users, 'filters': {'endpoint': '/user'}})
-        a.append({'method': self.ingest_accounts, 'filters': {'endpoint': '/accounts'}})
-        a.append({'method': self.get_all_accounts, 'filters': {'endpoint': '/accounts/list'}})
-        a.append({'method': self.list_categories, 'filters': {'endpoint': '/categories'}})
+        :return:
+        """
+        methods = (self.test_connectivity, self.list_categories,
+                   self.delete_users, self.activate_users, self.get_users,
+                   self.ingest_accounts, self.get_all_accounts)
 
-        return a
-
-    def _define_process_actions(self):
         actions = list()
 
-        excluded_actions = self.test_connectivity, self.list_categories
+        # Define supported actions
+        for method in methods:
+            action = {'method': method}
+            filters = {}
+
+            if method == self.test_connectivity:
+                filters.update({'endpoints': []})
+                action.update({'filters': filters})
+            elif method == self.list_categories:
+                filters.update({'endpoints': ['/categories']})
+                action.update({'filters': filters})
+            elif method == self.delete_users:
+                filters.update({'endpoints': ['/user/delete']})
+                action.update({'filters': filters})
+            elif method == self.activate_users:
+                filters.update({'endpoints': ['/user/delete', '/user/create']})
+                action.update({'filters': filters})
+            elif method == self.get_users:
+                filters.update({'endpoints': ['/user']})
+                action.update({'filters': filters})
+            elif method == self.ingest_accounts:
+                filters.update({'endpoints': ['/accounts']})
+                action.update({'filters': filters})
+            elif method == self.get_all_accounts:
+                filters.update({'endpoints': ['/accounts/list']})
+                action.update({'filters': filters})
+
+            actions.append(action)
+
+        return actions
+
+    def _define_process_actions(self):
+        """
+        TODO: Docstring
+
+        :return:
+        """
+        actions = list()
+
+        excluded_actions = (self.test_connectivity, self.list_categories)
 
         for action in self._supported_actions:
             if action['method'] not in excluded_actions:
@@ -91,7 +125,7 @@ class TinkModel:
 
     def supported_action_filters(self, method):
         """
-        Get the current output filter for a supported action (method reference)
+        Get the current output filter for a supported action (method reference).
         :return: The output filter for the supplied method reference.
         """
         for action in self._supported_actions:
@@ -101,41 +135,60 @@ class TinkModel:
 
         return None
 
-    def get_input_data_from_file(self, entity_type: cfg.EntityType):
+    def save_data_to_file(self,
+                          entity_type: cfg.EntityType,
+                          fields: tuple,
+                          locator,
+                          payload: any):
         """
-        Retrieves data for a valid entity from the file system over the DAO.
-        :return: The requested data e.g. as an instance of <class 'list'>: [OrderedDict()]
-        in case of a file input source type selected.
-        """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        d = self._dao.load_input(entity_type, cfg.DataProviderType.File)
-        return d
-
-    def read_account_data(self):
-        """
-        Read account test data from the DAO.
-        :return: account data as an instance of <class 'list'>: [OrderedDict()]
+        Save
+        Persists data for a valid entity over the DAO.
+        :return: TinkModelResultList object.
         """
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        d = self._dao.load_input(cfg.EntityType.Account, cfg.DataProviderType.File)
-        return d
+        msg = f'Save results to "{locator}"'
+        result = TinkModelResult(status=TinkModelResultStatus.Success,
+                                 action=msg,
+                                 msg='Done',
+                                 is_important=True)
 
-    def read_transaction_data(self):
+        # Check whether the payload delivered contains data
+        if (isinstance(payload, list) and len(payload) > 0) or (isinstance(payload, dict) and len(payload.keys()) > 0):
+            try:
+                written_data = self._dao.data_access(entity_type=entity_type,
+                                                     access_type=data.TinkDAO.WRITE,
+                                                     locator=locator,
+                                                     fields=fields,
+                                                     payload=payload)
+
+            except Exception as e:
+                result.status = TinkModelResultStatus.Error
+                result.msg = 'Failed'
+                raise e
+        else:
+            result.msg = f'No data to write into a file: Payload {type(payload)} delivered was empty'
+
+        logging.info(f'{result.action} => {result.msg}')
+
+        return TinkModelResultList(result=result,
+                                   action=result.action,
+                                   msg=result.msg)
+
+    def _oauth2_client_credentials_flow(self,
+                                        grant_type,
+                                        client_scope,
+                                        user_scope,
+                                        ext_user_id=None):
         """
-        Read transaction test data from the DAO.
-        :return: transaction data as an instance of <class 'list'>: [OrderedDict()]
+        TODO: Docstring
+        :param grant_type:
+        :param client_scope:
+        :param user_scope:
+        :param ext_user_id:
+        :return:
         """
-        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
-        logging.info(msg)
-
-        d = self._dao.load_input(cfg.EntityType.Transaction, cfg.DataProviderType.File)
-        return d
-
-    def _oauth2_client_credentials_flow(self, grant_type, client_scope, user_scope, ext_user_id=None):
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
@@ -250,12 +303,12 @@ class TinkModel:
                                              scope=scope)
 
         response: api.OAuth2AuthorizeResponse = response
-        if response._status_code == 200:
+        if response.status_code == 200:
             code = response.data['code']
             msg = f'Received access code "{code}"'
             logging.info(msg)
             result_status = TinkModelResultStatus.Success
-        elif response._status_code == 404:
+        elif response.status_code == 404:
             # User does not exist
             text = f'User ext_user_id:{ext_user_id} does not exist'
             logging.warning(text)
@@ -383,12 +436,12 @@ class TinkModel:
         service = api.UserService()
         response = service.activate_user(ext_user_id, label, market, locale, client_access_token)
 
-        if response._status_code == 200:
+        if response.status_code == 200:
             result_status = TinkModelResultStatus.Success
             user_id = response.user_id
             msg = f'User with ext_user_id:{ext_user_id} created as user_id:{user_id}'
             logging.info(msg)
-        elif response._status_code == 409:
+        elif response.status_code == 409:
             result_status = TinkModelResultStatus.Warning
             msg = f'User with ext_user_id:{ext_user_id} does already exist'
             logging.info(msg)
@@ -423,7 +476,7 @@ class TinkModel:
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
-        users = self.get_input_data_from_file(cfg.EntityType.User)
+        users = self._dao.users.data
 
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Activate users')
@@ -496,10 +549,12 @@ class TinkModel:
 
         if response.http_status(cfg.HTTPStatusCode.Code2xx):
             result_status = TinkModelResultStatus.Success
-            logging.info(msg + f' => ext_user_id:{ext_user_id} deleted')
+            msg = f' => ext_user_id:{ext_user_id} deleted'
+            logging.info(msg)
         else:
-            logging.error(response.summary())
             result_status = TinkModelResultStatus.Error
+            msg = f' => ext_user_id:{ext_user_id} could not be deleted'
+            logging.error(response.summary())
 
         result_list.append(TinkModelResult(result_status, response, msg))
 
@@ -517,9 +572,9 @@ class TinkModel:
         logging.info(msg)
 
         # Wrapper for the results
-        result_list = TinkModelResultList(result=None, action=msg, msg='Delete users')
+        result_list = TinkModelResultList(result=None, action='Delete Users', msg='')
 
-        users = self.get_input_data_from_file(cfg.EntityType.User)
+        users = self._dao.users.data
 
         # Delete existing users
         key = 'userExternalId'
@@ -567,7 +622,7 @@ class TinkModel:
 
         msg = f'Get user ext_user_id:{ext_user_id}'
         service = api.UserService()
-        response: api.UserResponse = service.get_user(ext_user_id = ext_user_id,
+        response: api.UserResponse = service.get_user(ext_user_id=ext_user_id,
                                                       access_token=self._access_token)
 
         if response.http_status(cfg.HTTPStatusCode.Code2xx):
@@ -595,7 +650,7 @@ class TinkModel:
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get users')
 
-        users = self.get_input_data_from_file(cfg.EntityType.User)
+        users = self._dao.users.data
 
         # Delete existing users
         key = 'userExternalId'
@@ -611,19 +666,22 @@ class TinkModel:
                     except ex.UserNotExistingError as e:
                         result_list.append(e.result_list)
 
+        # Store data in the DAO
+        try:
+            self._dao.tink_users = result_list.payload()
+        except Exception as e:
+            raise e
+
         # Write results into a file
-        if cfg.TinkConfig.get_instance().result_file_flag
-            payload = result_list.payload(cfg.EntityType.User)
-            users = data.TinkEntityList(entity_type=cfg.EntityType.User,
-                                        entity_data=payload,
-                                        fields=data.TinkDAO.fields_user_api_out)
-            self._dao.users = users
+        if cfg.TinkConfig.get_instance().result_file_flag:
             try:
-                self._dao.dump_output(entity_type=cfg.EntityType.User,
-                                      source_type=cfg.DataProviderType.File)
+                rl = self.save_data_to_file(entity_type=cfg.EntityType.User,
+                                            fields=data.TinkDAO.fields_user_api_out,
+                                            locator=cfg.TinkConfig.get_instance().user_target,
+                                            payload=self._dao.tink_users.data)
+                result_list.append(rl)
             except Exception as e:
-                # TODO: Bring this error to the UI
-                print(e)
+                raise e
 
         return result_list
 
@@ -676,45 +734,30 @@ class TinkModel:
         result_list.append(rl)
 
         # --- Ingest accounts per user
-        users = self.get_input_data_from_file(cfg.EntityType.User)
-        accounts = self.get_input_data_from_file(cfg.EntityType.Account)
+        users = self._dao.users.data
+        service = api.AccountService(url_root=cfg.API_URL_TINK_CONNECTOR)
 
-        try:
-            acc_entities = data.TinkEntityList(entity_type=cfg.EntityType.Account,
-                                               entity_data=accounts,
-                                               fields=data.TinkDAO.fields_acc_api_in)
-        except NotImplementedError as e1:
-            logging.debug(e1)
-            raise e1
-        except AttributeError as e2:
-            logging.debug(e2)
-            raise e2
+        for e in users:
+            ext_user_id = e['userExternalId']
+            msg = f'Ingest accounts for ext_user_id:{ext_user_id}'
 
-        service = api.AccountService()
+            if not self._dao.accounts.contains_entities(ext_user_id):
+                logging.info(msg + ' => Skipped (No accounts found)')
+                continue
 
-        if users:
-            for e in users:
-                ext_user_id = e['userExternalId']
+            response: api.AccountIngestionResponse = None
+            response = service.ingest_accounts(ext_user_id=ext_user_id,
+                                               accounts=self._dao.accounts,
+                                               client_access_token=client_access_token)
 
-                msg = f'Ingest accounts for ext_user_id:{ext_user_id}'
+            if response.http_status(cfg.HTTPStatusCode.Code2xx):
+                result_status = TinkModelResultStatus.Success
+                logging.info(msg + ' => Done')
+            else:
+                logging.error(response.summary())
+                result_status = TinkModelResultStatus.Error
 
-                if not acc_entities.contains_data(ext_user_id):
-                    logging.info(msg + ' => Skipped (No accounts found)')
-                    continue
-
-                response: api.AccountIngestionResponse = None
-                response = service.ingest_accounts(ext_user_id=ext_user_id,
-                                                   accounts=acc_entities,
-                                                   client_access_token=client_access_token)
-
-                if response.http_status(cfg.HTTPStatusCode.Code2xx):
-                    result_status = TinkModelResultStatus.Success
-                    logging.info(msg + ' => Done')
-                else:
-                    logging.error(response.summary())
-                    result_status = TinkModelResultStatus.Error
-
-                result_list.append(TinkModelResult(result_status, response, msg))
+            result_list.append(TinkModelResult(result_status, response, msg))
 
         return result_list
 
@@ -740,9 +783,8 @@ class TinkModel:
         # Wrapper for the results
         result_list = TinkModelResultList(result=None, action=msg, msg='Get all accounts')
 
-        users = self.get_input_data_from_file(cfg.EntityType.User)
+        users = self._dao.users.data
 
-        # Delete existing users
         key = 'userExternalId'
         for e in users:
             if isinstance(e, collections.OrderedDict):
@@ -755,6 +797,28 @@ class TinkModel:
                         result_list.append(rl)
                     except ex.UserNotExistingError as e:
                         result_list.append(e.result_list)
+
+        # Store data in the DAO
+        try:
+            tink_accounts = data.TinkEntityList(entity_type=cfg.EntityType.Account)
+
+            for r in result_list.get_elements(has_payload=True):
+                entity_list = data.TinkEntityList.create_from_http_response(r.response)
+                tink_accounts.append(entity_list)
+            self._dao.tink_accounts = tink_accounts
+        except Exception as e:
+            raise e
+
+        # Write results into a file
+        if cfg.TinkConfig.get_instance().result_file_flag:
+            try:
+                rl = self.save_data_to_file(entity_type=cfg.EntityType.Account,
+                                            fields=data.TinkDAO.fields_acc_api_out,
+                                            locator=cfg.TinkConfig.get_instance().account_target,
+                                            payload=self._dao.tink_accounts.data)
+                result_list.append(rl)
+            except Exception as e:
+                raise e
 
         return result_list
 
@@ -875,23 +939,27 @@ class TinkModelResult:
                  status=TinkModelResultStatus.Undefined,
                  response: api.TinkAPIResponse = api.DummyResponse(),
                  action: str = '',
-                 msg: str = ''):
+                 msg: str = '',
+                 is_important: bool = False):
         """
         Initialization.
 
         :param status: Reference to an instance of the Enum class TinkResultStatus.
         :param response: Reference to an instance of a sub-class of the class api.TinkAPIResponse.
-        :param action: a description of the action performed.
-        :param msg: a message describing the main activity performed.
+        :param action: A description of the action performed.
+        :param msg: A message describing the main activity performed.
+        :param is_important: Boolean saying to ideally not ignore this result's contents (e.g. in output)
+        since it contains important information.
         """
-        self.status = status
-        self.response = response
+        self._status = status
+        self._response = response
 
-        self.action = action
-        if self.action == '':
-            self.action = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        self._action = action
+        if self._action == '':
+            self._action = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
 
-        self.msg = msg
+        self._msg = msg
+        self._is_important = is_important
 
     def get(self, key):
         """
@@ -900,10 +968,75 @@ class TinkModelResult:
         :param key: key for the dictionary lookup
         :return: the value if there could one be found in the dictionary
         """
-        if key in self.response._data:
-            return self.response._data[key]
+        if key in self._response.data:
+            return self._response.data[key]
         else:
             return ''
+
+    @property
+    def status(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._status = value
+
+    @property
+    def response(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._response
+
+    @property
+    def action(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._action
+
+    @action.setter
+    def action(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._action = value
+
+    @property
+    def msg(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._msg
+
+    @msg.setter
+    def msg(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._msg = value
+
+
+    @property
+    def is_important(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._is_important
 
 
 class TinkModelResultList:
@@ -920,21 +1053,52 @@ class TinkModelResultList:
         to be appended to the list of result items.
         :param action: a description of the action performed.
         :param msg: a message describing the main activity performed.
-
         """
         self.results: list[TinkModelResult] = list()
 
-        self.action = action
-        if self.action == '':
-            self.action = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        self._action = action
+        if self._action == '':
+            self._action = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
 
-        self.msg = msg
+        self._msg = msg
 
         # If provided save a list containing the initial result items
         if isinstance(result, TinkModelResult):
             self.results.append(result)
         else:
             logging.debug('Parameter "result" was ignored since it was not of expected type TinkModelResult')
+
+    @property
+    def action(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._action
+
+    @action.setter
+    def action(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._action = value
+
+    @property
+    def msg(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._msg
+
+    @msg.setter
+    def msg(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._msg = value
 
     def status(self):
         """
@@ -954,7 +1118,7 @@ class TinkModelResultList:
 
         return overall_status
 
-    def append(self, result: TinkModelResult):
+    def append(self, result):
         """
         Appends a new result item to the internal list result_items.
         :param result: a result item of type TinkModelResult to be added to the list
@@ -987,41 +1151,45 @@ class TinkModelResultList:
         else:
             return TinkModelResult('Unbound')
 
-    def get_elements(self, endpoint_filter: str = '/api/v1/'):
+    def get_elements(self,
+                     endpoints: list = None,
+                     has_payload: bool = None,
+                     is_important: bool = None,
+                     is_exception: bool = None):
         """
         Get the latest TinkModelResult object in the list result_items for which the
-        given string filter applies
+        given filters apply.
+        Hint: The filters (parameters) are being interpreted as a logical AND meaning only
+        if all of the conditions provided are fulfilled the item will be added to the result.
 
-        :param endpoint_filter: the substring for which a matching endpoint should be found
-
-        :return: a list of TinkModelResult objects matching the endpoint_filter search string
+        :param endpoints: Do only return results whose response endpoints matches the given
+        list of (sub)strings.
+        :param is_important: Filter =>  Include results that have set the flag "is_important".
+        :param has_payload: Filter => Include results that have set the flag "has_payload".
+        :param is_exception: Filter => Include results that have TinkModelResultStatus.Exception.
+        :return TinkModelResult: A list of TinkModelResult objects matching the filter criteria.
         """
         lst = list()
-        for e in self.results:
-            if e.response.request._endpoint.find(endpoint_filter) != -1:  # Found
-                lst.append(e)
-            # Exceptions should 1) have this status set and 2) always be shown
-            elif e.status == TinkModelResultStatus.Exception:
-                lst.append(e)
+        for result in self.results:
+            # Filter 1: Do only consider special endpoints
+            if endpoints:
+                for endpoint in endpoints:
+                    if result.response.request.endpoint.find(endpoint) != -1:  # Found
+                        lst.append(result)
+            # Filter 2: Add responses that have any payload if requested
+            if has_payload:
+                if result.response.has_payload == has_payload:
+                    lst.append(result)
+            # Filter 3: Add responses that have a flag to not ignore these ideally
+            if is_important:
+                if result.is_important is is_important:
+                    lst.append(result)
+            # Exceptions should ALWAYS be shown!
+            if is_exception:
+                if result.status == TinkModelResultStatus.Exception:
+                    lst.append(result)
+
         return lst
-
-    def get_element(self, index=None, endpoint_filter: str = '/api/v1/'):
-        """
-        Get the all TinkModelResult objects in the list result_items for which the
-        given string filter applies
-
-        :param index: The exact list index of the element, if known
-        :param endpoint_filter: the substring for which a matching endpoint should be found
-
-        :return: The latest TinkModelResult object matching the endpoint_filter search string
-        """
-        if index and len(self.results) < index:
-            return self.results[index]
-        else:
-            for e in self.results:
-                if e.response.request._endpoint.find(endpoint_filter):
-                    result = e
-            return result  # Which is automatically the latest element
 
     def count(self, status: TinkModelResultStatus):
         """
@@ -1069,13 +1237,13 @@ class TinkModelResultList:
         # Check Parameters
         if filters:
             for k, v in filters.items():
-                if k == 'endpoint':
-                    endpoint_filter = filters[k]
+                if k == 'endpoints':
+                    endpoints = filters[k]
         else:
-            endpoint_filter = ''
+            endpoints = None
 
         # Overall status over all results wrapped within this result list
-        text = f'{self.action} ... {self.status().value} [{self.msg}]'
+        text = f'{self._action} ... {self.status().value} [{self._msg}]'
 
         # Overall statistics
 
@@ -1089,7 +1257,9 @@ class TinkModelResultList:
         # Reduce amount of results by using the provided filters
         if level == cfg.MessageDetailLevel.Low:
             # Print certain results only (of the list of actions performed)
-            rl: list[TinkModelResult] = self.get_elements(endpoint_filter=endpoint_filter)
+            rl: list[TinkModelResult] = self.get_elements(endpoints=endpoints,
+                                                          is_important=True,
+                                                          is_exception=True)
         else:
             rl = self.results
 
@@ -1120,7 +1290,14 @@ class TinkModelResultList:
         result_data = list()
         for result in self.results:
             if result.response.has_payload:
-                result_data.append(result.response.payload)
+
+                payload = result.response.payload
+                # TODO: Adjust definition of payload
+                #  1. Only consider responses that have has_payload = True
+                #  2. If payload is a list then append the items of the
+                #  list rather than the list itself
+                #  Or do the job using a new TinkEntityList.create_from_http_response
+                result_data.append(payload)
 
         return result_data
 

@@ -36,16 +36,23 @@ class UserNotExistingError(Exception):
     """
 
     def __init__(self, message, result_list):
+
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
+
         self.text = message
-        self.result_list = result_list
+        self._result_list: model.TinkModelResultList = result_list
+
+        if isinstance(result_list, model.TinkModelResultList):
+            self.result_list = result_list
+        else:
+            self.result_list = None
 
 
-class ParameterError(Exception):
+class ParameterTypeError(Exception):
 
     """
-    Exception that indicates that parameter had not the expected value(s)
+    Exception that indicates that parameter had not the expected type
     """
 
     def __init__(self, param_name: str, expected_type: str, found_type: str,
@@ -60,12 +67,28 @@ class ParameterError(Exception):
         the caller.
         """
         # Call the base class constructor with the parameters it needs
-        self.text = f'Parameter: {param_name} has an unexpected type {found_type}. ' \
+        self.text = f'Parameter "{param_name}" has an unexpected type "{found_type}". ' \
                     f'Possible type(s): {expected_type}'
 
         super().__init__(self.text)
 
         if result_list and isinstance(result_list, model.TinkModelResultList):
-            self.result_list = result_list
+            self._result_list = result_list
         else:
-            self.result_list = model.TinkModelResultList()
+            self._result_list = model.TinkModelResultList()
+
+    @property
+    def result_list(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._result_list
+
+    @result_list.setter
+    def result_list(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        """
+        self._result_list = value
