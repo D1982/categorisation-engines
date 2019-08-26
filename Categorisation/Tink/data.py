@@ -11,6 +11,7 @@ import sys
 import collections
 import logging
 import abc  # https://pymotw.com/3/abc/
+from datetime import datetime
 
 
 class TinkDAO:
@@ -42,16 +43,20 @@ class TinkDAO:
     # Standard fields for entity Account
 
     fields_acc_src_in = ('userExternalId', 'externalId', 'availableCredit', 'balance',
-                         'name', 'type', 'flags', 'number', 'reservedAmount')
+                         'name', 'type', 'flags', 'number', 'reservedAmount',
+                         'payloadTags')
 
-    fields_acc_map = ('flags',)
+    fields_acc_map = ('flags', 'payload')
+
+    fields_acc_add = ('payloadCreated',)
 
     fields_acc_api_in = ('externalId', 'availableCredit', 'balance',
-                         'name', 'type', 'flags', 'number', 'reservedAmount')
+                         'name', 'type', 'flags', 'number', 'reservedAmount',
+                         'payloadTags', 'payloadCreated')
 
     fields_acc_api_out = ('accountNumber', 'availableCredit', 'balance', 'bankId',
-                          'credentialsId', 'id', 'name', 'type', 'userId', 'payload',
-                          'currencyCode', 'errorMessage', 'errorCode')
+                          'credentialsId', 'id', 'name', 'type', 'userId', 'currencyCode',
+                          'errorMessage', 'errorCode')  # 'payloadTags', 'payloadCreated'
 
     # Standard fields for entity Transaction
 
@@ -721,20 +726,32 @@ class TinkAccount(TinkEntity):
             if k not in self._fields:
                 del self._data[k]
 
+        # Check availability of all expected fields
         for field in self._fields:
             if field in self._data:
                 value = self._data[field]
-
+            # Check if an input fields requires any mapping operations
             if field in TinkDAO.fields_acc_map:
-                # Field to be mapped against the API
+                # TODO: #DevWork: Add all the required mapping code in this section
                 if field == 'flags':  # Specified as an array
                     self._data[field] = list()
+                    # TODO: Convert CSV to list and iterated it in order to handle multiple array members correctly .
+                    self._data[field].append(value)
+                elif field == 'payloadTags':  # Specified as an array
+                    self._data[field] = list()
+                    # TODO: Convert CSV to list and iterated it in order to handle multiple array members correctly .
                     self._data[field].append(value)
                 else:
                     if fields_unmapped_str == '':
                         fields_unmapped_str += f'{field}'
                     else:
                         fields_unmapped_str += f', {field}'
+
+        # Add fields that are not gathered from the input data. These must be mentioned in map
+        for field in data.TinkDAO.fields_acc_add:
+            # TODO: #DevWork: Add all the required mapping code in this section
+            if field == 'payloadCreated' and field in self._fields:
+                self._data['payloadCreated'] = util.strdate(datetime.now())
 
         if fields_unmapped_str != '':
             raise RuntimeError(f'Unmapped fields in: {str(type(self))} {fields_unmapped_str}')
