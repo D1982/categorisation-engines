@@ -44,7 +44,7 @@ class TinkDAO:
 
     fields_acc_src_in = ('userExternalId', 'externalId', 'availableCredit', 'balance',
                          'name', 'type', 'flags', 'number', 'reservedAmount',
-                         'payloadTags')
+                         'payloadTags', 'payloadCreated')
 
     fields_acc_map = ('flags', 'payload')
 
@@ -52,7 +52,7 @@ class TinkDAO:
 
     fields_acc_api_in = ('externalId', 'availableCredit', 'balance',
                          'name', 'type', 'flags', 'number', 'reservedAmount',
-                         'payloadTags', 'payloadCreated')
+                         'payloadTags')
 
     fields_acc_api_out = ('accountNumber', 'availableCredit', 'balance', 'bankId',
                           'credentialsId', 'id', 'name', 'type', 'userId', 'currencyCode',
@@ -333,7 +333,6 @@ class TinkDAO:
             self._tink_accounts = value
         else:
             try:
-                # TODO: Here I am #1
                 entities = TinkEntityList(entity_type=cfg.EntityType.Account,
                                           entity_data=value,
                                           fields=data.TinkDAO.fields_acc_api_out)
@@ -545,9 +544,12 @@ class TinkEntityList:
                     entity = TinkUser(user_data=item, fields=fields)
                 elif self._entity_type == cfg.EntityType.Account:
                     entity = TinkAccount(acc_data=item, fields=fields)
+                elif self._entity_type == cfg.EntityType.Transaction:
+                    entity = TinkTransaction(trx_data=item, fields=fields)
                 else:
-                    pass
-                    # TODO: Add transaction case here once class TinkTransaction is available
+                    t = (TinkEntity.User, TinkEntity.Account, TinkEntity.Transaction)
+                    raise AttributeError(f'Expected one of the entity types {t}')
+
                 self._entities.append(entity)
             except AttributeError as ex_att:
                 raise ex_att
@@ -762,6 +764,80 @@ class TinkAccount(TinkEntity):
         provided i.e. could not be found in the given data.
         """
         super().__init__(entity_type=cfg.EntityType.Account, entity_data=acc_data, fields=fields)
+
+    def adjust_data(self):
+        fields_unmapped_str = ''
+
+        # Remove fields that are not required
+        for k in list(self._data.keys()):
+            if k not in self._fields:
+                del self._data[k]
+
+        # Check availability of all expected fields
+        for field in self._fields:
+            if field in self._data:
+                value = self._data[field]
+            # Check if an input fields requires any mapping operations
+            if field in TinkDAO.fields_acc_map:
+                # TODO: #DevWork: Add all the required mapping code in this section
+                if field == 'flags':  # Specified as an array
+                    my_list = self._data[field].split(",")
+                    self._data[field] = my_list
+                elif field == 'payloadTags':  # Specified as an array
+                    my_list = self._data[field].split(",")
+                    self._data[field] = my_list
+                else:
+                    if fields_unmapped_str == '':
+                        fields_unmapped_str += f'{field}'
+                    else:
+                        fields_unmapped_str += f', {field}'
+
+        # Add fields that are not gathered from the input data. These must be mentioned in map
+        for field in data.TinkDAO.fields_acc_add:
+            # TODO: #DevWork: Add all the required mapping code in this section
+            if field == 'payloadCreated' and field in self._fields:
+                self._data['payloadCreated'] = util.strdate(datetime.now())
+
+        if fields_unmapped_str != '':
+            raise RuntimeError(f'Unmapped fields in: {str(type(self))} {fields_unmapped_str}')
+
+
+@TinkEntity.register
+class TinkTransaction(TinkEntity):
+    """
+    Object representation of a Tink entity data structure list.
+    """
+
+    @staticmethod
+    def create_from_http_response(response):
+        """
+        Creates a TinkEntity object from a http response originated from
+        a Tink API endpoint.
+        :param response: A response of a supported sub-type of TinkAPIResponse
+        containing the data.
+        :raise ParameterError: If the supplied response object is not a
+        supported response. This does basically mean that the response cannot
+        become a valid TinkUser object.
+        """
+        raise ex.ParameterTypeError(param_name='response',
+                                    expected_type=None,
+                                    found_type=type(response),
+                                    result_list=None)
+
+    def __init__(self, trx_data: dict, fields: tuple):
+        """
+        Initialization
+        :param trx_data: The raw data as a dictionary. The data should usually
+        originate either from a data source or from the Tink API.
+        :param fields: A list (tuple) of relevant fields to be extracted out of
+        the provided data in order to mak the information accessible in
+        a structured way over this data access object.
+        :raise ParameterError: If not all the parameters were delivered with
+        the expected data type.
+        :raise AttributeError: If at least one of the expected fields was not
+        provided i.e. could not be found in the given data.
+        """
+        super().__init__(entity_type=cfg.EntityType.Account, entity_data=trx_data, fields=fields)
 
     def adjust_data(self):
         fields_unmapped_str = ''
