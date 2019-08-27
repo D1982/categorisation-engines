@@ -522,6 +522,7 @@ class TinkEntityList:
         """
         self._entities: TinkEntity = list()
         self._entity_type: cfg.EntityType = entity_type
+        self._fields: tuple = fields
 
         if not isinstance(entity_data, list):
             raise ex.ParameterTypeError(param_name='entity_data',
@@ -572,6 +573,24 @@ class TinkEntityList:
         return result_data
 
     @property
+    def fields(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._fields
+
+    @fields.setter
+    def fields(self, value):
+        """
+        Set the current value of the corresponding property _<method_name>.
+        :param value: The new value of the corresponding property _<method_name>.
+        :raise Exception: If there occurred an error when trying to set the value.
+        """
+        self._fields = value
+
+
+    @property
     def entities(self):
         """
         Get a list containing all the entities stored within this TinkEntityList object.
@@ -593,6 +612,32 @@ class TinkEntityList:
 
         if len(entity_list.entities) > 0:
             self._entities.extend(entity_list.entities)
+
+    def create_subset(self, ext_user_id: str = None):
+        """
+        Creates a new TinkEntityList that is a subset of the current one restricted to the
+        entities that belong to a given user ext_user_id.
+        :param ext_user_id: The external user reference (this is NOT the Tink internal id).
+        If provided then the data returned will be restricted to the records that belong
+        to the user ext_user_id.
+        :return: A new TinkEntityList restricted to the entities that belong to the given
+        user ext_user_id.
+        :raise Exception: If an error occured when trying to instantiate a new
+        TinkEntityList with the gathered data.
+        """
+        subset_entities = self.get_entities(ext_user_id=ext_user_id)
+
+        try:
+            subset_instance = TinkEntityList(entity_type=self._entity_type,
+                                             entity_data=subset_entities,
+                                             fields=self._fields)
+            return subset_instance
+        except Exception as e:
+            logging.error(e)
+            return self
+
+
+
 
     def get_entities(self, ext_user_id: str = None):
         """
@@ -734,13 +779,11 @@ class TinkAccount(TinkEntity):
             if field in TinkDAO.fields_acc_map:
                 # TODO: #DevWork: Add all the required mapping code in this section
                 if field == 'flags':  # Specified as an array
-                    self._data[field] = list()
-                    # TODO: Convert CSV to list and iterated it in order to handle multiple array members correctly .
-                    self._data[field].append(value)
+                    my_list = self._data[field].split(",")
+                    self._data[field] = my_list
                 elif field == 'payloadTags':  # Specified as an array
-                    self._data[field] = list()
-                    # TODO: Convert CSV to list and iterated it in order to handle multiple array members correctly .
-                    self._data[field].append(value)
+                    my_list = self._data[field].split(",")
+                    self._data[field] = my_list
                 else:
                     if fields_unmapped_str == '':
                         fields_unmapped_str += f'{field}'
