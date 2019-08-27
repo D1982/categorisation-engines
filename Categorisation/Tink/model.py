@@ -867,7 +867,7 @@ class TinkModel:
 
         return result_list
 
-    def ingest_trx(self):
+    def ingest_transactions(self):
         """
         Initiates the ingestion of transactions in the Tink platform.
 
@@ -875,7 +875,7 @@ class TinkModel:
         """
         pass
 
-    def delete_trx(self):
+    def delete_transactions(self):
         """
         Initiates the deletion of transactions in the Tink platform.
 
@@ -883,7 +883,7 @@ class TinkModel:
         """
         pass
 
-    def list_trx(self):
+    def list_transactions(self):
         """
         Initiates the retrieval of a list of all transactions in the Tink platform.
 
