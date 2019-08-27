@@ -1107,7 +1107,6 @@ class TransactionService(TinkAPI):
 
         :return: a response wrapper object (instance of api.AccountIngestionResponse)
         """
-        # TODO: Implement since this is a plain copy at the moment
         msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
         logging.info(msg)
 
@@ -1140,6 +1139,40 @@ class TransactionService(TinkAPI):
                                  headers=request.headers)
 
         return AccountIngestionResponse(request, response)
+
+
+@TinkAPIResponse.register
+class TransactionIngestionResponse(TinkAPIResponse):
+
+    """
+    Abstract wrapper class for AccountIngestionResponse from Tink's account service.
+    """
+
+    fieldnames = TinkAPIResponse.fieldnames
+
+    def __init__(self, request, response):
+        """
+        Initialization.
+        """
+        super().__init__(request, response)
+
+        # Population of inherited members
+        self._fields = __class__.fieldnames
+        self._has_payload = False
+        self._entity_type = cfg.EntityType.Transaction
+
+    def to_string_custom(self):
+
+        """
+        Implementation of the abstract method of the class api.TinkAPIResponse
+
+        Generic extended string representation of a TinkAPIResponse instance.
+
+        :return: a formatted, human readable string representation of the data
+        within an instance of this class
+        """
+        # No override required - use standard output
+        return self.to_string_formatted()
 
 
 class OAuthService(TinkAPI):
