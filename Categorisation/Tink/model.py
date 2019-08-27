@@ -746,8 +746,9 @@ class TinkModel:
                 continue
 
             response: api.AccountIngestionResponse = None
+            user_accounts = self._dao.accounts.create_subset(ext_user_id=ext_user_id)
             response = service.ingest_accounts(ext_user_id=ext_user_id,
-                                               accounts=self._dao.accounts,
+                                               accounts=user_accounts,
                                                client_access_token=client_access_token)
 
             if response.http_status(cfg.HTTPStatusCode.Code2xx):
@@ -1196,8 +1197,7 @@ class TinkModelResultList:
         Count all elements having the given status.
 
         :param status: Reference to an instance of the Enum class TinkResultStatus.
-
-        :return: The number of elements in the list self.result with the requested status
+        :return: The number of elements in the list self.result with the requested status.
         """
         cnt = sum(e.status == status for e in self.results)
 
