@@ -908,7 +908,7 @@ class AccountService(TinkAPI):
         Ingest a list of accounts into the space of an existing user in the Tink platform.
 
         :param ext_user_id: external user reference (this is NOT the Tink internal id)
-        :param accounts: A dictionary containing the account data to be ingested
+        :param accounts: A list of all accounts
         :param client_access_token: The client access token gathered via the endpoint
         /api/v1/oauth/token which can be called using OAuthService.authorize_client_access(...)
 
@@ -1075,6 +1075,71 @@ class AccountListResponse(TinkAPIResponse):
             text += self.to_string_formatted()
 
         return str(text)
+
+
+class TransactionService(TinkAPI):
+
+    """
+    Wrapper class for the Tink transaction service.
+    """
+
+    def __init__(self, url_root=cfg.API_URL_TINK_CONNECTOR):
+        """
+        Initialization.
+        """
+        super().__init__(url_root)
+
+    def ingest_transactions(self,
+                            ext_user_id,
+                            accounts: data.TinkEntityList,
+                            transactions: data.TinkEntityList,
+                            client_access_token):
+        """
+        Call the Connector API endpoint users/{{external-user-id}}/accounts
+
+        Ingest a list of accounts into the space of an existing user in the Tink platform.
+
+        :param ext_user_id: external user reference (this is NOT the Tink internal id)
+        :param accounts: A list of all accounts
+        :param transactions: A list of all transactions
+        :param client_access_token: The client access token gathered via the endpoint
+        /api/v1/oauth/token which can be called using OAuthService.authorize_client_access(...)
+
+        :return: a response wrapper object (instance of api.AccountIngestionResponse)
+        """
+        # TODO: Implement since this is a plain copy at the moment
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        endpoint = self._url_root + f'/users/{ext_user_id}/transactions'
+        request = TinkAPIRequest(method='POST', endpoint=endpoint)
+        request.ext_user_id = ext_user_id
+
+        headers = request.headers
+        headers.update({'Authorization': f'Bearer {client_access_token}'})
+        headers.update({'Content-Type': 'application/json'})
+        request.headers = headers
+
+        body = request.payload
+        account_data = accounts.get_entities()
+        trx_data = transactions.get_entities()
+        key = 'transactionAccounts'
+        body.update({key: account_data})
+        for item in body[key]:
+            item.transactions = trx_data
+        # TODO: Add 'type': REAL_TIME|HISTORICAL|BATCH as a parameter of ingest_transactions()
+        body.update({'type': 'REAL_TIME'})
+        request.payload = body
+
+        json_data = json.dumps(request.payload)
+
+        request.log()
+
+        response = requests.post(url=request.endpoint,
+                                 data=json_data,
+                                 headers=request.headers)
+
+        return AccountIngestionResponse(request, response)
 
 
 class OAuthService(TinkAPI):
