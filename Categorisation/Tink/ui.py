@@ -457,7 +457,7 @@ class TinkUI:
                             method=self._model.get_all_accounts)
         elif code == 'btn_ingest_trx':
             self.call_model(action='Ingest Transactions',
-                            method=None)
+                            method=self._model.ingest_transactions)
         elif code == 'btn_delete_trx':
             self.call_model(action='Delete Transactions',
                             method=None)
