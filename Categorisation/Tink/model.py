@@ -56,7 +56,8 @@ class TinkModel:
         """
         methods = (self.test_connectivity, self.list_categories,
                    self.delete_users, self.activate_users, self.get_users,
-                   self.ingest_accounts, self.get_all_accounts)
+                   self.ingest_accounts, self.get_all_accounts,
+                   self.ingest_transactions)
 
         actions = list()
 
@@ -85,6 +86,9 @@ class TinkModel:
                 action.update({'filters': filters})
             elif method == self.get_all_accounts:
                 filters.update({'endpoints': ['/accounts/list']})
+                action.update({'filters': filters})
+            elif method == self.ingest_transactions:
+                filters.update({'endpoints': ['/transactions']})
                 action.update({'filters': filters})
 
             actions.append(action)
@@ -869,11 +873,70 @@ class TinkModel:
 
     def ingest_transactions(self):
         """
-        Initiates the ingestion of transactions in the Tink platform.
+        Initiates the ingestion of a user's transactions into the Tink platform.
 
-        :return: TinkModelResult
+        :return: TinkModelResultList wrapping TinkModelResult objects of all API calls performed
+        containing instances of api.TransactionIngestionResponse with a status code:
+
+        STATUS CODE	DESCRIPTION
+        204	Transactions ingested.
+        400	The payload does not pass validation, or the specified account does not exist.
+        401	User not found.
+        409	Transaction already exists.
+        410	Transaction has already been deleted.
+        412	Could not find any accounts for the user.
         """
-        pass
+        msg = f'{self.__class__.__name__}.{sys._getframe().f_code.co_name}'
+        logging.info(msg)
+
+        # Wrapper for the results
+        result_list = TinkModelResultList(result=None, action=msg, msg='Ingest accounts')
+
+        # --- Authorize client
+        rl = self._authorize_client(scope='authorization:grant,accounts:write,transactions:write')
+        response: api.OAuth2AuthenticationTokenResponse = rl.last().response
+
+        if rl.status() == TinkModelResultStatus.Success:
+            client_access_token = response.access_token
+        else:
+            logging.error(response.summary())
+
+        result_list.append(rl)
+
+        # --- Ingest accounts per user
+        users = self._dao.users.data
+        service = api.TransactionService(url_root=cfg.API_URL_TINK_CONNECTOR)
+
+        for e in users:
+            ext_user_id = e['userExternalId']
+            msg = f'Ingest transactions for ext_user_id:{ext_user_id}'
+            transactions: data.TinkTransaction = self._dao.transactions
+
+            if not transactions.contains_entities(ext_user_id):
+                logging.info(msg + ' => Skipped (No transactions found)')
+                continue
+
+            response: api.TransactionIngestionResponse = None
+            user_accounts = self._dao.accounts.create_subset(ext_user_id=ext_user_id)
+            user_trx = self._dao.transactions.create_subset(ext_user_id=ext_user_id)
+
+            raise Exception(f'Application stopped by Developer: {user_trx}')
+
+            response = service.ingest_transactions(ext_user_id=ext_user_id,
+                                                   accounts=user_accounts,
+                                                   transactions=user_trx,
+                                                   client_access_token=client_access_token)
+
+            if response.http_status(cfg.HTTPStatusCode.Code2xx):
+                result_status = TinkModelResultStatus.Success
+                logging.info(msg + ' => Done')
+            else:
+                logging.error(response.summary())
+                result_status = TinkModelResultStatus.Error
+
+            result_list.append(TinkModelResult(result_status, response, msg))
+
+        return result_list
 
     def delete_transactions(self):
         """
