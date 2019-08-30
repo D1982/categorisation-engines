@@ -42,7 +42,7 @@ class TinkDAO:
 
     # Standard fields for entity Account
 
-    fields_acc_src_in = ('userExternalId', 'externalId', 'availableCredit', 'balance',
+    fields_acc_src_in = ('userExternalId', 'accExternalId', 'availableCredit', 'balance',
                          'name', 'type', 'flags', 'number', 'reservedAmount',
                          'payloadTags', 'payloadCreated')
 
@@ -60,13 +60,16 @@ class TinkDAO:
 
     # Standard fields for entity Transaction
 
-    fields_trx_input = ('amount', 'date', 'description', 'externalId', 'payload',
-                        'pending', 'tinkId', 'type', 'n26cat', 'currency')
+    fields_trx_src_in = ('accExternalId', 'trxExternalId', 'amount', 'date', 'description',
+                         'pending', 'tinkId', 'type', 'n26cat', 'currency')
 
     fields_trx_map = ('amount', 'date', 'description', 'externalId', 'payload',
                       'pending', 'tinkId', 'type', 'n26cat', 'currency')
 
-    fields_trx_api_in = tuple
+    fields_trx_add = tuple
+
+    fields_trx_api_in = ('amount', 'date', 'description', 'externalId',
+                         'pending', 'tinkId', 'type', 'n26cat', 'currency')
 
     fields_trx_api_out = tuple
 
@@ -264,7 +267,7 @@ class TinkDAO:
             try:
                 raw_data = self.data_access(entity_type=cfg.EntityType.Transaction,
                                             access_type=data.TinkDAO.READ,
-                                            locator=self._config.trx_source,
+                                            locator=self._config.transaction_source,
                                             fields=TinkDAO.fields_trx_src_in)
 
                 self.transactions = raw_data
@@ -285,7 +288,7 @@ class TinkDAO:
             try:
                 entities = TinkEntityList(entity_type=cfg.EntityType.Transaction,
                                           entity_data=value,
-                                          fields=data.TinkDAO.fields_transaction_src_in)
+                                          fields=data.TinkDAO.fields_trx_api_in)
                 self._transactions = entities
             except Exception as e:
                 raise e
@@ -409,11 +412,23 @@ class TinkEntity(metaclass=abc.ABCMeta):
         self._data: dict = entity_data
         self._fields: tuple = fields
 
-        if 'userExternalId' in self._data:
-            self._ext_user_id = self._data['userExternalId']
-        else:
-            self._ext_user_id = None
+        # Set the external id property in order to be able to identify the object
+        if self._entity_type == cfg.EntityType.User:
+            if 'userExternalId' in self._data:
+                self._ext_id = self._data['userExternalId']
+                self._owner_ext_id = self._ext_id
+        elif self._entity_type == cfg.EntityType.Account:
+            if 'accExternalId' in self._data:
+                self._ext_id = self._data['accExternalId']
+            if 'userExternalId' in self._data:
+                self._owner_ext_id = self._data['userExternalId']
+        elif self._entity_type == cfg.EntityType.Transaction:
+            if 'trxExternalId' in self._data:
+                self._ext_id = self._data['trxExternalId']
+            elif 'accExternalId' in self._data:
+                self._owner_ext_id = self._data['accExternalId']
 
+        # Custom mappings and data enrichment
         self.adjust_data()
 
         # Make sure that the least expected fields are provided within data
@@ -439,12 +454,20 @@ class TinkEntity(metaclass=abc.ABCMeta):
         return self._data
 
     @property
-    def ext_user_id(self):
+    def ext_id(self):
         """
         Get the current value of the corresponding property _<method_name>.
         :return: The current value of the corresponding property _<method_name>.
         """
-        return self._ext_user_id
+        return self._ext_id
+
+    @property
+    def owner_ext_id(self):
+        """
+        Get the current value of the corresponding property _<method_name>.
+        :return: The current value of the corresponding property _<method_name>.
+        """
+        return self._owner_ext_id
 
     @abc.abstractmethod
     def adjust_data(self):
@@ -638,9 +661,6 @@ class TinkEntityList:
             logging.error(e)
             return self
 
-
-
-
     def get_entities(self, ext_user_id: str = None):
         """
         This method returns the contained TinkEntity data.
@@ -658,9 +678,9 @@ class TinkEntityList:
             return self._entities
 
         # Add only data to the result list if it belongs to the user ext_user_id
-        if self._entity_type in (cfg.EntityType.User, cfg.EntityType.Account):
+        if self._entity_type in (cfg.EntityType.User, cfg.EntityType.Account, cfg.EntityType.Transaction):
             for entity in self._entities:
-                if entity.ext_user_id == ext_user_id:
+                if entity.ext_id == ext_user_id:
                     lst.append(entity.data)
 
         return lst
@@ -837,7 +857,7 @@ class TinkTransaction(TinkEntity):
         :raise AttributeError: If at least one of the expected fields was not
         provided i.e. could not be found in the given data.
         """
-        super().__init__(entity_type=cfg.EntityType.Account, entity_data=trx_data, fields=fields)
+        super().__init__(entity_type=cfg.EntityType.Transaction, entity_data=trx_data, fields=fields)
 
     def adjust_data(self):
         fields_unmapped_str = ''
